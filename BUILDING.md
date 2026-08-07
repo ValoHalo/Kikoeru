@@ -85,4 +85,39 @@ kikoeru-win-x64-<6 位 commit ID>.zip
 
 ## GitHub Actions
 
-`.github/workflows/build-windows.yml` 在手动触发或推送 `v*` tag 时调用同一个一键脚本。两种触发方式都会把仓库根目录中的最终 ZIP 上传为 workflow artifact；推送 `v*` tag 时还会创建同名 GitHub Release、自动生成 release notes，并把 ZIP 添加为 Release asset。手动触发只生成 workflow artifact，不会发布 Release。Actions 不提交 `.build/`，仓库中也不需要保存 FFmpeg、Node.js 工具链或编译后的前端。
+`.github/workflows/build-windows.yml` 在手动触发或推送 `v*` tag 时并行构建 Windows x64 与 Linux x64 便携包。Linux job 还会构建一次 `Dockerfile`，确认容器镜像能够生成。两种触发方式都会上传 Windows ZIP 和 Linux tar.gz 作为 workflow artifact；推送 `v*` tag 时，只有两个平台都构建成功才会创建同名 GitHub Release、自动生成 release notes，并一次性上传两个便携包。手动触发只生成 workflow artifact，不会发布 Release。Actions 不提交 `.build/`，仓库中也不需要保存 FFmpeg、Node.js 工具链或编译后的前端。
+
+## Linux x64 便携包
+
+### 环境要求
+
+- Linux x64，glibc 2.28 或更高版本
+- Bash、Git、curl、tar 和 SHA-256 工具
+- Node.js 24，用于读取构建配置；实际构建和最终产物使用脚本下载的固定 Node.js 24 运行时
+- 可访问 Node.js、npm registry 和 GitHub 的网络
+
+运行：
+
+```bash
+./build-linux-release.sh
+```
+
+脚本在 `.build/` 中下载并校验固定的 Node.js Linux x64 与 FFmpeg LGPL 归档，创建隔离的前后端工作副本，安装锁定依赖，运行 server 测试和语法检查，构建 PWA，然后生成：
+
+```text
+kikoeru-linux-x64-<6 位 commit ID>.tar.gz
+```
+
+文件名中的 commit ID 取自当前 HEAD；产品版本读取自 `server/package.json`。便携包包含 Node.js 24、生产依赖、前端文件、FFmpeg、启动脚本和许可证；用户数据默认写入解压目录下的 `data/`。
+
+## Podman / Docker 镜像
+
+两个容器工具共用仓库根目录的 `Dockerfile`：
+
+```bash
+podman build -t kikoeru:local .
+KIKOERU_PORT=8888
+podman run --rm -e PORT="$KIKOERU_PORT" -p "$KIKOERU_PORT:$KIKOERU_PORT" -v kikoeru-data:/data -v /path/to/VoiceWork:/media kikoeru:local
+```
+
+`KIKOERU_PORT` 可按需修改。镜像使用 Node.js 24，构建阶段生成 PWA 和 Linux 原生依赖，运行阶段提供 FFmpeg。配置与数据库保存在 `/data`，媒体目录挂载到 `/media`；首次启动后需要在管理设置中把根目录配置为 `/media`。

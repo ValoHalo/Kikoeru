@@ -53,6 +53,26 @@ npm run build
 
 首次构建会自动下载前端 Node.js 24 工具链和固定的 FFmpeg LGPL 构建，安装锁定依赖、运行测试并生成 ZIP。完整环境要求、构建过程和 Actions 行为见 [BUILDING.md](BUILDING.md)。
 
+## Linux 构建与运行
+
+在 Linux x64 上构建便携包：
+
+```bash
+./build-linux-release.sh
+```
+
+产物为仓库根目录下的 `kikoeru-linux-x64-<6 位 commit ID>.tar.gz`。解压后运行 `start-kikoeru.sh`，用户数据默认保存在同目录的 `data/`。
+
+Podman 和 Docker 使用同一个 `Dockerfile`：
+
+```bash
+podman build -t kikoeru:local .
+KIKOERU_PORT=8888
+podman run --rm -e PORT="$KIKOERU_PORT" -p "$KIKOERU_PORT:$KIKOERU_PORT" -v kikoeru-data:/data -v /path/to/VoiceWork:/media kikoeru:local
+```
+
+`KIKOERU_PORT` 可按需修改。使用 Docker 时将上述命令中的 `podman` 替换为 `docker`。首次登录后，在管理设置中把媒体根目录配置为容器内的 `/media`。
+
 ## 致谢
 
 * [kikoeru-express](https://github.com/Number178/kikoeru-express) 及其 [Docker 镜像](https://hub.docker.com/r/number17/kikoeru)

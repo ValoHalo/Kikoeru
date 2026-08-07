@@ -133,24 +133,19 @@ function runServer(app) {
     }
     const listenPort = parseInt(process.env.PORT) || config_1.config.listenPort || 6789;
     const localOnly = config_1.config.blockRemoteConnection;
-    const listenWithRetry = (retries = 3) => {
-        const doListen = () => {
-            server.listen(listenPort, (0, listenAddress_1.getHttpListenAddress)(localOnly, config_1.config.enableIPV6));
-        };
-        server.once('error', (err) => {
-            if (err.code === 'EADDRINUSE' && retries > 0) {
-                console.log(`端口 ${listenPort} 被占用，${retries} 次重试...`);
-                server.removeAllListeners('listening');
-                setTimeout(() => {
-                    server.close();
-                    listenWithRetry(retries - 1);
-                }, 1000);
+    const listenWithRetry = (port = listenPort) => {
+        const onError = (err) => {
+            if (err.code === 'EADDRINUSE' && port < 65535) {
+                console.log(`端口 ${port} 被占用，尝试端口 ${port + 1}...`);
+                listenWithRetry(port + 1);
             }
             else {
                 throw err;
             }
-        });
-        doListen();
+        };
+        server.once('error', onError);
+        server.once('listening', () => server.removeListener('error', onError));
+        server.listen(port, (0, listenAddress_1.getHttpListenAddress)(localOnly, config_1.config.enableIPV6));
     };
     listenWithRetry();
     if (config_1.config.httpsEnabled && httpsSuccess) {
@@ -163,6 +158,7 @@ function runServer(app) {
     }
     server.on('listening', () => {
         console.log('Express server started on port %s at %s', server.address().port, server.address().address);
+        console.log('Kikoeru: http://127.0.0.1:%s/', server.address().port);
         if (config_1.config.enableFileWatcher) {
             (0, fileWatcher_1.startWatcher)();
         }

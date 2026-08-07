@@ -9,4 +9,5 @@ web/dist/
 web/.quasar/
 server/src/public/
 kikoeru-win-x64-*.zip
+kikoeru-linux-x64-*.tar.gz
 *.log
