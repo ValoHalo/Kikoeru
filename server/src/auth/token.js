@@ -55,7 +55,12 @@ function getCookieOptions(config) {
 
 function setAuthCookie(res, token, config) {
     if (typeof token === 'string' && token) {
-        res.cookie(AUTH_COOKIE_NAME, token, getCookieOptions(config));
+        const expiresInSeconds = Number(config && config.expiresIn);
+        const options = getCookieOptions(config);
+        if (Number.isFinite(expiresInSeconds) && expiresInSeconds > 0) {
+            options.maxAge = expiresInSeconds * 1000;
+        }
+        res.cookie(AUTH_COOKIE_NAME, token, options);
     }
 }
 

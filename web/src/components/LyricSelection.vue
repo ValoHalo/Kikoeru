@@ -10,11 +10,13 @@
 
     <q-separator />
 
-    <q-card-section class="row q-gutter-sm items-center lyric-actions">
+    <q-card-section class="row items-center lyric-actions">
       <q-btn
         color="warning"
         icon="save"
-        label="保存歌词"
+        :label="$q.screen.lt.sm ? undefined : '保存歌词'"
+        :round="$q.screen.lt.sm"
+        aria-label="保存歌词"
         :disable="!isAdministrator || lyricLines.length === 0"
         :loading="saving"
         @click="saveLyrics"
@@ -22,7 +24,9 @@
       <q-btn
         color="secondary"
         icon="library_music"
-        label="选择其他歌词"
+        :label="$q.screen.lt.sm ? undefined : '选择其他歌词'"
+        :round="$q.screen.lt.sm"
+        aria-label="选择其他歌词"
         :disable="!currentPlayingFile.hash"
         :loading="loadingOptions"
         @click="fetchOtherLyricFiles"
@@ -30,20 +34,31 @@
       <q-btn
         color="negative"
         icon="subtitles_off"
-        label="关闭歌词"
+        :label="$q.screen.lt.sm ? undefined : '关闭歌词'"
+        :round="$q.screen.lt.sm"
+        aria-label="关闭歌词"
         :disable="!hasLyric"
         @click="closeLyric"
       />
-      <q-btn color="primary" icon="my_location" label="转到当前段落" @click="showCurrentLyric" />
+      <q-btn
+        color="primary"
+        icon="my_location"
+        :label="$q.screen.lt.sm ? undefined : '转到当前段落'"
+        :round="$q.screen.lt.sm"
+        aria-label="转到当前段落"
+        @click="showCurrentLyric"
+      />
       <q-btn
         outline
         color="primary"
         icon="timer"
-        label="以当前播放位置设置本行结束时间"
+        :label="$q.screen.lt.sm ? undefined : '以当前播放位置设置本行结束时间'"
+        :round="$q.screen.lt.sm"
+        aria-label="以当前播放位置设置本行结束时间"
         :disable="!isAdministrator || lyricLines.length === 0"
         @click="setCurrentLineEndTime"
       />
-      <q-toggle v-model="autoTrackCurrentLine" label="自动跟踪当前歌词" />
+      <q-toggle class="lyric-auto-track" v-model="autoTrackCurrentLine" label="自动跟踪当前歌词" />
       <div v-if="!isAdministrator" class="text-caption text-grey-7">
         当前用户可查看和切换歌词；编辑及保存需要管理员权限。
       </div>
@@ -448,6 +463,18 @@ export default {
 
 .lyric-actions {
   flex: 0 0 auto;
+  gap: 8px;
+}
+
+@media (max-width: 599px) {
+  .lyric-actions {
+    column-gap: 0;
+    justify-content: space-between;
+  }
+
+  .lyric-auto-track {
+    flex: 0 0 100%;
+  }
 }
 
 .lyric-list-container {
