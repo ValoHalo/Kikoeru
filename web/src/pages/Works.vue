@@ -245,6 +245,7 @@ export default {
       stopLoad: false,
       isLoading: false,
       activeWorkListMode: null,
+      savedScrollPosition: 0,
       WORK_LIST_MODES,
       works: [],
       pageTitle: '',
@@ -376,6 +377,17 @@ export default {
     } else if (this.workListMode === WORK_LIST_MODES.WATERFALL && this.works.length < this.pagination.totalCount) {
       this.stopLoad = false
     }
+
+    this.$nextTick(() => {
+      setTimeout(() => {
+        requestAnimationFrame(() => window.scrollTo(0, this.savedScrollPosition))
+      }, 0)
+    })
+  },
+
+  beforeRouteLeave (to, from, next) {
+    this.savedScrollPosition = window.scrollY
+    next()
   },
 
   deactivated () {

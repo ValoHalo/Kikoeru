@@ -107,7 +107,11 @@
     <CountDownSleepMode v-else v-model="showTimer" />
 
     <q-page-container :class="{'page-container-style': isFullScreenPage, 'padding-bottom-play-bar': !isFullScreenPage}">
-      <keep-alive include="Works"><router-view /></keep-alive>
+      <router-view v-slot="{ Component }">
+        <keep-alive include="Works">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
       <q-page-scroller v-if="!isFullScreenPage" position="bottom-right" :scroll-offset="150" :offset="[18, 90]" class="scroller" :class="{'scroller-hide': !showScroller, 'scroller-show': showScroller}"><q-btn dense fab icon="keyboard_arrow_up" color="primary" padding="sm" /></q-page-scroller>
     </q-page-container>
     <div style="position: fixed; bottom: 0; z-index: 3001;"><PlayerBar /><AudioPlayer /><LyricsBar v-if="!enablePIPLyrics" /><PIPLyrics /></div>
