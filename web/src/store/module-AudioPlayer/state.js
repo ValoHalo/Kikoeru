@@ -15,6 +15,7 @@ export const TRANSCODE_FROM_TYPES_KEY = 'transcode_from_types_key'
 export const SMART_PATH_ENABLED_KEY = 'smart_path_enabled_key'
 export const SMART_PATH_PREFER_EFFECT_KEY = 'smart_path_prefer_effect_key'
 export const SMART_PATH_AUDIO_TYPES_KEY = 'smart_path_audio_types_key'
+export const VOLUME_KEY = 'volume'
 
 export const WORK_LIST_MODES = {
   WATERFALL: 'waterfall',
@@ -76,6 +77,11 @@ function loadSeekTime (key, fallback) {
   return [5, 10, 30].includes(value) ? value : fallback
 }
 
+function loadVolume () {
+  const value = LocalStorage.has(VOLUME_KEY) ? Number(LocalStorage.getItem(VOLUME_KEY)) : 1
+  return Number.isFinite(value) && value >= 0 && value <= 1 ? value : 1
+}
+
 export default function () {
   return {
     hide: false,
@@ -99,7 +105,7 @@ export default function () {
       name: "order"
     }, // 顺序播放("order"), 循环播放("all repeat"), 单曲循环("repeat once") or 随机播放("shuffle")
     muted: false,
-    volume: 0, // 音量 (0.0-1.0)
+    volume: loadVolume(), // 音量 (0.0-1.0)
     hasLyric: false,
     currentLyric: '',
     currentLyricLineNumber: 0,

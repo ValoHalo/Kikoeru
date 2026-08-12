@@ -15,7 +15,11 @@ export default defineRouter(function () {
     history: createHistory(process.env.VUE_ROUTER_BASE),
     routes,
     scrollBehavior (to, from, savedPosition) {
-      return savedPosition || { left: 0, top: 0 }
+      if (!savedPosition) return { left: 0, top: 0 }
+
+      return new Promise(resolve => {
+        setTimeout(() => resolve(savedPosition), 0)
+      })
     }
   })
 

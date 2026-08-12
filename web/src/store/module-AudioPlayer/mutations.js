@@ -16,6 +16,7 @@ import state, {
   SMART_PATH_ENABLED_KEY,
   SMART_PATH_PREFER_EFFECT_KEY,
   SMART_PATH_AUDIO_TYPES_KEY,
+  VOLUME_KEY,
   TRANSCODE_OPTIONS,
   TRANSCODE_FILE_TYPES,
   WORK_LIST_MODES,
@@ -178,10 +179,12 @@ const mutations = {
   },
 
   SET_VOLUME: (state, val) => {
-    if (val < 0 || val > 1) {
+    const volume = Number(val)
+    if (!Number.isFinite(volume) || volume < 0 || volume > 1) {
       return
     }
-    state.volume = val
+    state.volume = volume
+    LocalStorage.set(VOLUME_KEY, volume)
   },
   SET_REWIND_SEEK_TIME: (state, value) => {
     const normalized = [5, 10, 30].includes(Number(value)) ? Number(value) : 5
