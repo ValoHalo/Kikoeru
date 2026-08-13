@@ -39,7 +39,7 @@ export default {
       stopRafObject: { stopped: false },
       visibility: "hide",
       // visibility: "show",
-      isFireFox: navigator.userAgent.toLowerCase().indexOf('firefox') > -1,
+      isFirefox: navigator.userAgent.toLowerCase().includes('firefox'),
       isVideoCanPlay: false, // 用以记录video能否播放并进入画中画模式，如果用户操作太快，此时video还没有准备好，需要延迟到video canplay事件发生后才能进入画中画状态
       pixelRatio: window.devicePixelRatio,
 
@@ -207,6 +207,13 @@ export default {
       requestAnimationFrame(draw)
     },
 
+    requiresManualPIP() {
+      return this.isFirefox && !(
+        typeof this.video.requestPictureInPicture === 'function' &&
+        document.pictureInPictureEnabled
+      ) && typeof this.video.webkitPresentationMode !== 'function'
+    },
+
     openPIPVideoMode() {
       // this.drawLyric(this.currentLyric) // 首先绘制一次
       this.video.play()
@@ -235,24 +242,12 @@ export default {
         this.video.webkitPresentationMode('picture-in-picture')
       }
 
-      if (this.isFireFox) {
-        // 对火狐浏览器，将video强制显示出来，让用户自己设置video进入画中画模式，然后自动隐藏
+      if (this.requiresManualPIP()) {
+        // 浏览器不支持网页触发画中画时，显示video供用户通过浏览器控件手动开启
         this.visibility = "manulSet"
         setTimeout(()=>{
           this.visibility = "hide"
         }, 10000)
-      } else {
-        // // 20230805 更新，下面这个对SE的处理根本没用，SE一会能有一会不行，相当玄学，
-        // // 有的时候多等一下再点OK按钮就能显示出来了，有的时候又不行。算了，不管这个，其他iPhone、ipad、桌面都没有问题
-        // // 对于其他浏览器其实无需做额外操作
-        // // 但是目前发现iPhoneSE1 15.7.7 的safari奇怪的行为，必须要将video/canvas显示出来一下，然后才能正常进入画中画模式，否则video将无法看到
-        // // 这里就强制所有浏览器环境都进行这样一个操作，先show出来，然后立即hide下去
-        // this.visibility = "show"
-        // console.log("show pip video temp")
-        // setTimeout(() => {
-        //   this.visibility = "hide"
-        //   console.log("hide pip video")
-        // }, 2000);
       }
 
     },
@@ -260,9 +255,8 @@ export default {
     showUserPrompt() {
       let msg = "请点击‘打开’按钮确认显示桌面歌词，或者点击‘取消’关闭桌面歌词。（请注意，桌面歌词打开后，原先网页内的歌词就会被隐藏掉）"
       let okMsg = "请继续"
-      if (this.isFireFox) {
-        msg = "检测到FireFox浏览器，此浏览器下必须由用户手动选择开启画中画功能，请在10秒内手动选择左上角出现的video组件并开启画中画功能，10秒后video组件将会隐藏并无法操作。如果错过，您也可以重新关闭、打开桌面歌词功能，来再次操作。"
-        // firefox尚不支持这种js触发画中画功能，先将video显示出来，让用户手动选择画中画功能，然后隐藏页面中的video元素
+      if (this.requiresManualPIP()) {
+        msg = "当前浏览器无法由网页直接开启画中画。请在10秒内通过页面顶部出现的视频控件手动开启画中画；如果错过，可以关闭并重新打开桌面歌词。"
         okMsg = "好的"
       }
 
@@ -423,5 +417,13 @@ export default {
 
   .manulSet > canvas {
     display: none;
+  }
+
+  .manulSet > video {
+    box-sizing: border-box;
+    position: static;
+    width: 100vw;
+    max-width: 100%;
+    height: 120px;
   }
 </style>
