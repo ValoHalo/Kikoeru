@@ -152,6 +152,33 @@
               </q-tooltip>
             </q-btn>
 
+            <q-btn
+              flat
+              dense
+              no-caps
+              size="md"
+              padding="none sm"
+              :label="`${playbackRate}×`"
+              style="min-width: 44px"
+              aria-label="播放速度"
+            >
+              <q-tooltip anchor="top middle" self="bottom middle">播放速度</q-tooltip>
+              <q-menu anchor="bottom right" self="top right">
+                <q-list dense style="min-width: 132px">
+                  <q-item
+                    v-for="rate in playbackRates"
+                    :key="rate"
+                    clickable
+                    v-close-popup
+                    @click="setPlaybackRate(rate)"
+                  >
+                    <q-item-section avatar><q-icon :name="playbackRate === rate ? 'done' : ''" /></q-item-section>
+                    <q-item-section>{{ rate }}×</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
+
           <!-- 放在尾部 -->
             <q-btn
               flat 
@@ -299,7 +326,7 @@
         <!-- 操作当前播放列表的控制按钮 -->
         <div class="row" style="padding: 5px; height: 45px;">
           <q-btn dense round size="md" icon="edit" color="primary" @click="editCurrentPlayList = !editCurrentPlayList" style="height: 35px; width: 35px;" class="col-auto" />
-          <q-btn dense round size="md" icon="save" color="teal" style="height: 35px; width: 35px;" class="col-auto q-mx-sm" />
+          <q-btn dense round size="md" icon="save" color="teal" style="height: 35px; width: 35px;" class="col-auto q-mx-sm" aria-label="保存当前队列" @click="openSaveQueueDialog"><q-tooltip>保存当前队列</q-tooltip></q-btn>
           <q-space />
           <q-btn dense round size="md" icon="delete_forever" color="red" @click="emptyQueue()" style="height: 35px; width: 35px;" class="col-auto" />
         </div>
@@ -345,6 +372,16 @@
             </template>
           </draggable>
         </q-list>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="showSaveQueueDialog">
+      <q-card class="save-queue-dialog">
+        <q-form @submit.prevent="saveQueueAsPlaylist">
+          <q-card-section><div class="text-h6">保存当前队列</div></q-card-section>
+          <q-card-section class="q-pt-none"><q-input v-model.trim="saveQueueName" autofocus outlined label="播放列表名称" maxlength="80" :rules="[value => Boolean(value) || '请输入名称']" /></q-card-section>
+          <q-card-actions align="right"><q-btn flat label="取消" v-close-popup /><q-btn flat color="primary" label="保存" type="submit" :loading="savingQueue" /></q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
 
@@ -394,6 +431,7 @@ import TranscodingStatus from 'components/TranscodingStatus.vue'
 import { mapState, mapGetters, mapMutations } from 'vuex'
 import { formatSeconds } from '../utils'
 import { debounce } from 'quasar'
+import { PLAYBACK_RATES } from '../store/module-AudioPlayer/state'
 
 export default {
   name: 'AudioPlayer',
@@ -416,6 +454,10 @@ export default {
       isAndroid: navigator.userAgent.toLowerCase().indexOf('android') > -1,
       histroyCheckIntervalId: -1,
       latestUpdatedHistory: null, // 记录最近一次更新的历史记录，防止反复对同一个播放历史进行远程数据更新
+      playbackRates: PLAYBACK_RATES,
+      showSaveQueueDialog: false,
+      saveQueueName: '',
+      savingQueue: false,
 
       isFlipCover: false, // 是否反转封面显示其他内容
 
@@ -483,6 +525,14 @@ export default {
     },
 
     playing() {
+      this.onUpdatePlayingStatus()
+    },
+
+    playMode() {
+      this.onUpdatePlayingStatus()
+    },
+
+    playbackRate() {
       this.onUpdatePlayingStatus()
     },
 
@@ -643,6 +693,7 @@ export default {
       'hasLyric',
       'lyricOffsetSeconds',
       'playingTranscode',
+      'playbackRate',
     ]),
     
     ...mapGetters('AudioPlayer', [
@@ -680,6 +731,7 @@ export default {
       previousTrack: 'PREVIOUS_TRACK',
       changePlayMode: 'CHANGE_PLAY_MODE',
       setVolume: 'SET_VOLUME',
+      setPlaybackRate: 'SET_PLAYBACK_RATE',
       rewind: 'SET_REWIND_SEEK_MODE',
       forward: 'SET_FORWARD_SEEK_MODE',
       toggleSwapSeekButton: 'TOGGLE_SWAP_SEEK_BUTTON',
@@ -699,6 +751,33 @@ export default {
 
     samCoverUrl (hash) {
       return hash ? `/api/cover/${hash.split('/')[0]}?type=sam` : ""
+    },
+
+    openSaveQueueDialog () {
+      this.saveQueueName = ''
+      this.showCurrentPlayList = false
+      this.showSaveQueueDialog = true
+    },
+
+    playlistItemFromTrack (track) {
+      const workId = Number(track.workId) || Number(String(track.hash || '').split('/')[0])
+      const relativePath = track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/')
+      return { workId, relativePath: String(relativePath).replace(/\\/g, '/'), title: track.title, workTitle: track.workTitle || '' }
+    },
+
+    async saveQueueAsPlaylist () {
+      if (!this.saveQueueName || this.queueCopy.length === 0) return
+      this.savingQueue = true
+      try {
+        await this.$axios.post('/api/playlists', { name: this.saveQueueName, items: this.queueCopy.map(this.playlistItemFromTrack) })
+        this.showSaveQueueDialog = false
+        this.$q.notify({ message: '播放列表已保存', type: 'positive' })
+      } catch (error) {
+        const message = error.response && error.response.data && error.response.data.error ? error.response.data.error : '保存播放列表失败'
+        this.$q.notify({ message, type: 'negative' })
+      } finally {
+        this.savingQueue = false
+      }
     },
 
     onClickTrack (index) {
@@ -768,9 +847,12 @@ export default {
       // 如果有任意一个是null，则认为两者不一样
       if (!(ha && hb)) return false;
       
+      if (ha.user_name != hb.user_name) return false;
       if (ha.work_id != hb.work_id) return false;
       if (ha.state.seconds != hb.state.seconds) return false;
       if (ha.state.index != hb.state.index) return false;
+      if ((ha.state.playMode && ha.state.playMode.name) != (hb.state.playMode && hb.state.playMode.name)) return false;
+      if (ha.state.playbackRate != hb.state.playbackRate) return false;
       if (ha.state.queue.length != hb.state.queue.length) return false;
       for (let i = 0; i < ha.state.queue.length; ++i) {
         if (ha.state.queue[i].hash != hb.state.queue[i].hash) return false;
@@ -792,11 +874,14 @@ export default {
       }
 
       const data = {
+        "user_name": this.$store.state.User.name,
         "work_id": this.playWorkId,
         "state": {
           queue: this.queueCopy,
           index: this.queueIndex,
           seconds: this.currentTime,
+          playMode: this.playMode,
+          playbackRate: this.playbackRate,
         }
       }
 
@@ -1002,6 +1087,12 @@ export default {
   @media (max-width: $breakpoint-xs-max) {
     min-width: 280px;
   }
+}
+
+.save-queue-dialog {
+  width: 420px;
+  max-width: 92vw;
+  border-radius: 8px;
 }
 
 .pull-handler {

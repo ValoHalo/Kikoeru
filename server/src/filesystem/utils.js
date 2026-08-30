@@ -147,8 +147,10 @@ const getTrackList = async function (id, dir, readMemo) {
         });
         const sortedFiles = (0, natural_orderby_1.orderBy)(mappedFiles, [v => v.subtitle, v => v.title, v => v.ext]);
         const sortedHashedFiles = sortedFiles.map((file, index) => ({
+            workId: Number(id),
             title: file.title,
             subtitle: file.subtitle,
+            relativePath: file.shortFilePath.replace(/\\/g, '/'),
             hash: `${id}/${index}`,
             ext: file.ext,
             fullPath: file.fullPath,
@@ -215,6 +217,8 @@ const toTree = (tracks, workTitle, workDir, rootFolder) => {
         if (track.ext === '.txt' || track.ext === '.lrc' || track.ext === '.srt' || track.ext === '.ass' || track.ext === '.vtt') {
             fatherFolder.push({
                 type: 'text',
+                workId: track.workId,
+                relativePath: track.relativePath,
                 hash: track.hash,
                 title: track.title,
                 subtitle: track.subtitle,
@@ -226,6 +230,8 @@ const toTree = (tracks, workTitle, workDir, rootFolder) => {
         else if (track.ext === '.jpg' || track.ext === '.jpeg' || track.ext === '.png' || track.ext === '.webp') {
             fatherFolder.push({
                 type: 'image',
+                workId: track.workId,
+                relativePath: track.relativePath,
                 hash: track.hash,
                 title: track.title,
                 subtitle: track.subtitle,
@@ -237,6 +243,8 @@ const toTree = (tracks, workTitle, workDir, rootFolder) => {
         else if (track.ext === '.pdf') {
             fatherFolder.push({
                 type: 'other',
+                workId: track.workId,
+                relativePath: track.relativePath,
                 hash: track.hash,
                 title: track.title,
                 subtitle: track.subtitle,
@@ -248,6 +256,8 @@ const toTree = (tracks, workTitle, workDir, rootFolder) => {
         else {
             fatherFolder.push({
                 type: 'audio',
+                workId: track.workId,
+                relativePath: track.relativePath,
                 hash: track.hash,
                 title: track.title,
                 subtitle: track.subtitle,

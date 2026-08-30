@@ -5,10 +5,10 @@
     "archiveUrl": "https://nodejs.org/dist/v24.14.1/node-v24.14.1-win-x64.zip"
   },
   "ffmpeg": {
-    "archiveUrl": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-02-13-17/ffmpeg-n8.1.2-34-g9b6c8969e0-win64-lgpl-8.1.zip",
-    "archiveFileName": "ffmpeg-n8.1.2-34-g9b6c8969e0-win64-lgpl-8.1.zip",
-    "archiveRoot": "ffmpeg-n8.1.2-34-g9b6c8969e0-win64-lgpl-8.1",
-    "archiveSha256": "1c17a2af80ca4f85e3e72a1137eb4645f8a88c2e2d754339e270b1f234f8d49c"
+    "archiveUrl": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-29-13-12/ffmpeg-n8.1.2-50-g1a748fe2cd-win64-lgpl-8.1.zip",
+    "archiveFileName": "ffmpeg-n8.1.2-50-g1a748fe2cd-win64-lgpl-8.1.zip",
+    "archiveRoot": "ffmpeg-n8.1.2-50-g1a748fe2cd-win64-lgpl-8.1",
+    "archiveSha256": "e1cafe80e9fb3e4e4024923a2ed2544bc3a0545af09b6a7861a7193210988c63"
   },
   "linuxNode": {
     "version": "24.19.0",
@@ -18,9 +18,9 @@
     "archiveSha256": "14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647"
   },
   "linuxFfmpeg": {
-    "archiveUrl": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-02-13-17/ffmpeg-n8.1.2-34-g9b6c8969e0-linux64-lgpl-8.1.tar.xz",
-    "archiveFileName": "ffmpeg-n8.1.2-34-g9b6c8969e0-linux64-lgpl-8.1.tar.xz",
-    "archiveRoot": "ffmpeg-n8.1.2-34-g9b6c8969e0-linux64-lgpl-8.1",
-    "archiveSha256": "74425e4f2cc73341777abae35d761470f30ba95878fee729fde67ffcf122da35"
+    "archiveUrl": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-29-13-12/ffmpeg-n8.1.2-50-g1a748fe2cd-linux64-lgpl-8.1.tar.xz",
+    "archiveFileName": "ffmpeg-n8.1.2-50-g1a748fe2cd-linux64-lgpl-8.1.tar.xz",
+    "archiveRoot": "ffmpeg-n8.1.2-50-g1a748fe2cd-linux64-lgpl-8.1",
+    "archiveSha256": "f7d0402c90d33067ffeca1505fa6f4b0bcb86397305780c4f630ab0eb239edad"
   }
 }

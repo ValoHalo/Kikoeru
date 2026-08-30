@@ -1,5 +1,5 @@
 import { COLOR_SCHEMES } from './colorScheme'
-import { TRANSCODE_OPTIONS, WORK_LIST_MODES } from './store/module-AudioPlayer/state'
+import { PLAYBACK_RATES, TRANSCODE_OPTIONS, WORK_LIST_MODES } from './store/module-AudioPlayer/state'
 
 export const colorSchemeOptions = [
   { label: '浅色', icon: 'light_mode', value: COLOR_SCHEMES.LIGHT },
@@ -17,6 +17,11 @@ export const seekOptions = [
   { label: '10 秒', value: 10 },
   { label: '30 秒', value: 30 },
 ]
+
+export const playbackRateOptions = PLAYBACK_RATES.map(value => ({
+  label: `${value}×`,
+  value,
+}))
 
 export const sleepTimerOptions = [
   { label: '分钟倒计时', icon: 'hourglass_bottom', value: false },

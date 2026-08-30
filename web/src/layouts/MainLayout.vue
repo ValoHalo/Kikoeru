@@ -141,6 +141,7 @@ export default {
     return {
       keyword: typeof this.$route.query.keyword === 'string' ? this.$route.query.keyword : '', drawerOpen: false, drawerMini: true, confirm: false, randId: null, showTimer: false, showScroller: false,
       loginDialog: false, loginName: '', loginPassword: '', loginSubmitting: false, loginPromptDismiss: null,
+      restoredQueueUser: '',
       colorScheme: readColorScheme(),
       links: [
         { title: '媒体库', icon: 'widgets', path: '/' }, { title: '聚合搜索', icon: 'manage_search', path: '/search' }, { title: '大图模式', icon: 'play_circle', path: '/fullScreenPlayer' }, { title: '我的收藏', icon: 'favorite', path: '/favourites' }, { title: '播放列表', icon: 'queue_music', path: '/playlist' }, { title: '社团', icon: 'group', path: '/circles' }, { title: '标签', icon: 'label', path: '/tags' }, { title: '声优', icon: 'mic', path: '/vas' }
@@ -191,6 +192,7 @@ export default {
   methods: {
     async initUser ({ showPrompt = true, retry = true } = {}) {
       try {
+        const previousUserName = this.$store.state.User.name
         const response = await this.$axios.get('/api/auth/me')
         this.$store.commit('User/INIT', response.data.user)
         this.$store.commit('User/SET_AUTH', response.data.auth)
@@ -200,6 +202,11 @@ export default {
         } else if (response.data.user) {
           this.dismissAnonymousLoginPrompt()
         }
+        const currentUserName = response.data.user && response.data.user.name ? response.data.user.name : ''
+        if (currentUserName !== previousUserName && this.$store.state.AudioPlayer.queue.length > 0) {
+          this.$store.commit('AudioPlayer/EMPTY_QUEUE')
+        }
+        await this.restoreLatestQueue(currentUserName)
         return response.data
       } catch (error) {
         if (retry && error.response && error.response.status === 401) {
@@ -209,6 +216,45 @@ export default {
         this.$store.commit('User/CLEAR')
         this.showErrNotif((error.response && error.response.data.error) || error.message || error)
         return null
+      }
+    },
+    async restoreLatestQueue (userName) {
+      if (!userName || !this.$store.state.AudioPlayer.restoreLastQueue) return
+      if (this.restoredQueueUser === userName || this.$store.state.AudioPlayer.queue.length > 0) return
+      this.restoredQueueUser = userName
+      try {
+        const response = await this.$axios.get('/api/histroy', { params: { page: 1, sort: 'desc' } })
+        if (this.$store.state.User.name !== userName || this.$store.state.AudioPlayer.queue.length > 0) return
+        const work = response.data && Array.isArray(response.data.works) ? response.data.works[0] : null
+        const historyState = work && work.state
+        if (!historyState || !Array.isArray(historyState.queue) || historyState.queue.length === 0) return
+        const indexValue = Number(historyState.index)
+        const index = Number.isInteger(indexValue)
+          ? Math.min(Math.max(indexValue, 0), historyState.queue.length - 1)
+          : 0
+        const secondsValue = Number(historyState.seconds)
+        const seconds = Number.isFinite(secondsValue) && secondsValue >= 0 ? secondsValue : 0
+        this.$store.commit('AudioPlayer/PAUSE')
+        this.$store.commit('AudioPlayer/SET_QUEUE', {
+          workId: work.id,
+          queue: historyState.queue,
+          index,
+          resetPlaying: false,
+          resumeHistroySeconds: seconds,
+        })
+        if (historyState.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', historyState.playMode)
+        if (Object.prototype.hasOwnProperty.call(historyState, 'playbackRate')) {
+          this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', historyState.playbackRate)
+        }
+        const track = historyState.queue[index]
+        this.$q.notify({
+          message: `已恢复上次播放${track && track.title ? `：${track.title}` : ''}`,
+          icon: 'restore',
+          timeout: 3500,
+          actions: [{ label: '清除', handler: () => this.$store.commit('AudioPlayer/EMPTY_QUEUE') }],
+        })
+      } catch (error) {
+        console.warn('Failed to restore latest queue:', error)
       }
     },
     checkUpdate () {
@@ -297,7 +343,9 @@ export default {
     },
     async clearAuthentication () {
       try { await this.$axios.post('/api/auth/logout') } catch (error) { console.warn('Failed to clear server authentication cookie:', error) }
+      this.$store.commit('AudioPlayer/EMPTY_QUEUE')
       this.$store.commit('User/CLEAR')
+      this.restoredQueueUser = ''
     },
     async logout () {
       await this.clearAuthentication()

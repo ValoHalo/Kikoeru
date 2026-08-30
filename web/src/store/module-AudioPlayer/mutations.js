@@ -17,11 +17,37 @@ import state, {
   SMART_PATH_PREFER_EFFECT_KEY,
   SMART_PATH_AUDIO_TYPES_KEY,
   VOLUME_KEY,
+  PLAYBACK_RATE_KEY,
+  RESTORE_LAST_QUEUE_KEY,
+  PLAY_MODES,
   TRANSCODE_OPTIONS,
   TRANSCODE_FILE_TYPES,
   WORK_LIST_MODES,
+  normalizePlaybackRate,
   normalizeSmartPathAudioTypes,
 } from './state'
+
+function trackWorkId (track, fallback = 0) {
+  const explicitId = Number(track && track.workId)
+  if (Number.isInteger(explicitId) && explicitId > 0) return explicitId
+  const hashId = Number(String((track && track.hash) || '').split('/')[0])
+  return Number.isInteger(hashId) && hashId > 0 ? hashId : Number(fallback) || 0
+}
+
+function syncCurrentTrackContext (state, fallbackWorkId = 0) {
+  const track = getters.currentPlayingFile(state)
+  const workId = trackWorkId(track, fallbackWorkId)
+  if (workId === 0) {
+    state.playWorkId = 0
+    state.visualPlayerCoverUrl = ''
+    return
+  }
+  if (workId !== state.playWorkId) {
+    const localStorageName = `visual_cover_${workId}`
+    state.visualPlayerCoverUrl = LocalStorage.getItem(localStorageName) || `/api/cover/${workId}`
+  }
+  state.playWorkId = workId
+}
 
 const mutations = {
   APPLY_DEFAULT_PREFERENCES: (state, defaults) => {
@@ -34,6 +60,7 @@ const mutations = {
 
     assignWhenUnset(REWIND_SEEK_TIME_KEY, 'rewindSeekTime', value => [5, 10, 30].includes(Number(value)) ? Number(value) : 5)
     assignWhenUnset(FORWARD_SEEK_TIME_KEY, 'forwardSeekTime', value => [5, 10, 30].includes(Number(value)) ? Number(value) : 30)
+    assignWhenUnset(PLAYBACK_RATE_KEY, 'playbackRate', normalizePlaybackRate)
     assignWhenUnset(SWAP_SEEK_BUTTON_KEY, 'swapSeekButton', booleanValue)
     assignWhenUnset(ENABLE_VISUALIZER_KEY, 'enableVisualizer', booleanValue)
     assignWhenUnset(ENABLE_VIDEO_SOURCE_KEY, 'enableVideoSource', booleanValue)
@@ -76,12 +103,14 @@ const mutations = {
 
     state.playing = true
     state.queueIndex = index
+    syncCurrentTrackContext(state)
   },
   NEXT_TRACK: (state) => {
     if (state.queueIndex < state.queue.length - 1) {
       // Go to next track only if it exists.
       state.playing = true
       state.queueIndex += 1
+      syncCurrentTrackContext(state)
     }
   },
   PREVIOUS_TRACK: (state) => {
@@ -89,30 +118,28 @@ const mutations = {
       // Go to previous track only if it exists.
       state.playing = true
       state.queueIndex -= 1
+      syncCurrentTrackContext(state)
     }
   },
 
   SET_QUEUE (state, payload) {
-    state.queue = payload.queue
-    state.queueIndex = payload.index
+    state.queue = Array.isArray(payload.queue) ? payload.queue : []
+    if (state.queue.length === 0) {
+      state.queueIndex = 0
+      state.playing = false
+      syncCurrentTrackContext(state)
+      return
+    }
+    const requestedIndex = Number(payload.index)
+    state.queueIndex = Number.isInteger(requestedIndex)
+      ? Math.min(Math.max(requestedIndex, 0), state.queue.length - 1)
+      : 0
 
     if (payload.resetPlaying) {
       state.playing = true
     }
 
-    const workId = payload.workId
-    // 设置workId，然后配置封面，从浏览器本地Storage查找是否曾经手动配置过封面，
-    // 如果没有则使用默认的封面路径
-    if (workId !== state.playWorkId) {
-      const localStorageName = `visual_cover_${workId}`
-      let coverUrl = LocalStorage.getItem(localStorageName)
-      if (!coverUrl) {
-        const hash = getters.currentPlayingFile(state).hash
-        coverUrl = `/api/cover/${hash.split('/')[0]}`
-      }
-      state.visualPlayerCoverUrl = coverUrl
-    }
-    state.playWorkId = workId
+    syncCurrentTrackContext(state, payload.workId)
     if (Object.prototype.hasOwnProperty.call(payload, "resumeHistroySeconds")) {
       state.resumeHistroySeconds = payload.resumeHistroySeconds
     }
@@ -121,19 +148,32 @@ const mutations = {
     state.playing = false
     state.queue = []
     state.queueIndex = 0
+    state.playWorkId = 0
+    state.visualPlayerCoverUrl = ''
+    state.currentTime = 0
+    state.duration = 0
+    state.resumeHistroySeconds = -1
   },
   ADD_TO_QUEUE: (state, file) => {
     state.queue.push(file)
+    syncCurrentTrackContext(state)
   },
   REMOVE_FROM_QUEUE: (state, index) => {
+    if (index < 0 || index >= state.queue.length) return
     state.queue.splice(index, 1)
-
-    if (index === state.queueIndex) {
+    if (state.queue.length === 0) {
       state.playing = false
       state.queueIndex = 0
+      syncCurrentTrackContext(state)
+      return
+    }
+    if (index === state.queueIndex) {
+      state.playing = false
+      state.queueIndex = Math.min(state.queueIndex, state.queue.length - 1)
     } else if (index < state.queueIndex) {
       state.queueIndex -= 1
-    } 
+    }
+    syncCurrentTrackContext(state)
   },
 
 
@@ -148,30 +188,17 @@ const mutations = {
   // Add a file after the current playing item in the queue.
   PLAY_NEXT: (state, file) => {
     state.queue.splice(state.queueIndex + 1, 0, file);
+    syncCurrentTrackContext(state)
   },
 
   CHANGE_PLAY_MODE: (state) => {
-    const playModes = [
-      {
-        id: 0,
-        name: "order"
-      },
-      {
-        id: 1,
-        name: "all repeat"
-      },
-      {
-        id: 2,
-        name: "repeat once"
-      },
-      {
-        id: 3,
-        name: "shuffle"
-      }
-    ]
-    const index = (state.playMode.id >= playModes.length - 1) ? 0 : (state.playMode.id + 1)
+    const index = (state.playMode.id >= PLAY_MODES.length - 1) ? 0 : (state.playMode.id + 1)
+    state.playMode = PLAY_MODES[index]
+  },
 
-    state.playMode = playModes[index]
+  SET_PLAY_MODE: (state, value) => {
+    const name = typeof value === 'string' ? value : value && value.name
+    state.playMode = PLAY_MODES.find(mode => mode.name === name) || PLAY_MODES[0]
   },
 
   TOGGLE_MUTED: (state) => {
@@ -185,6 +212,14 @@ const mutations = {
     }
     state.volume = volume
     LocalStorage.set(VOLUME_KEY, volume)
+  },
+  SET_PLAYBACK_RATE: (state, value) => {
+    state.playbackRate = normalizePlaybackRate(value)
+    LocalStorage.set(PLAYBACK_RATE_KEY, state.playbackRate)
+  },
+  SET_RESTORE_LAST_QUEUE: (state, value) => {
+    state.restoreLastQueue = Boolean(value)
+    LocalStorage.set(RESTORE_LAST_QUEUE_KEY, state.restoreLastQueue)
   },
   SET_REWIND_SEEK_TIME: (state, value) => {
     const normalized = [5, 10, 30].includes(Number(value)) ? Number(value) : 5

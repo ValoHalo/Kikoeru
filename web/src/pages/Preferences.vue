@@ -152,6 +152,22 @@
           </q-item-section>
         </q-item>
 
+        <q-item class="preference-row">
+          <q-item-section>
+            <q-item-label>播放速度</q-item-label>
+            <q-item-label caption>刷新页面后继续使用所选速度。</q-item-label>
+          </q-item-section>
+          <q-item-section side class="preference-control preference-control--wide"><q-btn-toggle v-model="playbackRate" dense unelevated no-caps toggle-color="primary" :options="playbackRateOptions" /></q-item-section>
+        </q-item>
+
+        <q-item tag="label" class="preference-row">
+          <q-item-section>
+            <q-item-label>启动时恢复上次队列</q-item-label>
+            <q-item-label caption>恢复曲目顺序和播放位置，并保持暂停。</q-item-label>
+          </q-item-section>
+          <q-item-section side class="preference-control"><q-toggle v-model="restoreLastQueue" color="primary" /></q-item-section>
+        </q-item>
+
         <q-item tag="label" class="preference-row">
           <q-item-section>
             <q-item-label>底栏显示快进与后退</q-item-label>
@@ -212,7 +228,7 @@
 <script>
 import { mapState, mapMutations } from 'vuex'
 import { applyColorScheme, COLOR_SCHEMES, COLOR_SCHEME_EVENT, readColorScheme } from '../colorScheme'
-import { colorSchemeOptions, seekOptions, sleepTimerOptions, transcodeOptions, workListModeOptions } from '../preferenceOptions'
+import { colorSchemeOptions, playbackRateOptions, seekOptions, sleepTimerOptions, transcodeOptions, workListModeOptions } from '../preferenceOptions'
 import { TRANSCODE_FILE_TYPES } from '../store/module-AudioPlayer/state'
 import { ACCENT_COLOR_EVENT, applyAccentColor, DEFAULT_ACCENT_COLOR, normalizeAccentColor, readAccentColor } from '../themeColor'
 import SmartPathSettings from '../components/SmartPathSettings.vue'
@@ -231,6 +247,7 @@ export default {
       colorSchemeOptions,
       workListModeOptions,
       seekOptions,
+      playbackRateOptions,
       sleepTimerOptions,
       transcodeOptions,
       transcodeFileTypes: TRANSCODE_FILE_TYPES,
@@ -282,6 +299,14 @@ export default {
       get () { return this.$store.state.AudioPlayer.forwardSeekTime },
       set (value) { this.SET_FORWARD_SEEK_TIME(value) },
     },
+    playbackRate: {
+      get () { return this.$store.state.AudioPlayer.playbackRate },
+      set (value) { this.SET_PLAYBACK_RATE(value) },
+    },
+    restoreLastQueue: {
+      get () { return this.$store.state.AudioPlayer.restoreLastQueue },
+      set (value) { this.SET_RESTORE_LAST_QUEUE(value) },
+    },
     swapSeekButton: {
       get () { return this.$store.state.AudioPlayer.swapSeekButton },
       set (value) {
@@ -319,6 +344,8 @@ export default {
       'SET_ENABLE_VIDEO_SOURCE',
       'SET_ENABLE_VISUALIZER',
       'SET_FORWARD_SEEK_TIME',
+      'SET_PLAYBACK_RATE',
+      'SET_RESTORE_LAST_QUEUE',
       'SET_OLD_SLEEP_TIMER_UI_STYLE',
       'SET_OLD_WORK_CARD_UI_STYLE',
       'SET_REWIND_SEEK_TIME',

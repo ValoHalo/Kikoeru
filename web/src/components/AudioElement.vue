@@ -191,6 +191,7 @@ export default {
       'playMode',
       'muted',
       'volume',
+      'playbackRate',
       'sleepTime',
       'sleepMode',
       'rewindSeekTime',
@@ -259,6 +260,9 @@ export default {
       // 调节音量
       this.player.volume = val
     },
+    playbackRate (value) {
+      if (this.player && this.player.media) this.player.media.playbackRate = value
+    },
     rewindSeekMode(rewind) {
       if (rewind) {
         this.player.rewind(this.rewindSeekTime);
@@ -315,6 +319,7 @@ export default {
       })
       this.playerInstance.muted = this.muted
       this.playerInstance.volume = this.volume
+      this.playerInstance.media.playbackRate = this.playbackRate
     },
 
     /**

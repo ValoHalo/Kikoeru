@@ -12,6 +12,7 @@ const config_1 = __importDefault(require("./config"));
 const media_1 = __importDefault(require("./media"));
 const review_1 = __importDefault(require("./review"));
 const play_histroy_1 = __importDefault(require("./play_histroy"));
+const playlist_1 = __importDefault(require("./playlist"));
 const edit_1 = __importDefault(require("./edit"));
 const metadata_1 = __importDefault(require("./metadata"));
 router.get('/health', (req, res) => {
@@ -27,6 +28,7 @@ router.use('/config', config_1.default);
 router.use('/media', media_1.default);
 router.use('/review', review_1.default);
 router.use('/histroy', play_histroy_1.default);
+router.use('/playlists', playlist_1.default);
 router.use('/edit', edit_1.default);
 router.use('/', metadata_1.default);
 exports.default = router;

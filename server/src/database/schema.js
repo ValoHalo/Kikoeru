@@ -82,6 +82,25 @@ const createSchema = (connection = db_1.knex) => connection.schema
     table.foreign('work_id').references('id').inTable('t_work').onDelete('CASCADE');
     table.primary(['user_name', 'work_id']);
 })
+    .createTable('t_playlist', (table) => {
+    table.increments('id');
+    table.string('user_name').notNullable();
+    table.string('name', 80).notNullable();
+    table.timestamps(true, true);
+    table.foreign('user_name').references('name').inTable('t_user').onDelete('CASCADE');
+    table.unique(['user_name', 'name']);
+})
+    .createTable('t_playlist_item', (table) => {
+    table.increments('id');
+    table.integer('playlist_id').unsigned().notNullable();
+    table.bigInteger('work_id').unsigned().notNullable();
+    table.text('relative_path').notNullable();
+    table.string('title', 512).notNullable();
+    table.string('work_title', 512).notNullable().defaultTo('');
+    table.integer('position').unsigned().notNullable();
+    table.foreign('playlist_id').references('id').inTable('t_playlist').onDelete('CASCADE');
+    table.index(['playlist_id', 'position']);
+})
     .raw(`DROP VIEW IF EXISTS staticMetadata;`)
     .raw(`
     CREATE VIEW staticMetadata AS

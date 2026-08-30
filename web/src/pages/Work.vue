@@ -128,6 +128,8 @@ export default {
         resetPlaying: false,
         resumeHistroySeconds: this.metadata.state.seconds,
       })
+      if (this.metadata.state.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', this.metadata.state.playMode)
+      if (Object.prototype.hasOwnProperty.call(this.metadata.state, 'playbackRate')) this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', this.metadata.state.playbackRate)
       console.log(`resume seconds = ${this.metadata.state.seconds}`)
     }
   }

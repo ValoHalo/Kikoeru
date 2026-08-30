@@ -1,6 +1,6 @@
 {
   "name": "kikoeru-server",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "private": true,
   "description": "A self-hosted media server for listening to your DLsite voice works.",
   "homepage": "https://github.com/ValoHalo/Kikoeru",

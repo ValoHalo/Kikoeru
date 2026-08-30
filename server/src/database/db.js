@@ -701,6 +701,109 @@ exports.updatePlayHistroy = updatePlayHistroy;
 async function deletePlayHistroy(username, work_id) {
     await knex('t_play_histroy').select('*').where('work_id', '=', work_id).where('user_name', '=', username).first().del();
 }
+async function getPlaylists(username) {
+    return knex('t_playlist')
+        .leftJoin('t_playlist_item', 't_playlist.id', 't_playlist_item.playlist_id')
+        .where('t_playlist.user_name', username)
+        .groupBy('t_playlist.id', 't_playlist.user_name', 't_playlist.name', 't_playlist.created_at', 't_playlist.updated_at')
+        .select('t_playlist.id', 't_playlist.name', 't_playlist.created_at', 't_playlist.updated_at')
+        .count('t_playlist_item.id as item_count')
+        .orderBy('t_playlist.updated_at', 'desc');
+}
+exports.getPlaylists = getPlaylists;
+async function getPlaylist(username, playlistId) {
+    const playlist = await knex('t_playlist')
+        .select('id', 'name', 'created_at', 'updated_at')
+        .where({ id: playlistId, user_name: username })
+        .first();
+    if (!playlist)
+        return null;
+    const items = await knex('t_playlist_item')
+        .select('id', 'playlist_id', 'work_id', 'relative_path', 'title', 'work_title', 'position')
+        .where('playlist_id', playlistId)
+        .orderBy('position', 'asc')
+        .orderBy('id', 'asc');
+    return { playlist, items };
+}
+exports.getPlaylist = getPlaylist;
+async function createPlaylist(username, name, items = []) {
+    return knex.transaction(async (trx) => {
+        const result = await trx('t_playlist').insert({ user_name: username, name });
+        const playlistId = typeof result[0] === 'object' ? result[0].id : result[0];
+        if (items.length > 0) {
+            await trx('t_playlist_item').insert(items.map((item, position) => ({
+                playlist_id: playlistId,
+                work_id: item.work_id,
+                relative_path: item.relative_path,
+                title: item.title,
+                work_title: item.work_title || '',
+                position,
+            })));
+        }
+        return playlistId;
+    });
+}
+exports.createPlaylist = createPlaylist;
+async function renamePlaylist(username, playlistId, name) {
+    return knex('t_playlist')
+        .where({ id: playlistId, user_name: username })
+        .update({ name, updated_at: knex.fn.now() });
+}
+exports.renamePlaylist = renamePlaylist;
+async function deletePlaylist(username, playlistId) {
+    return knex('t_playlist').where({ id: playlistId, user_name: username }).del();
+}
+exports.deletePlaylist = deletePlaylist;
+async function addPlaylistItems(username, playlistId, items) {
+    return knex.transaction(async (trx) => {
+        const playlist = await trx('t_playlist').select('id').where({ id: playlistId, user_name: username }).first();
+        if (!playlist)
+            return false;
+        const lastItem = await trx('t_playlist_item').where('playlist_id', playlistId).max('position as position').first();
+        const startPosition = lastItem && lastItem.position !== null ? Number(lastItem.position) + 1 : 0;
+        await trx('t_playlist_item').insert(items.map((item, index) => ({
+            playlist_id: playlistId,
+            work_id: item.work_id,
+            relative_path: item.relative_path,
+            title: item.title,
+            work_title: item.work_title || '',
+            position: startPosition + index,
+        })));
+        await trx('t_playlist').where('id', playlistId).update({ updated_at: trx.fn.now() });
+        return true;
+    });
+}
+exports.addPlaylistItems = addPlaylistItems;
+async function deletePlaylistItem(username, playlistId, itemId) {
+    return knex.transaction(async (trx) => {
+        const playlist = await trx('t_playlist').select('id').where({ id: playlistId, user_name: username }).first();
+        if (!playlist)
+            return false;
+        const deleted = await trx('t_playlist_item').where({ id: itemId, playlist_id: playlistId }).del();
+        if (deleted)
+            await trx('t_playlist').where('id', playlistId).update({ updated_at: trx.fn.now() });
+        return Boolean(deleted);
+    });
+}
+exports.deletePlaylistItem = deletePlaylistItem;
+async function reorderPlaylistItems(username, playlistId, itemIds) {
+    return knex.transaction(async (trx) => {
+        const playlist = await trx('t_playlist').select('id').where({ id: playlistId, user_name: username }).first();
+        if (!playlist)
+            return false;
+        const rows = await trx('t_playlist_item').select('id').where('playlist_id', playlistId);
+        const existingIds = rows.map(row => Number(row.id)).sort((a, b) => a - b);
+        const requestedIds = itemIds.map(Number).sort((a, b) => a - b);
+        if (existingIds.length !== requestedIds.length || existingIds.some((id, index) => id !== requestedIds[index]))
+            return false;
+        for (let position = 0; position < itemIds.length; position++) {
+            await trx('t_playlist_item').where({ id: itemIds[position], playlist_id: playlistId }).update({ position });
+        }
+        await trx('t_playlist').where('id', playlistId).update({ updated_at: trx.fn.now() });
+        return true;
+    });
+}
+exports.reorderPlaylistItems = reorderPlaylistItems;
 const getMetadata = ({ field = 'circle', id } = {}) => {
     const validFields = ['circle', 'tag', 'va'];
     if (!validFields.includes(field))

@@ -267,6 +267,8 @@ export default {
         resetPlaying: false,
         resumeHistroySeconds: histroyState.seconds,
       })
+      if (histroyState.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', histroyState.playMode)
+      if (Object.prototype.hasOwnProperty.call(histroyState, 'playbackRate')) this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', histroyState.playbackRate)
       // this.$store.commit('AudioPlayer/SET_RESUME_HISTROY_SECONDS', histroyState.seconds)
     }
   }

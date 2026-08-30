@@ -10,6 +10,25 @@
       </q-breadcrumbs-el>
     </q-breadcrumbs>
 
+    <div class="row justify-end q-mb-sm">
+      <q-btn flat round icon="playlist_add" :disable="allAudioTracks.length === 0" aria-label="将整个作品加入已保存列表" @click="openPlaylistPicker(allAudioTracks)"><q-tooltip>将整个作品加入已保存列表</q-tooltip></q-btn>
+    </div>
+
+    <q-dialog v-model="showPlaylistPicker">
+      <q-card class="playlist-picker-dialog">
+        <q-card-section><div class="text-h6">加入已保存列表</div><div class="text-caption text-grey-7">{{ pendingPlaylistTracks.length }} 首曲目</div></q-card-section>
+        <q-list v-if="savedPlaylists.length" separator bordered class="scroll" style="max-height: 42vh">
+          <q-item v-for="playlist in savedPlaylists" :key="playlist.id" clickable v-ripple @click="addPendingToPlaylist(playlist.id)"><q-item-section avatar><q-icon name="library_music" /></q-item-section><q-item-section><q-item-label>{{ playlist.name }}</q-item-label><q-item-label caption>{{ playlist.item_count }} 首</q-item-label></q-item-section><q-item-section side><q-icon name="add" /></q-item-section></q-item>
+        </q-list>
+        <q-card-section v-else-if="!loadingPlaylists" class="text-grey text-center">还没有保存的播放列表</q-card-section>
+        <q-separator />
+        <q-form @submit.prevent="createPlaylistFromPending">
+          <q-card-section><q-input v-model.trim="newPlaylistName" outlined dense label="新播放列表名称" maxlength="80" :rules="[value => Boolean(value) || '请输入名称']"><template #append><q-btn flat round dense icon="add" type="submit" :loading="addingToPlaylist" aria-label="新建并加入" /></template></q-input></q-card-section>
+        </q-form>
+        <q-card-actions align="right"><q-btn flat label="取消" v-close-popup /></q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-dialog v-model="edit_img">
       <ImageEditor
         v-if="edit_img"
@@ -91,7 +110,7 @@
 
           <!-- 上下文菜单 -->
           <q-menu
-            v-if="item.type === 'audio' || item.type === 'text' || item.type === 'image' || item.type === 'other'"
+            v-if="item.type === 'folder' || item.type === 'audio' || item.type === 'text' || item.type === 'image' || item.type === 'other'"
             touch-position
             context-menu
             auto-close
@@ -100,18 +119,22 @@
           >
             <q-list separator>
               <q-item clickable @click="addToQueue(item)" v-if="item.type === 'audio'">
-                <q-item-section>添加到播放列表</q-item-section>
+                <q-item-section>加入当前队列</q-item-section>
               </q-item>
 
               <q-item clickable @click="playNext(item)" v-if="item.type === 'audio'">
                 <q-item-section>下一曲播放</q-item-section>
               </q-item>
 
+              <q-item clickable @click="openPlaylistPicker(item.type === 'folder' ? collectAudioTracks(item.children) : [item])" v-if="item.type === 'folder' || item.type === 'audio'">
+                <q-item-section>加入已保存列表</q-item-section>
+              </q-item>
+
               <q-item clickable @click="editImg(item)" v-if="item.type === 'image' && isAdministrator">
                 <q-item-section>编辑作为封面</q-item-section>
               </q-item>
 
-              <q-item clickable @click="download(item)">
+              <q-item clickable @click="download(item)" v-if="item.type !== 'folder'">
                 <q-item-section>下载文件</q-item-section>
               </q-item>
 
@@ -147,6 +170,12 @@ export default {
       preview_img_idx: 0,
       preview_img_list: [],
       preview_img_hash: "",
+      showPlaylistPicker: false,
+      savedPlaylists: [],
+      pendingPlaylistTracks: [],
+      newPlaylistName: '',
+      loadingPlaylists: false,
+      addingToPlaylist: false,
     }
   },
 
@@ -203,6 +232,10 @@ export default {
       return queue
     },
 
+    allAudioTracks () {
+      return this.collectAudioTracks(this.internalTree)
+    },
+
     preview_img_url () {
       const item = this.preview_img_list[this.preview_img_idx];
       return item ? this.originalImgSrc(item) : "";
@@ -225,6 +258,68 @@ export default {
 
   methods: {
     formatSeconds,
+
+    collectAudioTracks (items, result = []) {
+      for (const item of items || []) {
+        if (item.type === 'audio') result.push(item)
+        else if (item.type === 'folder' && Array.isArray(item.children)) this.collectAudioTracks(item.children, result)
+      }
+      return result
+    },
+
+    playlistItemFromTrack (track) {
+      const workId = Number(track.workId) || Number(String(track.hash || '').split('/')[0]) || Number(this.metadata.id)
+      const relativePath = track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/')
+      return { workId, relativePath: String(relativePath).replace(/\\/g, '/'), title: track.title, workTitle: track.workTitle || this.metadata.title || '' }
+    },
+
+    async openPlaylistPicker (tracks) {
+      this.pendingPlaylistTracks = (tracks || []).filter(track => track.type === 'audio')
+      if (this.pendingPlaylistTracks.length === 0) return
+      this.newPlaylistName = ''
+      this.showPlaylistPicker = true
+      this.loadingPlaylists = true
+      try {
+        const response = await this.$axios.get('/api/playlists')
+        this.savedPlaylists = response.data.playlists || []
+      } catch (error) {
+        this.showErrNotif(this.playlistError(error, '读取播放列表失败'))
+      } finally {
+        this.loadingPlaylists = false
+      }
+    },
+
+    async addPendingToPlaylist (playlistId) {
+      if (this.addingToPlaylist) return
+      this.addingToPlaylist = true
+      try {
+        await this.$axios.post(`/api/playlists/${playlistId}/items`, { items: this.pendingPlaylistTracks.map(track => this.playlistItemFromTrack(track)) })
+        this.showPlaylistPicker = false
+        this.showSuccNotif(`已加入 ${this.pendingPlaylistTracks.length} 首曲目`)
+      } catch (error) {
+        this.showErrNotif(this.playlistError(error, '加入播放列表失败'))
+      } finally {
+        this.addingToPlaylist = false
+      }
+    },
+
+    async createPlaylistFromPending () {
+      if (!this.newPlaylistName || this.addingToPlaylist) return
+      this.addingToPlaylist = true
+      try {
+        await this.$axios.post('/api/playlists', { name: this.newPlaylistName, items: this.pendingPlaylistTracks.map(track => this.playlistItemFromTrack(track)) })
+        this.showPlaylistPicker = false
+        this.showSuccNotif('播放列表已创建')
+      } catch (error) {
+        this.showErrNotif(this.playlistError(error, '创建播放列表失败'))
+      } finally {
+        this.addingToPlaylist = false
+      }
+    },
+
+    playlistError (error, fallback) {
+      return error.response && error.response.data && error.response.data.error ? error.response.data.error : fallback
+    },
 
     playIcon (hash) {
       return this.playing && this.currentPlayingFile.hash === hash ? "pause" : "play_arrow"            
@@ -375,3 +470,12 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.playlist-picker-dialog {
+  width: 460px;
+  max-width: 92vw;
+  max-height: 80vh;
+  border-radius: 8px;
+}
+</style>

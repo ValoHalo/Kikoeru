@@ -16,6 +16,16 @@ export const SMART_PATH_ENABLED_KEY = 'smart_path_enabled_key'
 export const SMART_PATH_PREFER_EFFECT_KEY = 'smart_path_prefer_effect_key'
 export const SMART_PATH_AUDIO_TYPES_KEY = 'smart_path_audio_types_key'
 export const VOLUME_KEY = 'volume'
+export const PLAYBACK_RATE_KEY = 'playback_rate'
+export const RESTORE_LAST_QUEUE_KEY = 'restore_last_queue'
+
+export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2]
+export const PLAY_MODES = [
+  { id: 0, name: 'order' },
+  { id: 1, name: 'all repeat' },
+  { id: 2, name: 'repeat once' },
+  { id: 3, name: 'shuffle' },
+]
 
 export const WORK_LIST_MODES = {
   WATERFALL: 'waterfall',
@@ -82,6 +92,11 @@ function loadVolume () {
   return Number.isFinite(value) && value >= 0 && value <= 1 ? value : 1
 }
 
+export function normalizePlaybackRate (value) {
+  const rate = Number(value)
+  return PLAYBACK_RATES.includes(rate) ? rate : 1
+}
+
 export default function () {
   return {
     hide: false,
@@ -100,12 +115,11 @@ export default function () {
        */
     ],
     queueIndex: 0, // which track in the queue is currently selected
-    playMode: {
-      id: 0,
-      name: "order"
-    }, // 顺序播放("order"), 循环播放("all repeat"), 单曲循环("repeat once") or 随机播放("shuffle")
+    playMode: PLAY_MODES[0], // 顺序播放("order"), 循环播放("all repeat"), 单曲循环("repeat once") or 随机播放("shuffle")
     muted: false,
     volume: loadVolume(), // 音量 (0.0-1.0)
+    playbackRate: normalizePlaybackRate(LocalStorage.has(PLAYBACK_RATE_KEY) ? LocalStorage.getItem(PLAYBACK_RATE_KEY) : 1),
+    restoreLastQueue: !LocalStorage.has(RESTORE_LAST_QUEUE_KEY) || Boolean(LocalStorage.getItem(RESTORE_LAST_QUEUE_KEY)),
     hasLyric: false,
     currentLyric: '',
     currentLyricLineNumber: 0,
