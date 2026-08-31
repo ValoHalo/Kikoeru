@@ -105,7 +105,7 @@ async function testNetwork(networkConfig) {
     const targets = NETWORK_TEST_TARGETS.map(target => ({
         ...target,
         url: target.key === 'metaServer'
-            ? `${metaBaseUrl}/api/static/RJ01000001?locale=${config_1.config.tagLanguage}`
+            ? `${metaBaseUrl}/api/static/RJ01469493?locale=${config_1.config.tagLanguage}`
             : target.url,
     }));
     const results = await Promise.all(targets.map(async (target) => {
