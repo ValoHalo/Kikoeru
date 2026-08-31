@@ -38,6 +38,14 @@ function writeInstallMarker(updates, packagePath) {
     }));
 }
 
+test("Windows launcher passes a normalized app directory non-interactively", () => {
+    const buildScript = fs.readFileSync(path.resolve(updaterRoot, "build-release.js"), "utf8");
+    assert.ok(buildScript.includes('"set \\"KIKOERU_APP_DIR=%~dp0.\\""'));
+    assert.equal(buildScript.split("powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass").length - 1, 2);
+    assert.equal(buildScript.split('-AppDir \\"%KIKOERU_APP_DIR%\\"').length - 1, 2);
+    assert.equal(buildScript.includes('-AppDir \\"%~dp0\\"'), false);
+});
+
 test("Windows updater installs and rolls back a portable package", { skip: process.platform !== "win32" }, () => {
     const runtime = makeRuntime();
     const sourceUpdater = path.join(updaterRoot, "update-kikoeru.ps1");

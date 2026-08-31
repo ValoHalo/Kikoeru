@@ -13,6 +13,7 @@ const packageJson = require("../../package.json");
 
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const RELEASE_CACHE_MS = 5 * 60 * 1000;
+const UPDATE_EXIT_GRACE_MS = 5000;
 const EXIT_INSTALL_UPDATE = 42;
 const dataRoot = path.dirname(configFolderDir);
 const updatesRoot = path.join(dataRoot, "updates");
@@ -353,10 +354,12 @@ async function requestInstall() {
 
     setTimeout(async () => {
         const db = require("../database/db");
+        const forceExitTimer = setTimeout(() => process.exit(EXIT_INSTALL_UPDATE), UPDATE_EXIT_GRACE_MS);
         try {
             await db.knex.destroy();
         }
         finally {
+            clearTimeout(forceExitTimer);
             process.exit(EXIT_INSTALL_UPDATE);
         }
     }, 1200);
