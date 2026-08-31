@@ -105,6 +105,12 @@ podman run --rm -e PORT="$KIKOERU_PORT" -p "$KIKOERU_PORT:$KIKOERU_PORT" -v kiko
 
 `KIKOERU_PORT` 可按需修改。使用 Docker 时将上述命令中的 `podman` 替换为 `docker`。首次登录后，在管理设置中把媒体根目录配置为容器内的 `/media`。
 
+## 更新
+
+Windows 和 Linux 便携版可以在“管理设置 / 更新”中检查并下载 GitHub Release。下载完成后由管理员确认安装，服务会重启并保留 `data/` 中的配置、数据库、封面和转码文件。自动下载默认关闭。
+
+源码运行模式只提供版本提示。Docker 和 Podman 版本通过容器镜像更新；正式版本镜像发布在 `ghcr.io/valohalo/kikoeru`，版本标签与 GitHub Release 标签一致。
+
 ## 致谢
 
 * [kikoeru-express](https://github.com/Number178/kikoeru-express) 及其 [Docker 镜像](https://hub.docker.com/r/number17/kikoeru)

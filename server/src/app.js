@@ -53,6 +53,7 @@ const socket_1 = require("./socket");
 const init_1 = require("./database/init");
 const api_1 = __importDefault(require("./api"));
 const fileWatcher_1 = require("./filesystem/fileWatcher");
+const updateManager = require("./update/updateManager");
 const serve_index_1 = __importDefault(require("serve-index"));
 function makeApp() {
     const app = (0, express_1.default)();
@@ -165,6 +166,8 @@ function runServer(app) {
         else {
             console.log('[FileWatcher] 文件监听功能已禁用，如需启用请在设置中开启 enableFileWatcher');
         }
+        updateManager.markStartupSuccessful();
+        updateManager.startAutoUpdateChecks();
     });
     if (config_1.config.httpsEnabled && httpsSuccess) {
         httpsServer.on('listening', () => {

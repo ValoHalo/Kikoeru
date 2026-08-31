@@ -168,6 +168,8 @@
 
       <q-btn dense @click="showReviewDialog = true" color="cyan q-mt-sm shadow-4 q-mx-xs q-px-sm" label="写评论" />
 
+      <LibraryActions :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('reset')" />
+
       <q-btn v-if="metadata.state && playWorkId !== metadata.id" dense @click="resumeThisHistroy" color="cyan q-mt-sm shadow-4 q-mx-xs q-px-sm" label="播放此作品的历史记录" />
       <q-btn v-if="metadata.state" dense @click="clearThisHistroy" color="cyan q-mt-sm shadow-4 q-mx-xs q-px-sm" label="删除播放记录">
         <q-tooltip>当历史记录中有已被删除的音频文件，可能会无法正确播放文件，可通过此按钮解决</q-tooltip>
@@ -192,6 +194,7 @@
 import CoverSFW from 'components/CoverSFW.vue'
 import WriteReview from './WriteReview.vue'
 import EditMeta from './EditMeta.vue'
+import LibraryActions from './LibraryActions.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { mapState } from 'vuex'
 import { idNumberToCode } from 'src/utils'
@@ -204,7 +207,8 @@ export default {
   components: {
     CoverSFW,
     WriteReview,
-    EditMeta
+    EditMeta,
+    LibraryActions
   },
 
   props: {

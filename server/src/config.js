@@ -39,6 +39,8 @@ const defaultConfig = {
     dbBusyTimeout: 1000,
     checkUpdate: true,
     checkBetaUpdate: false,
+    autoDownloadUpdate: false,
+    setupVersion: 0,
     maxParallelism: 16,
     rootFolders: [],
     excludeFolderGlobs: [
@@ -66,6 +68,7 @@ const defaultConfig = {
     dlsiteTimeout: 10000,
     hvdbTimeout: 10000,
     retryDelay: 2000,
+    httpProxyMode: 'direct',
     httpProxyHost: '',
     httpProxyPort: 0,
     listenPort: 8888,
@@ -150,7 +153,11 @@ function setNewConfigValue(newConfigValues) {
     writeConfig(exports.config);
 }
 function fixSomeConfigParameter(inputConfig) {
-    const outputConfig = Object.assign({}, (0, lodash_1.cloneDeep)(defaultConfig), (0, lodash_1.cloneDeep)(inputConfig));
+    const inputClone = (0, lodash_1.cloneDeep)(inputConfig);
+    if (!['direct', 'environment', 'manual'].includes(inputClone.httpProxyMode)) {
+        inputClone.httpProxyMode = Number(inputClone.httpProxyPort) > 0 ? 'manual' : 'direct';
+    }
+    const outputConfig = Object.assign({}, (0, lodash_1.cloneDeep)(defaultConfig), inputClone);
     delete outputConfig.importantWorkTreeOption;
     if (!path_1.default.isAbsolute(outputConfig.coverFolderDir)) {
         outputConfig.coverFolderDir = path_1.default.join(genDefaultDataPath(), outputConfig.coverFolderDir);

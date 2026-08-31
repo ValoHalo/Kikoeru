@@ -22,7 +22,8 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8888 \
     KIKOERU_DATA_DIR=/data \
-    KIKOERU_VOICEWORK_PATH=/media
+    KIKOERU_VOICEWORK_PATH=/media \
+    KIKOERU_INSTALL_KIND=container
 
 COPY server/package.json server/package-lock.json ./
 COPY server/src ./src

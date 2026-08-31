@@ -223,10 +223,34 @@ function writeReleaseFiles(stagePath, ffmpegInput) {
         "if not defined PORT set \"PORT=8888\"",
         "set \"NODE_ENV=production\"",
         "set \"KNEX_ENV=\"",
-        "set \"KIKOERU_DATA_DIR=%~dp0data\"",
-        "set \"PKG_NATIVE_CACHE_PATH=%~dp0data\\native-cache\"",
+        "if not defined KIKOERU_DATA_DIR set \"KIKOERU_DATA_DIR=%~dp0data\"",
+        "set \"PKG_NATIVE_CACHE_PATH=%KIKOERU_DATA_DIR%\\native-cache\"",
+        "set \"KIKOERU_INSTALL_KIND=windows-portable\"",
+        "set \"KIKOERU_UPDATE_SUPERVISOR=1\"",
+        "set \"KIKOERU_UPDATE_RUNNER=%KIKOERU_DATA_DIR%\\updates\\update-runner.ps1\"",
+        ":run",
+        "if not exist \"%KIKOERU_DATA_DIR%\\updates\" mkdir \"%KIKOERU_DATA_DIR%\\updates\"",
+        "if exist \"%KIKOERU_DATA_DIR%\\updates\\install.json\" (",
+        "  copy /y \"%~dp0update-kikoeru.ps1\" \"%KIKOERU_UPDATE_RUNNER%\" >nul",
+        "  powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%KIKOERU_UPDATE_RUNNER%\" -Install -AppDir \"%~dp0\" -DataDir \"%KIKOERU_DATA_DIR%\"",
+        "  if errorlevel 1 goto update_failed",
+        ")",
+        "if exist \"%KIKOERU_DATA_DIR%\\updates\\startup-pending.json\" (",
+        "  copy /y \"%~dp0update-kikoeru.ps1\" \"%KIKOERU_UPDATE_RUNNER%\" >nul",
+        "  powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%KIKOERU_UPDATE_RUNNER%\" -HandlePending -AppDir \"%~dp0\" -DataDir \"%KIKOERU_DATA_DIR%\"",
+        "  if errorlevel 1 goto update_failed",
+        ")",
+        "set \"PATH=%~dp0;%PATH%\"",
         "\"%~dp0kikoeru-express.exe\"",
-        "if errorlevel 1 pause",
+        "set \"KIKOERU_EXIT_CODE=%ERRORLEVEL%\"",
+        "if \"%KIKOERU_EXIT_CODE%\"==\"42\" goto run",
+        "if exist \"%KIKOERU_DATA_DIR%\\updates\\startup-pending.json\" goto run",
+        "if not \"%KIKOERU_EXIT_CODE%\"==\"0\" pause",
+        "exit /b %KIKOERU_EXIT_CODE%",
+        ":update_failed",
+        "echo Kikoeru update failed. The previous version was kept when possible.",
+        "pause",
+        "exit /b 1",
         "",
     ].join("\r\n");
     fs.writeFileSync(path.join(stagePath, "start-kikoeru.cmd"), launcher, "utf8");
@@ -242,6 +266,7 @@ function writeReleaseFiles(stagePath, ffmpegInput) {
         "",
     ].join("\r\n");
     fs.writeFileSync(path.join(stagePath, "README.txt"), readme, "utf8");
+    copyRequiredFile(path.join(serverRoot, "scripts", "update-kikoeru.ps1"), path.join(stagePath, "update-kikoeru.ps1"));
 
     const projectLicense = fs.readFileSync(path.join(serverRoot, "LICENSE"), "utf8").trimEnd();
     const ffmpegLicense = fs.readFileSync(ffmpegInput.licensePath, "utf8").trimEnd();

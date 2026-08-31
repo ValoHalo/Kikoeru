@@ -138,6 +138,8 @@ cp -a "$node_toolchain/." "$stage_root/node/"
 cp "$ffmpeg_toolchain/bin/ffmpeg" "$ffmpeg_toolchain/bin/ffprobe" "$stage_root/ffmpeg/"
 cp "$ffmpeg_toolchain/LICENSE.txt" "$stage_root/ffmpeg/"
 cp "$repository_root/LICENSE" "$stage_root/LICENSE"
+cp "$source_server_root/scripts/update-kikoeru.sh" "$stage_root/update-kikoeru.sh"
+chmod +x "$stage_root/update-kikoeru.sh"
 
 cat >"$stage_root/start-kikoeru.sh" <<'EOF'
 #!/usr/bin/env sh
@@ -150,10 +152,37 @@ app_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 export PORT
 export NODE_ENV=production
 export KIKOERU_DATA_DIR
+export KIKOERU_INSTALL_KIND=linux-portable
+export KIKOERU_UPDATE_SUPERVISOR=1
 export PATH="$app_dir/ffmpeg:$PATH"
 
 mkdir -p "$KIKOERU_DATA_DIR"
-exec "$app_dir/node/bin/node" "$app_dir/server/src/app.js"
+KIKOERU_DATA_DIR=$(CDPATH= cd -- "$KIKOERU_DATA_DIR" && pwd)
+export KIKOERU_DATA_DIR
+updates_dir="$KIKOERU_DATA_DIR/updates"
+mkdir -p "$updates_dir"
+
+while true; do
+    cp "$app_dir/update-kikoeru.sh" "$updates_dir/update-runner.sh"
+    chmod +x "$updates_dir/update-runner.sh"
+    if [ -f "$updates_dir/install.json" ]; then
+        "$updates_dir/update-runner.sh" install "$app_dir" "$KIKOERU_DATA_DIR"
+    fi
+    if [ -f "$updates_dir/startup-pending.json" ]; then
+        cp "$app_dir/update-kikoeru.sh" "$updates_dir/update-runner.sh"
+        chmod +x "$updates_dir/update-runner.sh"
+        "$updates_dir/update-runner.sh" handle-pending "$app_dir" "$KIKOERU_DATA_DIR"
+    fi
+
+    set +e
+    "$app_dir/node/bin/node" "$app_dir/server/src/app.js"
+    exit_code=$?
+    set -e
+    if [ "$exit_code" -eq 42 ] || [ -f "$updates_dir/startup-pending.json" ]; then
+        continue
+    fi
+    exit "$exit_code"
+done
 EOF
 chmod +x "$stage_root/start-kikoeru.sh"
 

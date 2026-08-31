@@ -202,6 +202,15 @@ export default {
         } else if (response.data.user) {
           this.dismissAnonymousLoginPrompt()
         }
+        if (response.data.canManage === true) {
+          try {
+            const setupStatus = await this.$axios.get('/api/config/admin/setup-status')
+            if (!setupStatus.data.completed) {
+              await this.$router.replace('/admin/setup')
+              return response.data
+            }
+          } catch (_) {}
+        }
         const currentUserName = response.data.user && response.data.user.name ? response.data.user.name : ''
         if (currentUserName !== previousUserName && this.$store.state.AudioPlayer.queue.length > 0) {
           this.$store.commit('AudioPlayer/EMPTY_QUEUE')

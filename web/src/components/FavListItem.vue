@@ -103,6 +103,11 @@
           </q-item-label>
       </q-item-section>
 
+      <q-item-section side top>
+        <q-badge v-if="metadata.archived_at" color="grey-7" label="已归档" class="q-mb-xs" />
+        <LibraryActions :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('reset')" />
+      </q-item-section>
+
       <WriteReview v-if="showReviewDialog" @closed="processReview" :workid="workid" :metadata="metadata"></WriteReview>
 
   </q-item>
@@ -111,6 +116,7 @@
 <script>
 import WriteReview from './WriteReview.vue'
 import NotifyMixin from '../mixins/Notification.js'
+import LibraryActions from './LibraryActions.vue'
 
 export default {
   name: 'FavListItem',
@@ -118,7 +124,8 @@ export default {
   mixins: [NotifyMixin],
 
   components: {
-    WriteReview
+    WriteReview,
+    LibraryActions
   },
 
   props: {

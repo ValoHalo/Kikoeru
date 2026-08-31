@@ -15,6 +15,9 @@ const play_histroy_1 = __importDefault(require("./play_histroy"));
 const playlist_1 = __importDefault(require("./playlist"));
 const edit_1 = __importDefault(require("./edit"));
 const metadata_1 = __importDefault(require("./metadata"));
+const library_1 = __importDefault(require("./library"));
+const scanFailures_1 = __importDefault(require("./scanFailures"));
+const update_1 = __importDefault(require("./update"));
 router.get('/health', (req, res) => {
     res.send('OK');
 });
@@ -30,5 +33,8 @@ router.use('/review', review_1.default);
 router.use('/histroy', play_histroy_1.default);
 router.use('/playlists', playlist_1.default);
 router.use('/edit', edit_1.default);
+router.use('/library', library_1.default);
+router.use('/scan-failures', scanFailures_1.default);
+router.use('/update', update_1.default);
 router.use('/', metadata_1.default);
 exports.default = router;

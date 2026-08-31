@@ -154,23 +154,35 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>HTTP 代理服务主机 IP</q-item-label>
-            <q-item-label caption>此项为空时默认为本机</q-item-label>
+            <q-item-label>联网方式</q-item-label>
+            <q-item-label caption>直连、读取服务器环境变量，或手动指定 HTTP 代理</q-item-label>
           </q-item-section>
-
-          <q-item-section avatar>
-            <q-input
-              v-model="config.httpProxyHost"
-              input-class="text-right"
-              style="max-width: 100px;"
-            />
+          <q-item-section side class="settings-control settings-control--wide">
+            <q-btn-toggle v-model="config.httpProxyMode" dense unelevated no-caps toggle-color="primary" :options="proxyModeOptions" />
           </q-item-section>
         </q-item>
 
-        <q-item>
+        <q-item v-if="config.httpProxyMode === 'environment'">
           <q-item-section>
-            <q-item-label>HTTP 代理服务端口号 </q-item-label>
-            <q-item-label caption>此项为 0 时默认不使用代理</q-item-label>
+            <q-item-label>环境变量代理</q-item-label>
+            <q-item-label caption>读取服务器进程的 HTTP_PROXY、HTTPS_PROXY 和 NO_PROXY</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="config.httpProxyMode === 'manual'">
+          <q-item-section>
+            <q-item-label>HTTP 代理主机</q-item-label>
+            <q-item-label caption>留空时使用 127.0.0.1</q-item-label>
+          </q-item-section>
+          <q-item-section avatar>
+            <q-input v-model="config.httpProxyHost" input-class="text-right" style="max-width: 160px;" />
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="config.httpProxyMode === 'manual'">
+          <q-item-section>
+            <q-item-label>HTTP 代理端口</q-item-label>
+            <q-item-label caption>1 到 65535</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -187,6 +199,21 @@
                 </q-btn>
               </template>
             </q-input>
+          </q-item-section>
+        </q-item>
+
+        <q-item>
+          <q-item-section>
+            <q-item-label>联网测试</q-item-label>
+            <q-item-label caption>直接使用当前页面中的参数，不需要先保存</q-item-label>
+            <div v-if="networkResults.length" class="q-mt-sm">
+              <q-chip v-for="result in networkResults" :key="result.key" dense square :color="result.ok ? 'positive' : 'negative'" text-color="white" :icon="result.ok ? 'check' : 'close'">
+                {{ result.label }}
+              </q-chip>
+            </div>
+          </q-item-section>
+          <q-item-section side>
+            <q-btn flat no-caps color="primary" icon="network_check" label="测试" :loading="networkTestLoading" @click="testNetwork" />
           </q-item-section>
         </q-item>
       </q-list>
@@ -457,6 +484,8 @@ export default {
       loading: false,
       refreshTagsLoading: false,
       uncensorTagsLoading: false,
+      networkTestLoading: false,
+      networkResults: [],
       numericDefaults: Object.freeze({
         dlsiteTimeout: 10000,
         hvdbTimeout: 10000,
@@ -474,6 +503,11 @@ export default {
         { label: '繁', value: 'zh-tw' },
         { label: '日', value: 'ja-jp' },
         { label: 'Eng', value: 'en-us' },
+      ],
+      proxyModeOptions: [
+        { label: '直连', value: 'direct' },
+        { label: '环境变量', value: 'environment' },
+        { label: '手动代理', value: 'manual' },
       ],
     }
   },
@@ -498,6 +532,9 @@ export default {
       this.$axios.get('/api/config/admin')
         .then((response) => {
           this.config = response.data.config
+          if (!this.config.httpProxyMode) {
+            this.config.httpProxyMode = Number(this.config.httpProxyPort) > 0 ? 'manual' : 'direct'
+          }
           this.savedConfigSnapshot = JSON.stringify(this.config)
         })
         .catch((error) => {
@@ -510,6 +547,20 @@ export default {
             this.showErrNotif(error.message || error)
           }
         })
+    },
+
+    testNetwork () {
+      this.networkTestLoading = true
+      this.networkResults = []
+      this.$axios.post('/api/config/admin/network-test', { config: this.config })
+        .then((response) => {
+          this.networkResults = response.data.results || []
+          const successCount = this.networkResults.filter(item => item.ok).length
+          if (successCount === this.networkResults.length) this.showSuccNotif('联网测试全部通过')
+          else this.showWarnNotif(`联网测试通过 ${successCount}/${this.networkResults.length} 项`)
+        })
+        .catch((error) => this.showErrNotif((error.response && error.response.data.error) || error.message || error))
+        .finally(() => { this.networkTestLoading = false })
     },
 
     onSubmit () {

@@ -39,6 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.performScan = performScan;
 exports.performUpdate = performUpdate;
 exports.performWorkFileScan = performWorkFileScan;
+exports.performRetryFailed = performRetryFailed;
 exports.processFolder = processFolder;
 exports.classifyFolderResult = classifyFolderResult;
 exports.classifyCoverDownloadResults = classifyCoverDownloadResults;
@@ -156,6 +157,41 @@ const LOG = {
         }
     },
 };
+
+function currentTaskMessage(rjcode) {
+    const task = tasks.find(item => item.rjcode === rjcode);
+    if (!task || !task.logs.length)
+        return '处理失败';
+    const meaningfulLogs = task.logs.filter(log => !/添加失败!|处理失败!/.test(log.message));
+    const errorLog = [...meaningfulLogs].reverse().find(log => log.level === 'error' || log.level === 'warn');
+    return (errorLog || meaningfulLogs[meaningfulLogs.length - 1] || task.logs[task.logs.length - 1]).message;
+}
+
+function inferFailureStage(message) {
+    const text = String(message || '');
+    if (/封面|图片/.test(text))
+        return 'cover';
+    if (/数据库|添加元数据/.test(text))
+        return 'database';
+    if (/文件|目录|歌词|字幕/.test(text))
+        return 'filesystem';
+    return 'metadata';
+}
+
+async function persistFolderResult(folder, result) {
+    const identity = {
+        code: folder.code,
+        rootFolder: folder.rootFolderName,
+        relativeDir: folder.relativePath,
+    };
+    if (result === 'failed') {
+        const message = currentTaskMessage(folder.code);
+        await db.recordScanFailure({ ...identity, stage: inferFailureStage(message), message });
+    }
+    else {
+        await db.clearScanFailure(identity);
+    }
+}
 process.on('message', (m) => {
     if (m.emit === 'SCAN_INIT_STATE') {
         process.send?.({
@@ -520,7 +556,16 @@ async function tryProcessFolderListParallel(folderList) {
         counts.skipped += duplicateNum;
         const readyToBeProcessedFolderList = uniqueFolderList.concat(customCodeFolder);
         await Promise.all(readyToBeProcessedFolderList.map(async (folder) => {
-            const result = await processFolderLimited(folder);
+            let result;
+            try {
+                result = await processFolderLimited(folder);
+            }
+            catch (error) {
+                if (!tasks.some(task => task.rjcode === folder.code))
+                    LOG.task.add(folder.code);
+                LOG.task.error(folder.code, `处理目录时出错: ${error.message || error}`);
+                result = 'failed';
+            }
             counts[result] += 1;
             switch (result) {
                 case 'added':
@@ -534,6 +579,7 @@ async function tryProcessFolderListParallel(folderList) {
                     break;
                 default: break;
             }
+            await persistFolderResult(folder, result);
             LOG.task.remove(folder.code, result);
             if (result !== 'skipped')
                 LOG.result.add(folder.code, result, counts[result]);
@@ -569,6 +615,61 @@ async function performScan() {
     process.exit(0);
 }
 ;
+async function performRetryFailed() {
+    if (!fs_1.default.existsSync(config_1.config.coverFolderDir)) {
+        fs_1.default.mkdirSync(config_1.config.coverFolderDir, { recursive: true });
+    }
+    const failures = await db.getScanFailures();
+    const folderList = [];
+    const counts = { added: 0, failed: 0, skipped: 0, updated: 0 };
+    for (const failure of failures) {
+        const rootFolder = config_1.config.rootFolders.find(item => item.name === failure.root_folder);
+        if (!rootFolder) {
+            LOG.main.warn(`[${failure.code}] 找不到媒体根目录 ${failure.root_folder}，保留失败记录`);
+            counts.failed += 1;
+            continue;
+        }
+        const workId = idConverter.codeToIdNumber(failure.code);
+        const work = await db.knex('t_work')
+            .select('id', 'root_folder', 'dir', 'lyric_status', 'memo')
+            .where('id', workId)
+            .first();
+        if (work && failure.stage === 'metadata') {
+            const result = await updateMetadataLimited(workId, { refreshAll: true });
+            counts[result] += 1;
+            const identity = { code: failure.code, rootFolder: failure.root_folder, relativeDir: failure.relative_dir };
+            if (result === 'failed') {
+                await db.recordScanFailure({ ...identity, stage: 'metadata', message: currentTaskMessage(failure.code) });
+            }
+            else {
+                await db.clearScanFailure(identity);
+            }
+            LOG.task.remove(failure.code, result);
+            if (result !== 'skipped')
+                LOG.result.add(failure.code, result, counts[result]);
+            continue;
+        }
+        if (work && failure.stage === 'filesystem') {
+            const result = await scanWorkFileLimited(work, counts.updated + counts.failed, failures.length);
+            counts[result] += 1;
+            if (result !== 'skipped')
+                LOG.result.add(failure.code, result, counts[result]);
+            continue;
+        }
+        folderList.push({
+            code: failure.code,
+            rootFolderName: failure.root_folder,
+            relativePath: failure.relative_dir,
+            absolutePath: path_1.default.join(rootFolder.path, failure.relative_dir),
+        });
+    }
+    LOG.main.info(`准备重试 ${folderList.length} 个失败项.`);
+    const folderCounts = await tryProcessFolderListParallel(folderList);
+    Object.keys(counts).forEach(key => { counts[key] += folderCounts[key]; });
+    LOG.finish(`重试完成: 更新 ${counts.updated} 个，新增 ${counts.added} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`);
+    db.knex.destroy();
+    process.exit(counts.failed ? 1 : 0);
+}
 async function updateMetadata(id, options = {}) {
     let scrapeProcessor = () => {
         try {
@@ -614,7 +715,7 @@ async function updateVoiceActorLimited(id) {
     return limitP.call(updateMetadata, id, { includeVA: true });
 }
 async function performUpdate(options) {
-    const baseQuery = db.knex('t_work').select('id');
+    const baseQuery = db.knex('t_work').select('id', 'root_folder', 'dir');
     const processor = (id) => updateMetadataLimited(id, options);
     const counts = await refreshWorks(baseQuery, 'id', processor);
     const message = `扫描完成: 更新 ${counts.updated} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`;
@@ -644,6 +745,19 @@ async function refreshWorks(query, idColumnName, processor) {
         const rjcode = idConverter.idNumberToCode(workid);
         const result = await processor(workid);
         counts[result]++;
+        const storedWork = work.root_folder !== undefined
+            ? work
+            : await db.knex('t_work').select('root_folder', 'dir').where('id', workid).first();
+        if (storedWork) {
+            const identity = { code: rjcode, rootFolder: storedWork.root_folder, relativeDir: storedWork.dir };
+            if (result === 'failed') {
+                const message = currentTaskMessage(rjcode);
+                await db.recordScanFailure({ ...identity, stage: 'metadata', message });
+            }
+            else {
+                await db.clearScanFailure(identity);
+            }
+        }
         LOG.task.remove(rjcode, result);
         if (result !== 'skipped')
             LOG.result.add(rjcode, result, counts[result]);
@@ -668,11 +782,19 @@ async function scanWorkFile(work, index, total) {
             ? (0, utils_1.ensureIsJsonObject)(work.memo)
             : {}));
         await db.setWorkMemo(work.id, memo);
+        await db.clearScanFailure({ code: rjcode, rootFolder: work.root_folder, relativeDir: work.dir });
         return "updated";
     }
     catch (error) {
         LOG.main.error(`[${rjcode}] 扫描歌词过程中发生错误：${error}`);
         console.error(error.stack);
+        await db.recordScanFailure({
+            code: rjcode,
+            rootFolder: work.root_folder,
+            relativeDir: work.dir,
+            stage: 'filesystem',
+            message: error.message || String(error),
+        });
         return "failed";
     }
 }

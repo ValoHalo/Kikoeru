@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const router = express_1.default.Router();
 const config_1 = require("../config");
 const upgrade_1 = require("../upgrade");
-const axios_1 = __importDefault(require("axios"));
+const httpClient = require("../network/httpClient");
 const package_json_1 = __importDefault(require("../../package.json"));
 const VersionCheckCache_1 = require("../utils/VersionCheckCache");
 const versionComparison_1 = require("../utils/versionComparison");
@@ -20,8 +20,8 @@ async function fetchLatestVersions() {
     const urlLatestRelease = 'https://api.github.com/repos/ValoHalo/Kikoeru/releases';
     const requestOptions = { timeout: 10000 };
     const [responseStable, responseLatest] = await Promise.all([
-        axios_1.default.get(urlLatestStable, requestOptions),
-        axios_1.default.get(urlLatestRelease, requestOptions),
+        httpClient.get(urlLatestStable, requestOptions),
+        httpClient.get(urlLatestRelease, requestOptions),
     ]);
     if (!responseStable.data
         || !responseLatest.data

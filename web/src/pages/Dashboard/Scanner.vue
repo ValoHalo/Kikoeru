@@ -44,7 +44,55 @@
           @click="performWorkFileScan()"
         />
       </div>
+
+      <div class="col-xs-6 col-sm-4 row q-pa-sm">
+        <q-btn
+          class="col"
+          color="warning"
+          icon="replay"
+          label="只重试失败项"
+          :disable="state === 'running' || persistedFailures.length === 0 || !(loggedIn || socketConnected)"
+          @click="retryFailed()"
+        />
+      </div>
+
+      <div class="col-xs-6 col-sm-4 row q-pa-sm">
+        <q-btn
+          class="col"
+          outline
+          color="primary"
+          icon="network_check"
+          label="测试联网"
+          :loading="networkTesting"
+          :disable="state === 'running'"
+          @click="testNetwork()"
+        />
+      </div>
     </div>
+
+    <q-card v-if="persistedFailures.length" class="q-ma-md">
+      <q-card-section class="row items-center justify-between">
+        <div>
+          <div class="text-subtitle1">失败历史</div>
+          <div class="text-caption text-grey-7">服务器重启后仍会保留，共 {{ persistedFailures.length }} 项</div>
+        </div>
+        <q-btn flat round dense color="negative" icon="delete_sweep" aria-label="清除失败记录" :loading="failureLoading" @click="clearFailures">
+          <q-tooltip>清除全部失败记录</q-tooltip>
+        </q-btn>
+      </q-card-section>
+      <q-separator />
+      <q-list separator>
+        <q-expansion-item v-for="failure in persistedFailures" :key="failure.id" icon="error_outline" :label="failure.code" :caption="failure.message">
+          <q-item dense>
+            <q-item-section>
+              <q-item-label caption>阶段：{{ stageLabel(failure.stage) }}　尝试：{{ failure.attempts }} 次</q-item-label>
+              <q-item-label caption>目录：{{ failure.root_folder }}/{{ failure.relative_dir }}</q-item-label>
+              <q-item-label caption>最近失败：{{ failure.updated_at }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-expansion-item>
+      </q-list>
+    </q-card>
 
     <q-card v-show="state" class="q-ma-md">
       <q-expansion-item expand-separator>
@@ -188,7 +236,10 @@ export default {
       tasks: [], // 正在处理中的并行任务
       failedTasks: [], // 处理失败的任务
       mainLogs: [],
-      results: []
+      results: [],
+      persistedFailures: [],
+      failureLoading: false,
+      networkTesting: false
     }
   },
 
@@ -219,9 +270,11 @@ export default {
         level: 'info',
         message: payload.message
       })
+      this.loadFailures()
     },
     onScanError () {
       this.state = 'error'
+      this.loadFailures()
     },
     onSocketSuccess () {
       this.loggedIn = true
@@ -257,6 +310,55 @@ export default {
     performUpdate () {
       this.cleanRerun()
       this.$socket.emit('PERFORM_UPDATE')
+    },
+
+    retryFailed () {
+      this.cleanRerun()
+      this.$socket.emit('PERFORM_RETRY_FAILED')
+    },
+
+    async loadFailures () {
+      this.failureLoading = true
+      try {
+        const response = await this.$axios.get('/api/scan-failures')
+        this.persistedFailures = response.data.failures || []
+      } catch (error) {
+        this.showErrNotif((error.response && error.response.data.error) || error.message || error)
+      } finally {
+        this.failureLoading = false
+      }
+    },
+
+    async clearFailures () {
+      this.failureLoading = true
+      try {
+        const response = await this.$axios.delete('/api/scan-failures')
+        this.persistedFailures = []
+        this.showSuccNotif(response.data.message)
+      } catch (error) {
+        this.showErrNotif((error.response && error.response.data.error) || error.message || error)
+      } finally {
+        this.failureLoading = false
+      }
+    },
+
+    async testNetwork () {
+      this.networkTesting = true
+      try {
+        const response = await this.$axios.post('/api/config/admin/network-test')
+        const results = response.data.results || []
+        const passed = results.filter(item => item.ok).length
+        if (passed === results.length) this.showSuccNotif('联网测试全部通过')
+        else this.showWarnNotif(`联网测试通过 ${passed}/${results.length} 项`)
+      } catch (error) {
+        this.showErrNotif((error.response && error.response.data.error) || error.message || error)
+      } finally {
+        this.networkTesting = false
+      }
+    },
+
+    stageLabel (stage) {
+      return { metadata: '元数据', cover: '封面', filesystem: '文件系统', database: '数据库' }[stage] || stage
     },
 
     killScanProceess () {
@@ -305,6 +407,7 @@ export default {
     Object.entries(listeners).forEach(([event, listener]) => this.$socket.on(event, listener))
     this.socketConnected = this.$socket.connected
     this.$socket.emit('ON_SCANNER_PAGE')
+    this.loadFailures()
   },
 
   beforeUnmount () {

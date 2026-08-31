@@ -15,6 +15,8 @@ import Scanner from 'pages/Dashboard/Scanner.vue'
 import Advanced from 'pages/Dashboard/Advanced.vue'
 import DefaultPreferences from 'pages/Dashboard/DefaultPreferences.vue'
 import UserManage from 'pages/Dashboard/UserManage.vue'
+import Setup from 'pages/Dashboard/Setup.vue'
+import Update from 'pages/Dashboard/Update.vue'
 
 function prefixRoutes(prefix, routes) {
   return routes.map((route) => {
@@ -36,6 +38,10 @@ const routes = [
         component: Folders
       },
       {
+        path: 'setup',
+        component: Setup
+      },
+      {
         path: 'scanner',
         component: Scanner
       },
@@ -50,6 +56,10 @@ const routes = [
       {
         path: 'usermanage',
         component: UserManage
+      },
+      {
+        path: 'update',
+        component: Update
       }
     ]
   },
@@ -154,6 +164,11 @@ const routes = [
         {
           path: '/folder',
           props: { route: 'folder'},
+          component: Favourites,
+        },
+        {
+          path: '/archived',
+          props: { route: 'archived'},
           component: Favourites,
         },
         {

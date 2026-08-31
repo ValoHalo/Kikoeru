@@ -100,6 +100,11 @@ export default {
           title: '高级设置',
           icon: 'settings',
           path: '/admin/advanced'
+        },
+        {
+          title: '更新',
+          icon: 'system_update_alt',
+          path: '/admin/update'
         }
       ]
     }
@@ -116,7 +121,21 @@ export default {
     }
   },
 
+  watch: {
+    '$route.path' (path) {
+      if (path !== '/admin/setup') this.ensureSetupRoute()
+    }
+  },
+
   methods: {
+    async ensureSetupRoute () {
+      try {
+        const response = await this.$axios.get('/api/config/admin/setup-status')
+        if (!response.data.completed && this.$route.path !== '/admin/setup') {
+          await this.$router.replace('/admin/setup')
+        }
+      } catch (_) {}
+    },
     readSharedConfig () {
       this.$axios.get('/api/config/shared').then((response) => {
         const defaults = response.data.sharedConfig || {}
@@ -146,6 +165,7 @@ export default {
   created () {
     applyColorScheme(readColorScheme(), { persist: false })
     this.readSharedConfig()
+    this.ensureSetupRoute()
     this.$socket.on('success', this.onSocketSuccess)
     this.$socket.on('error', this.onSocketError)
     if (!this.$socket.connected) {

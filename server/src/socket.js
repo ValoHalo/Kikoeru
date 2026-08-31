@@ -12,6 +12,7 @@ const path_1 = __importDefault(require("path"));
 const socket_io_1 = __importDefault(require("socket.io"));
 const child_process_1 = __importDefault(require("child_process"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const runtimeState = require("./runtimeState");
 function initSocket(server) {
     const io = (0, socket_io_1.default)(server);
     if (config_1.config.auth) {
@@ -63,8 +64,10 @@ function initSocket(server) {
         socket.on('PERFORM_SCAN', () => {
             if (!scanner) {
                 scanner = child_process_1.default.fork(path_1.default.join(__dirname, './filesystem/scanner.js'), { silent: false });
+                runtimeState.scannerActive = true;
                 scanner.on('exit', (code) => {
                     scanner = null;
+                    runtimeState.scannerActive = false;
                     if (code) {
                         io.emit('SCAN_ERROR');
                     }
@@ -79,8 +82,10 @@ function initSocket(server) {
         socket.on('PERFORM_UPDATE', () => {
             if (!scanner) {
                 scanner = child_process_1.default.fork(path_1.default.join(__dirname, './filesystem/updater.js'), ['--refreshAll'], { silent: false });
+                runtimeState.scannerActive = true;
                 scanner.on('exit', (code) => {
                     scanner = null;
+                    runtimeState.scannerActive = false;
                     if (code) {
                         io.emit('SCAN_ERROR');
                     }
@@ -95,8 +100,28 @@ function initSocket(server) {
         socket.on('PERFORM_LYRIC_SCAN', () => {
             if (!scanner) {
                 scanner = child_process_1.default.fork(path_1.default.join(__dirname, './filesystem/workFileScanner.js'), { silent: false });
+                runtimeState.scannerActive = true;
                 scanner.on('exit', (code) => {
                     scanner = null;
+                    runtimeState.scannerActive = false;
+                    if (code) {
+                        io.emit('SCAN_ERROR');
+                    }
+                });
+                scanner.on('message', (m) => {
+                    if (m.event) {
+                        io.emit(m.event, m.payload);
+                    }
+                });
+            }
+        });
+        socket.on('PERFORM_RETRY_FAILED', () => {
+            if (!scanner) {
+                scanner = child_process_1.default.fork(path_1.default.join(__dirname, './filesystem/retryFailed.js'), { silent: false });
+                runtimeState.scannerActive = true;
+                scanner.on('exit', (code) => {
+                    scanner = null;
+                    runtimeState.scannerActive = false;
                     if (code) {
                         io.emit('SCAN_ERROR');
                     }

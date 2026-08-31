@@ -5,26 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.retryGet = retryGet;
 const axios_1 = __importDefault(require("axios"));
-const tunnel_agent_1 = require("tunnel-agent");
 const config_1 = require("../config");
-const axios = axios_1.default.create();
-const TUNNEL_OPTIONS = {
-    proxy: {
-        host: undefined,
-        port: config_1.config.httpProxyPort
-    }
-};
-if (config_1.config.httpProxyHost) {
-    TUNNEL_OPTIONS.proxy.host = config_1.config.httpProxyHost;
-}
-axios.interceptors.request.use(function (config) {
-    if (config_1.config.httpProxyPort) {
-        config.proxy = false;
-        config.httpAgent = (0, tunnel_agent_1.httpOverHttp)(TUNNEL_OPTIONS);
-        config.httpsAgent = (0, tunnel_agent_1.httpsOverHttp)(TUNNEL_OPTIONS);
-    }
-    return config;
-});
+const httpClient = require("../network/httpClient");
 async function retryGet(url, config) {
     let defaultLimit = config_1.config.retry || 5;
     let defaultRetryDelay = config_1.config.retryDelay || 2000;
@@ -45,11 +27,12 @@ async function retryGet(url, config) {
     const timeoutId = setTimeout(() => abort.cancel(`Timeout of ${config.retry.timeout}ms.`), config.retry.timeout);
     config.cancelToken = abort.token;
     try {
-        const response = await axios.get(url, config);
+        const response = await httpClient.get(url, config);
         clearTimeout(timeoutId);
         return response;
     }
     catch (error) {
+        clearTimeout(timeoutId);
         const backoff = new Promise((resolve) => {
             setTimeout(() => resolve(), config.retry.retryDelay);
         });

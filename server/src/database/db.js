@@ -15,6 +15,19 @@ exports.uncensorDlsiteTags = uncensorDlsiteTags;
 exports.checkDatabaseExists = checkDatabaseExists;
 exports.countQuery = countQuery;
 exports.fixDatabase = fixDatabase;
+
+function archivedWorkIds(username) {
+    return knex('t_work_user_state').select('work_id').where('user_name', username);
+}
+
+function archiveFilter(query, username, mode = 'exclude', column = 'staticMetadata.id') {
+    if (!username || mode === 'include')
+        return query;
+    if (mode === 'only')
+        return query.whereIn(column, archivedWorkIds(username));
+    return query.whereNotIn(column, archivedWorkIds(username));
+}
+exports.archiveFilter = archiveFilter;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const config_1 = require("../config");
@@ -339,10 +352,14 @@ const getWorkMetadata = async (id, username) => {
     ])
         .join('t_work', 't_work.id', 't_play_histroy.work_id')
         .where('t_play_histroy.user_name', "=", username).as('histroy');
+    const archiveQuery = knex('t_work_user_state')
+        .select(['work_id', 'archived_at'])
+        .where('user_name', username).as('archive_state');
     let query = () => knex('staticMetadata')
-        .select(['staticMetadata.*', 'userrate.userRating', 'userrate.review_text', 'userrate.progress', 'userrate.updated_at', 'userrate.user_name', 'histroy.state', 'histroy.play_updated_at'])
+        .select(['staticMetadata.*', 'userrate.userRating', 'userrate.review_text', 'userrate.progress', 'userrate.updated_at', 'userrate.user_name', 'histroy.state', 'histroy.play_updated_at', 'archive_state.archived_at'])
         .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
         .leftJoin(histroyQuery, 'histroy.work_id', 'staticMetadata.id')
+        .leftJoin(archiveQuery, 'archive_state.work_id', 'staticMetadata.id')
         .where('id', '=', id);
     const work = await query();
     if (work.length === 0)
@@ -442,22 +459,22 @@ const getWorksBy = (username, field, id) => {
         .where('t_review.user_name', username).as('userrate');
     switch (field) {
         case 'circle':
-            return knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
+            return archiveFilter(knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
                 .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-                .where('circle_id', '=', id);
+                .where('circle_id', '=', id), username);
         case 'tag':
             workIdQuery = knex('r_tag_work').select('work_id').where('tag_id', '=', id);
-            return knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
+            return archiveFilter(knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
                 .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-                .where('id', 'in', workIdQuery);
+                .where('id', 'in', workIdQuery), username);
         case 'va':
             workIdQuery = knex('r_va_work').select('work_id').where('va_id', '=', id);
-            return knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
+            return archiveFilter(knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
                 .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-                .where('id', 'in', workIdQuery);
+                .where('id', 'in', workIdQuery), username);
         default:
-            return knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
-                .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id');
+            return archiveFilter(knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
+                .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id'), username);
     }
 };
 exports.getWorksBy = getWorksBy;
@@ -527,7 +544,7 @@ function advanceSearch(conditions, username) {
     let query = knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
         .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id');
     const originalWorkIds = intersectQueryList.reduce((accQuery, idQuery) => accQuery.andWhere("id", "in", idQuery), knex('t_work').select('original_work_id'));
-    const relatedWorkIds = query.andWhere("original_work_id", "in", originalWorkIds);
+    const relatedWorkIds = archiveFilter(query.andWhere("original_work_id", "in", originalWorkIds), username);
     return relatedWorkIds;
 }
 const getWorksByKeyWord = (username = 'admin', keyword) => {
@@ -546,14 +563,16 @@ const getWorksByKeyWord = (username = 'admin', keyword) => {
         }
         else {
             const idNumber = parseInt(searchCode);
-            query = query.where('id', '=', idNumber);
-            idConverter_1.ID_TYPE_LIST.forEach((_, idTypeNumber) => {
-                if (idTypeNumber === 0)
-                    return;
-                query = query.orWhere('id', '=', idTypeNumber * idConverter_1.idSplitter + idNumber);
+            query = query.where((builder) => {
+                builder.where('id', '=', idNumber);
+                idConverter_1.ID_TYPE_LIST.forEach((_, idTypeNumber) => {
+                    if (idTypeNumber === 0)
+                        return;
+                    builder.orWhere('id', '=', idTypeNumber * idConverter_1.idSplitter + idNumber);
+                });
             });
         }
-        return query;
+        return archiveFilter(query, username);
     }
     const circleIdQuery = knex('t_circle').select('id').where('name', 'like', `%${keyword}%`);
     const tagIdQuery = knex('t_tag').select('id').where('name', 'like', `%${keyword}%`);
@@ -561,11 +580,13 @@ const getWorksByKeyWord = (username = 'admin', keyword) => {
     const workIdQuery = knex('r_tag_work').select('work_id').where('tag_id', 'in', tagIdQuery).union([
         knex('r_va_work').select('work_id').where('va_id', 'in', vaIdQuery)
     ]);
-    return knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
+    const query = knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
         .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
+        .where((builder) => builder
         .where('title', 'like', `%${keyword}%`)
         .orWhere('circle_id', 'in', circleIdQuery)
-        .orWhere('id', 'in', workIdQuery);
+        .orWhere('id', 'in', workIdQuery));
+    return archiveFilter(query, username);
 };
 exports.getWorksByKeyWord = getWorksByKeyWord;
 const getLabels = (field) => {
@@ -658,10 +679,10 @@ const getWorksWithReviews = async ({ username = '', limit = 1000, offset = 0, or
     if (orderBy == "updated_at") {
         orderBy = "review_updated_at";
     }
-    let query = () => knex('staticMetadata')
+    let query = () => archiveFilter(knex('staticMetadata')
         .select(['staticMetadata.*', 'userrate.userRating', 'userrate.review_text', 'userrate.progress', 'review_updated_at', 'userrate.user_name'])
         .join(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-        .orderBy(orderBy, sortOption).orderBy([{ column: 'release', order: 'desc' }, { column: 'id', order: 'desc' }]);
+        .orderBy(orderBy, sortOption).orderBy([{ column: 'release', order: 'desc' }, { column: 'id', order: 'desc' }]), username);
     if (filter) {
         totalCount = await countQuery(query().where('progress', '=', filter), 'id');
         works = await query().where('progress', '=', filter).limit(limit).offset(offset);
@@ -684,10 +705,10 @@ const getPlayHistroy = async ({ username = '', sortOption = 'desc', limit = 1000
     ])
         .join('t_work', 't_work.id', 't_play_histroy.work_id')
         .where('t_play_histroy.user_name', "=", username).as('histroy');
-    const query = () => knex('staticMetadata')
+    const query = () => archiveFilter(knex('staticMetadata')
         .select(['staticMetadata.*', 'histroy.state', 'histroy.play_updated_at'])
         .join(histroyQuery, 'histroy.work_id', 'staticMetadata.id')
-        .orderBy('play_updated_at', sortOption);
+        .orderBy('play_updated_at', sortOption), username);
     totalCount = await countQuery(query(), 'id');
     works = await query().limit(limit).offset(offset);
     return { works, totalCount };
@@ -804,6 +825,198 @@ async function reorderPlaylistItems(username, playlistId, itemIds) {
     });
 }
 exports.reorderPlaylistItems = reorderPlaylistItems;
+
+async function getScanFailures() {
+    return knex('t_scan_failure')
+        .select('*')
+        .orderBy('updated_at', 'desc')
+        .orderBy('id', 'desc');
+}
+exports.getScanFailures = getScanFailures;
+
+async function recordScanFailure({ code, rootFolder, relativeDir, stage = 'metadata', message }) {
+    return knex.transaction(async (trx) => {
+        const identity = {
+            code,
+            root_folder: rootFolder || '',
+            relative_dir: relativeDir || '',
+        };
+        const existing = await trx('t_scan_failure').select('id').where(identity).first();
+        if (existing) {
+            await trx('t_scan_failure').where('id', existing.id).update({
+                stage,
+                message: String(message || '处理失败'),
+                attempts: trx.raw('attempts + 1'),
+                updated_at: trx.fn.now(),
+            });
+            return existing.id;
+        }
+        const result = await trx('t_scan_failure').insert({
+            ...identity,
+            stage,
+            message: String(message || '处理失败'),
+        });
+        return typeof result[0] === 'object' ? result[0].id : result[0];
+    });
+}
+exports.recordScanFailure = recordScanFailure;
+
+async function clearScanFailure({ code, rootFolder, relativeDir }) {
+    return knex('t_scan_failure').where({
+        code,
+        root_folder: rootFolder || '',
+        relative_dir: relativeDir || '',
+    }).del();
+}
+exports.clearScanFailure = clearScanFailure;
+
+async function clearScanFailures() {
+    return knex('t_scan_failure').del();
+}
+exports.clearScanFailures = clearScanFailures;
+
+async function archiveWork(username, workId) {
+    return knex.transaction(async (trx) => {
+        const work = await trx('t_work').select('id').where('id', workId).first();
+        if (!work)
+            return false;
+        await trx('t_work_user_state').where({ user_name: username, work_id: workId }).del();
+        await trx('t_work_user_state').insert({ user_name: username, work_id: workId });
+        return true;
+    });
+}
+exports.archiveWork = archiveWork;
+
+async function unarchiveWork(username, workId) {
+    return knex('t_work_user_state').where({ user_name: username, work_id: workId }).del();
+}
+exports.unarchiveWork = unarchiveWork;
+
+async function getArchivedWorks(username, { limit = 1000, offset = 0 } = {}) {
+    const ratingSubQuery = knex('t_review')
+        .select(['work_id', 'rating AS userRating'])
+        .where('user_name', username).as('userrate');
+    const query = () => knex('staticMetadata')
+        .select(['staticMetadata.*', 'userrate.userRating', 'archive_state.archived_at'])
+        .join('t_work_user_state as archive_state', 'archive_state.work_id', 'staticMetadata.id')
+        .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
+        .where('archive_state.user_name', username)
+        .orderBy('archive_state.archived_at', 'desc');
+    const totalCount = await countQuery(query(), 'id');
+    const works = await query().limit(limit).offset(offset);
+    return { works, totalCount };
+}
+exports.getArchivedWorks = getArchivedWorks;
+
+async function getWorkCollections(username) {
+    return knex('t_work_collection')
+        .leftJoin('t_work_collection_item', 't_work_collection.id', 't_work_collection_item.collection_id')
+        .where('t_work_collection.user_name', username)
+        .groupBy('t_work_collection.id', 't_work_collection.user_name', 't_work_collection.name', 't_work_collection.created_at', 't_work_collection.updated_at')
+        .select('t_work_collection.id', 't_work_collection.name', 't_work_collection.created_at', 't_work_collection.updated_at')
+        .count('t_work_collection_item.id as item_count')
+        .orderBy('t_work_collection.updated_at', 'desc');
+}
+exports.getWorkCollections = getWorkCollections;
+
+async function getWorkCollection(username, collectionId) {
+    const collection = await knex('t_work_collection')
+        .select('id', 'name', 'created_at', 'updated_at')
+        .where({ id: collectionId, user_name: username })
+        .first();
+    if (!collection)
+        return null;
+    const items = await knex('t_work_collection_item as collection_item')
+        .select(['collection_item.id as collection_item_id', 'collection_item.position', 'collection_item.created_at as collection_item_created_at', 'staticMetadata.*', 'archive_state.archived_at'])
+        .join('staticMetadata', 'staticMetadata.id', 'collection_item.work_id')
+        .leftJoin('t_work_user_state as archive_state', function () {
+        this.on('archive_state.work_id', '=', 'staticMetadata.id')
+            .andOn('archive_state.user_name', '=', knex.raw('?', [username]));
+    })
+        .where('collection_item.collection_id', collectionId)
+        .orderBy('collection_item.position', 'asc')
+        .orderBy('collection_item.id', 'asc');
+    return { collection, items };
+}
+exports.getWorkCollection = getWorkCollection;
+
+async function createWorkCollection(username, name) {
+    const result = await knex('t_work_collection').insert({ user_name: username, name });
+    return typeof result[0] === 'object' ? result[0].id : result[0];
+}
+exports.createWorkCollection = createWorkCollection;
+
+async function renameWorkCollection(username, collectionId, name) {
+    return knex('t_work_collection')
+        .where({ id: collectionId, user_name: username })
+        .update({ name, updated_at: knex.fn.now() });
+}
+exports.renameWorkCollection = renameWorkCollection;
+
+async function deleteWorkCollection(username, collectionId) {
+    return knex('t_work_collection').where({ id: collectionId, user_name: username }).del();
+}
+exports.deleteWorkCollection = deleteWorkCollection;
+
+async function addWorkCollectionItems(username, collectionId, workIds) {
+    return knex.transaction(async (trx) => {
+        const collection = await trx('t_work_collection').select('id').where({ id: collectionId, user_name: username }).first();
+        if (!collection)
+            return null;
+        const validRows = await trx('t_work').select('id').whereIn('id', workIds);
+        const validIdSet = new Set(validRows.map(row => Number(row.id)));
+        const validIds = [...new Set(workIds.map(Number))].filter(id => validIdSet.has(id));
+        const existingRows = validIds.length
+            ? await trx('t_work_collection_item').select('work_id').where('collection_id', collectionId).whereIn('work_id', validIds)
+            : [];
+        const existingIds = new Set(existingRows.map(row => Number(row.work_id)));
+        const newIds = validIds.filter(id => !existingIds.has(id));
+        const lastItem = await trx('t_work_collection_item').where('collection_id', collectionId).max('position as position').first();
+        const startPosition = lastItem && lastItem.position !== null ? Number(lastItem.position) + 1 : 0;
+        if (newIds.length) {
+            await trx('t_work_collection_item').insert(newIds.map((workId, index) => ({
+                collection_id: collectionId,
+                work_id: workId,
+                position: startPosition + index,
+            })));
+            await trx('t_work_collection').where('id', collectionId).update({ updated_at: trx.fn.now() });
+        }
+        return newIds.length;
+    });
+}
+exports.addWorkCollectionItems = addWorkCollectionItems;
+
+async function removeWorkCollectionItem(username, collectionId, workId) {
+    return knex.transaction(async (trx) => {
+        const collection = await trx('t_work_collection').select('id').where({ id: collectionId, user_name: username }).first();
+        if (!collection)
+            return null;
+        const deleted = await trx('t_work_collection_item').where({ collection_id: collectionId, work_id: workId }).del();
+        if (deleted)
+            await trx('t_work_collection').where('id', collectionId).update({ updated_at: trx.fn.now() });
+        return deleted;
+    });
+}
+exports.removeWorkCollectionItem = removeWorkCollectionItem;
+
+async function reorderWorkCollectionItems(username, collectionId, workIds) {
+    return knex.transaction(async (trx) => {
+        const collection = await trx('t_work_collection').select('id').where({ id: collectionId, user_name: username }).first();
+        if (!collection)
+            return false;
+        const rows = await trx('t_work_collection_item').select('work_id').where('collection_id', collectionId);
+        const existingIds = rows.map(row => Number(row.work_id)).sort((a, b) => a - b);
+        const requestedIds = workIds.map(Number).sort((a, b) => a - b);
+        if (existingIds.length !== requestedIds.length || existingIds.some((id, index) => id !== requestedIds[index]))
+            return false;
+        for (let position = 0; position < workIds.length; position++) {
+            await trx('t_work_collection_item').where({ collection_id: collectionId, work_id: workIds[position] }).update({ position });
+        }
+        await trx('t_work_collection').where('id', collectionId).update({ updated_at: trx.fn.now() });
+        return true;
+    });
+}
+exports.reorderWorkCollectionItems = reorderWorkCollectionItems;
 const getMetadata = ({ field = 'circle', id } = {}) => {
     const validFields = ['circle', 'tag', 'va'];
     if (!validFields.includes(field))

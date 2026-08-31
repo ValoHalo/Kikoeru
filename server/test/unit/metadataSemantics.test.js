@@ -32,6 +32,8 @@ test.before(async () => {
         })
         .createTable("t_work", table => {
             table.bigInteger("id").primary();
+            table.string("root_folder").notNullable().defaultTo("VoiceWork");
+            table.string("dir").notNullable().defaultTo("");
             table.string("title");
             table.integer("circle_id");
             table.integer("is_custom_meta").defaultTo(0);
@@ -51,6 +53,16 @@ test.before(async () => {
         .createTable("r_va_work", table => {
             table.string("va_id");
             table.bigInteger("work_id");
+        })
+        .createTable("t_scan_failure", table => {
+            table.increments("id");
+            table.string("code", 16).notNullable();
+            table.string("root_folder").notNullable();
+            table.string("relative_dir", 1024).notNullable();
+            table.string("stage", 32).notNullable().defaultTo("metadata");
+            table.text("message").notNullable();
+            table.integer("attempts").unsigned().notNullable().defaultTo(1);
+            table.timestamps(true, true);
         });
     await db.knex("t_circle").insert([
         { id: 1, name: "Original circle" },

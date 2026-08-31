@@ -185,7 +185,7 @@
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
             :style="{ '--sim-hover-work-card': work.id === touchedWorkId ? '1' : '0'}"
           >
-            <WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit"/>
+            <WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/>
           </div>
         </div>
 
@@ -195,7 +195,7 @@
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
             style="--sim-hover-work-card: 0"
           >
-            <WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit"/>
+            <WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/>
           </div>
         </div>
 

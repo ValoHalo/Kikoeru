@@ -1,5 +1,6 @@
 <template>
   <q-card class="card hover-show">
+    <LibraryActions class="work-card-actions" :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('library-changed')" />
     <router-link :to="`/work/${metadata.id}`">
       <CoverSFW :workid="metadata.id" :nsfw="false" :release="metadata.release" :lyric_status="metadata.lyric_status" :tags="metadata.tags" />
     </router-link>
@@ -102,6 +103,7 @@
 
 <script>
 import CoverSFW from 'components/CoverSFW.vue'
+import LibraryActions from 'components/LibraryActions.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { idNumberToCode } from 'src/utils'
 
@@ -111,7 +113,8 @@ export default {
   mixins: [NotifyMixin],
 
   components: {
-    CoverSFW
+    CoverSFW,
+    LibraryActions
   },
 
   props: {
@@ -198,9 +201,19 @@ export default {
 
 <style scoped>
 .card {
+  position: relative;
   overflow: hidden;
   border-radius: 8px;
   box-shadow: 0 0px 8px rgba(0, 0, 0, 0.4);
+}
+
+.work-card-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .9);
 }
 
 .horize-scroll-va-list {
