@@ -1,5 +1,23 @@
 import { COLOR_SCHEMES } from './colorScheme'
-import { PLAYBACK_RATES, TRANSCODE_OPTIONS, WORK_LIST_MODES } from './store/module-AudioPlayer/state'
+import { PLAYBACK_RATES, SUBTITLE_LANGUAGES, TRANSCODE_OPTIONS, WORK_LIST_MODES } from './store/module-AudioPlayer/state'
+
+const subtitleLanguageLabels = {
+  auto: '自动匹配',
+  zh: '中文',
+  ja: '日语',
+  en: '英语',
+  ko: '韩语',
+  und: '未知语言',
+}
+
+export function subtitleLanguageLabel (value) {
+  return subtitleLanguageLabels[value] || subtitleLanguageLabels.und
+}
+
+export const subtitleLanguageOptions = SUBTITLE_LANGUAGES.map(value => ({
+  label: subtitleLanguageLabel(value),
+  value,
+}))
 
 export const colorSchemeOptions = [
   { label: '浅色', icon: 'light_mode', value: COLOR_SCHEMES.LIGHT },

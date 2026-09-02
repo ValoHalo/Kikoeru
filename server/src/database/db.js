@@ -117,6 +117,7 @@ const insertWorkMetadata = (work) => knex.transaction(trx => trx.raw(trx('t_circ
     rank: work.rank ? JSON.stringify(work.rank) : null,
     lyric_status: work.lyric_status,
     original_work_id: work.original_work_id,
+    ...(work.createdAt ? { created_at: work.createdAt } : {}),
 }))
     .then(() => {
     const promises = [];

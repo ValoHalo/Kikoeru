@@ -25,6 +25,7 @@ exports.isWorkFolderName = isWorkFolderName;
 exports.matchWorkCode = matchWorkCode;
 exports.tryMatchWorkCodeFromTopPath = tryMatchWorkCodeFromTopPath;
 exports.getWorkActualPath = getWorkActualPath;
+exports.sortFoldersByCreatedTime = sortFoldersByCreatedTime;
 const fs_1 = __importDefault(require("fs"));
 const fsPromises = fs_1.default.promises;
 const path_1 = __importDefault(require("path"));
@@ -403,13 +404,15 @@ async function* getFolderList(rootFolder, current = '', depth = 0, logger = cons
         const absolutePath = path_1.default.resolve(rootFolder.path, current, folder);
         const relativePath = path_1.default.join(current, folder);
         try {
-            if ((await fs_1.default.promises.stat(absolutePath)).isDirectory()) {
+            const stat = await fs_1.default.promises.stat(absolutePath);
+            if (stat.isDirectory()) {
                 if (isWorkFolderName(folder)) {
                     yield {
                         absolutePath,
                         relativePath,
                         rootFolderName: rootFolder.name,
-                        code: tryNormalizeCode(matchWorkCode(folder).toUpperCase())
+                        code: tryNormalizeCode(matchWorkCode(folder).toUpperCase()),
+                        createdAtMs: Number(stat.birthtimeMs) > 0 ? Number(stat.birthtimeMs) : Number(stat.ctimeMs),
                     };
                 }
                 else if (depth + 1 < config_1.config.scannerMaxRecursionDepth) {
@@ -428,6 +431,15 @@ async function* getFolderList(rootFolder, current = '', depth = 0, logger = cons
             }
         }
     }
+}
+function sortFoldersByCreatedTime(folders) {
+    return folders.slice().sort((left, right) => {
+        const leftTime = Number.isFinite(left.createdAtMs) ? left.createdAtMs : Number.MAX_SAFE_INTEGER;
+        const rightTime = Number.isFinite(right.createdAtMs) ? right.createdAtMs : Number.MAX_SAFE_INTEGER;
+        if (leftTime !== rightTime)
+            return leftTime - rightTime;
+        return String(left.absolutePath || left.relativePath || '').localeCompare(String(right.absolutePath || right.relativePath || ''));
+    });
 }
 function deleteCoverImageFromDisk(rjcode) {
     const types = ['main', 'sam', '240x240', '360x360'];

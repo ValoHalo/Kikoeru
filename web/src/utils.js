@@ -105,8 +105,8 @@ export function extname(string) {
 
 
 export const ServerApi = {
-  async queryLyric(trackHash) {
-    const response = await axios.get(`/api/media/query-lrc/${trackHash}`)
+  async queryLyric(trackHash, language = 'auto') {
+    const response = await axios.get(`/api/media/query-lrc/${trackHash}`, { params: { language } })
     return response.data.lyricList
   },
 

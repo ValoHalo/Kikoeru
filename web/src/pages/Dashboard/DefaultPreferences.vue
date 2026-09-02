@@ -114,6 +114,12 @@
             <q-item-section><q-item-label>睡眠定时方式</q-item-label><q-item-label caption>选择分钟倒计时或指定停止时刻。</q-item-label></q-item-section>
             <q-item-section side class="settings-control settings-control--wide"><q-btn-toggle v-model="config.oldSleepTimerUIStyle" dense unelevated no-caps toggle-color="primary" :options="sleepTimerOptions" /></q-item-section>
           </q-item>
+          <q-item class="settings-row">
+            <q-item-section><q-item-label>默认字幕语言</q-item-label><q-item-label caption>新设备自动加载本地字幕时优先使用的语言。</q-item-label></q-item-section>
+            <q-item-section side class="settings-control settings-control--select">
+              <q-select v-model="config.defaultSubtitleLanguage" :options="subtitleLanguageOptions" emit-value map-options dense outlined options-dense />
+            </q-item-section>
+          </q-item>
           <q-item tag="label" class="settings-row">
             <q-item-section><q-item-label>底栏显示快进与后退</q-item-label><q-item-label caption>用跳跃按钮替换上一曲和下一曲按钮。</q-item-label></q-item-section>
             <q-item-section side class="settings-control"><q-toggle v-model="config.swapSeekButton" color="primary" /></q-item-section>
@@ -172,7 +178,7 @@
 
 <script>
 import NotifyMixin from '../../mixins/Notification.js'
-import { colorSchemeOptions, seekOptions, sleepTimerOptions, transcodeOptions, workListModeOptions } from '../../preferenceOptions'
+import { colorSchemeOptions, seekOptions, sleepTimerOptions, subtitleLanguageOptions, transcodeOptions, workListModeOptions } from '../../preferenceOptions'
 import { TRANSCODE_FILE_TYPES } from '../../store/module-AudioPlayer/state'
 import { DEFAULT_ACCENT_COLOR, normalizeAccentColor } from '../../themeColor'
 import SmartPathSettings from '../../components/SmartPathSettings.vue'
@@ -194,6 +200,7 @@ export default {
       workListModeOptions,
       seekOptions,
       sleepTimerOptions,
+      subtitleLanguageOptions,
       transcodeOptions,
       transcodeFileTypes: TRANSCODE_FILE_TYPES,
     }
@@ -290,6 +297,7 @@ export default {
 .settings-list .q-item__section--side { padding-left: 24px; }
 .settings-control--types { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px; }
 .settings-control--color { width: 246px; align-items: stretch; }
+.settings-control--select { width: 180px; align-items: stretch; }
 .accent-color-control { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: center; gap: 8px; }
 .accent-color-picker-button { width: 34px; height: 34px; min-height: 34px !important; border-radius: 5px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff !important; }
 .accent-color-picker-button :deep(.q-icon) { font-size: 18px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .46)); }
@@ -323,6 +331,7 @@ export default {
   .settings-list .q-item__section--side { width: 100%; min-width: 0; align-items: flex-start; padding-left: 0; }
   .settings-list .settings-control--types { align-items: center; justify-content: flex-start; }
   .settings-control--color { flex-basis: 100%; width: 100%; max-width: 100%; align-items: stretch; }
+  .settings-control--select { width: 100%; align-items: stretch; }
   .settings-control--wide .q-btn-toggle { width: 100%; }
   .settings-control--wide :deep(.q-btn) { min-width: 0; flex: 1 1 auto; }
   .settings-actions.admin-page-actions { left: auto; }

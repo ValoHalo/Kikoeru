@@ -154,6 +154,7 @@
               </q-item-section>
               <q-item-section side>
                 <div class="row items-center q-gutter-xs">
+                  <q-chip dense color="primary" text-color="white">{{ subtitleLanguageLabel(option.language) }}</q-chip>
                   <q-chip dense outline color="grey-7">匹配 {{ formatMatchLevel(option.matchLevel) }}</q-chip>
                 </div>
               </q-item-section>
@@ -199,6 +200,7 @@
 import { mapGetters, mapMutations, mapState } from 'vuex'
 import { formatSeconds, ServerApi } from 'src/utils'
 import NotifyMixin from '../mixins/Notification.js'
+import { subtitleLanguageLabel } from '../preferenceOptions'
 
 export default {
   name: 'LyricSelection',
@@ -227,6 +229,7 @@ export default {
       'hasLyric',
       'lyricLines',
       'playWorkId',
+      'defaultSubtitleLanguage',
     ]),
 
     ...mapGetters('AudioPlayer', [
@@ -260,6 +263,7 @@ export default {
 
   methods: {
     formatSeconds,
+    subtitleLanguageLabel,
 
     ...mapMutations('AudioPlayer', [
       'SET_CURRENT_LYRIC',
@@ -406,14 +410,8 @@ export default {
     async fetchOtherLyricFiles () {
       this.loadingOptions = true
       try {
-        const options = await ServerApi.queryLyric(this.currentPlayingFile.hash)
-        this.lyricOptionList = options.slice().sort((left, right) => {
-          const leftLevel = Number(left.matchLevel)
-          const rightLevel = Number(right.matchLevel)
-          const leftRank = leftLevel < 0 ? Number.POSITIVE_INFINITY : leftLevel
-          const rightRank = rightLevel < 0 ? Number.POSITIVE_INFINITY : rightLevel
-          return leftRank - rightRank
-        })
+        const options = await ServerApi.queryLyric(this.currentPlayingFile.hash, this.defaultSubtitleLanguage)
+        this.lyricOptionList = options.slice()
         this.openLyricFileSelection = true
       } catch (error) {
         this.showErrNotif(this.errorMessage(error))

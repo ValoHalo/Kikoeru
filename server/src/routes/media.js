@@ -49,12 +49,36 @@ const url_1 = require("./utils/url");
 const validate_1 = require("./utils/validate");
 const iconv_lite_1 = __importDefault(require("iconv-lite"));
 const lyricParser_1 = require("../filesystem/lyricParser");
+const subtitleLanguage_1 = require("../filesystem/subtitleLanguage");
 const audioProcessor = __importStar(require("../filesystem/audioProcessor"));
 const PersistentCache_1 = require("../utils/PersistentCache");
 const TaskQueue_1 = require("../utils/TaskQueue");
 const pathSafety_1 = require("../filesystem/pathSafety");
 const accessControl_1 = require("../auth/accessControl");
 const supportedLyricExtensions = [".lrc", ".srt", ".vtt"];
+async function addSubtitleLanguages(lyricTracks, rootFolder, workDir) {
+    return Promise.all(lyricTracks.map(async (lyricTrack) => {
+        const fileName = path_1.default.join(rootFolder.path, workDir, lyricTrack.subtitle || '', lyricTrack.title);
+        try {
+            return Object.assign({ language: (0, subtitleLanguage_1.detectSubtitleFileLanguage)(fileName) }, lyricTrack);
+        }
+        catch (error) {
+            console.warn(`[subtitle-language] 无法识别 ${fileName}: ${error.message || error}`);
+            return Object.assign({ language: 'und' }, lyricTrack);
+        }
+    }));
+}
+function compareLyricTracks(left, right, preferredLanguage) {
+    const leftLevel = Number(left.matchLevel);
+    const rightLevel = Number(right.matchLevel);
+    const leftRank = leftLevel < 0 ? Number.POSITIVE_INFINITY : leftLevel;
+    const rightRank = rightLevel < 0 ? Number.POSITIVE_INFINITY : rightLevel;
+    if (leftRank !== rightRank)
+        return leftRank - rightRank;
+    const leftPreferred = (0, subtitleLanguage_1.isPreferredSubtitleLanguage)(left.language, preferredLanguage);
+    const rightPreferred = (0, subtitleLanguage_1.isPreferredSubtitleLanguage)(right.language, preferredLanguage);
+    return Number(rightPreferred) - Number(leftPreferred);
+}
 const supportedTranscodeBitRates = new Set([128, 320]);
 const defaultTranscodeBitRate = 128;
 const transcodeFailedStatusTtlMs = 60 * 1000;
@@ -178,21 +202,22 @@ router.get('/query-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
         console.log("[find-lrc] tracks: ", lyricTracks);
         const fileBasename = path_1.default.parse(track.title).name;
         console.log("[find-lrc] fileBasename: ", fileBasename, track.title);
-        const matchedTracks = lyricTracks.map((lrcTrack) => {
+        const matchedTracks = await addSubtitleLanguages(lyricTracks.map((lrcTrack) => {
             let lyricName = lrcTrack.title;
             lyricName = path_1.default.parse(lyricName).name;
             const p = path_1.default.parse(lyricName);
             if (utils_1.supportedMediaExtList.includes(p.ext.toLowerCase())) {
                 lyricName = p.name;
             }
+            lyricName = (0, subtitleLanguage_1.stripSubtitleLanguageSuffix)(lyricName);
             let matchLevel = (0, utils_1.audioLyricMatchLevel)(fileBasename, lyricName);
             console.log("[find-lrc] ", fileBasename, lyricName, matchLevel);
             if (lrcTrack.subtitle != track.subtitle) {
                 matchLevel += 0.5;
             }
             return Object.assign({ matchLevel }, lrcTrack);
-        });
-        matchedTracks.sort((la, lb) => la.matchLevel - lb.matchLevel);
+        }), rootFolder, work.dir);
+        matchedTracks.sort((left, right) => compareLyricTracks(left, right, req.query.language));
         console.log("[find-lrc] matchedTracks: ", matchedTracks);
         res.send({
             result: true,
@@ -242,6 +267,7 @@ router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id').isInt(),
             message: '找到歌词文件',
             hash,
             lyricExtension: extension,
+            language: (0, subtitleLanguage_1.detectSubtitleLanguage)(fileContent, track.title),
             lrc: lrc,
         });
     }
@@ -334,22 +360,23 @@ router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
         console.log("[find-lrc] tracks: ", lyricTracks);
         const fileBasename = path_1.default.parse(track.title).name;
         console.log("[find-lrc] fileBasename: ", fileBasename, track.title);
-        const matchedTracks = lyricTracks.map((lrcTrack) => {
+        const matchedTracks = (await addSubtitleLanguages(lyricTracks.map((lrcTrack) => {
             let lyricName = lrcTrack.title;
             lyricName = path_1.default.parse(lyricName).name;
             const p = path_1.default.parse(lyricName);
             if (utils_1.supportedMediaExtList.includes(p.ext.toLowerCase())) {
                 lyricName = p.name;
             }
+            lyricName = (0, subtitleLanguage_1.stripSubtitleLanguageSuffix)(lyricName);
             let matchLevel = (0, utils_1.audioLyricMatchLevel)(fileBasename, lyricName);
             console.log("[find-lrc] ", fileBasename, lyricName, matchLevel);
             if (lrcTrack.subtitle != track.subtitle) {
                 matchLevel += 0.5;
             }
             return Object.assign({ matchLevel }, lrcTrack);
-        })
+        }), rootFolder, work.dir))
             .filter((lrcTrack) => lrcTrack.matchLevel >= 0);
-        matchedTracks.sort((la, lb) => la.matchLevel - lb.matchLevel);
+        matchedTracks.sort((left, right) => compareLyricTracks(left, right, req.query.language));
         console.log("[find-lrc] matchedTracks: ", matchedTracks);
         if (matchedTracks.length == 0) {
             res.send({ result: false, message: '不存在歌词文件', hash: '' });
@@ -377,6 +404,7 @@ router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
             message: '找到歌词文件',
             hash: bestLrcTrack.hash,
             lyricExtension: path_1.default.extname(bestLrcTrack.title).toLowerCase(),
+            language: bestLrcTrack.language,
             lrc: lrc,
         });
     }

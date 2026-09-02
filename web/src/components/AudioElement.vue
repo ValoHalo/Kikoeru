@@ -211,6 +211,7 @@ export default {
       'lyricLines',
       'transcodeOption',
       'transcodeFromTypes',
+      'defaultSubtitleLanguage',
     ]),
 
     ...mapGetters('AudioPlayer', [
@@ -553,7 +554,7 @@ export default {
 
       try {
         // 首先向服务器查询是否有歌词
-        const check_response = await this.$axios.get(url)
+        const check_response = await this.$axios.get(url, { params: { language: this.defaultSubtitleLanguage } })
         if (!check_response.data.result) {
           this.resetToNoLyricStatus()
           return;

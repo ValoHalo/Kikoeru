@@ -18,6 +18,7 @@ export const SMART_PATH_AUDIO_TYPES_KEY = 'smart_path_audio_types_key'
 export const VOLUME_KEY = 'volume'
 export const PLAYBACK_RATE_KEY = 'playback_rate'
 export const RESTORE_LAST_QUEUE_KEY = 'restore_last_queue'
+export const DEFAULT_SUBTITLE_LANGUAGE_KEY = 'default_subtitle_language'
 
 export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2]
 export const PLAY_MODES = [
@@ -41,6 +42,11 @@ export const TRANSCODE_OPTIONS = {
 export const TRANSCODE_FILE_TYPES = ['wav', 'flac', 'avi', 'mp4']
 export const SMART_PATH_AUDIO_TYPES = ['mp3', 'flac', 'wav', 'opus', 'm4a', 'aac']
 export const DEFAULT_SMART_PATH_AUDIO_TYPES = SMART_PATH_AUDIO_TYPES.join(',')
+export const SUBTITLE_LANGUAGES = ['auto', 'zh', 'ja', 'en', 'ko']
+
+export function normalizeSubtitleLanguage (value) {
+  return SUBTITLE_LANGUAGES.includes(value) ? value : 'auto'
+}
 
 export function normalizeSmartPathAudioTypes (value) {
   const values = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : []
@@ -120,6 +126,7 @@ export default function () {
     volume: loadVolume(), // 音量 (0.0-1.0)
     playbackRate: normalizePlaybackRate(LocalStorage.has(PLAYBACK_RATE_KEY) ? LocalStorage.getItem(PLAYBACK_RATE_KEY) : 1),
     restoreLastQueue: !LocalStorage.has(RESTORE_LAST_QUEUE_KEY) || Boolean(LocalStorage.getItem(RESTORE_LAST_QUEUE_KEY)),
+    defaultSubtitleLanguage: normalizeSubtitleLanguage(LocalStorage.has(DEFAULT_SUBTITLE_LANGUAGE_KEY) ? LocalStorage.getItem(DEFAULT_SUBTITLE_LANGUAGE_KEY) : 'auto'),
     hasLyric: false,
     currentLyric: '',
     currentLyricLineNumber: 0,

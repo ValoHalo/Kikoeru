@@ -19,11 +19,13 @@ import state, {
   VOLUME_KEY,
   PLAYBACK_RATE_KEY,
   RESTORE_LAST_QUEUE_KEY,
+  DEFAULT_SUBTITLE_LANGUAGE_KEY,
   PLAY_MODES,
   TRANSCODE_OPTIONS,
   TRANSCODE_FILE_TYPES,
   WORK_LIST_MODES,
   normalizePlaybackRate,
+  normalizeSubtitleLanguage,
   normalizeSmartPathAudioTypes,
 } from './state'
 
@@ -61,6 +63,7 @@ const mutations = {
     assignWhenUnset(REWIND_SEEK_TIME_KEY, 'rewindSeekTime', value => [5, 10, 30].includes(Number(value)) ? Number(value) : 5)
     assignWhenUnset(FORWARD_SEEK_TIME_KEY, 'forwardSeekTime', value => [5, 10, 30].includes(Number(value)) ? Number(value) : 30)
     assignWhenUnset(PLAYBACK_RATE_KEY, 'playbackRate', normalizePlaybackRate)
+    assignWhenUnset(DEFAULT_SUBTITLE_LANGUAGE_KEY, 'defaultSubtitleLanguage', normalizeSubtitleLanguage)
     assignWhenUnset(SWAP_SEEK_BUTTON_KEY, 'swapSeekButton', booleanValue)
     assignWhenUnset(ENABLE_VISUALIZER_KEY, 'enableVisualizer', booleanValue)
     assignWhenUnset(ENABLE_VIDEO_SOURCE_KEY, 'enableVideoSource', booleanValue)
@@ -220,6 +223,10 @@ const mutations = {
   SET_RESTORE_LAST_QUEUE: (state, value) => {
     state.restoreLastQueue = Boolean(value)
     LocalStorage.set(RESTORE_LAST_QUEUE_KEY, state.restoreLastQueue)
+  },
+  SET_DEFAULT_SUBTITLE_LANGUAGE: (state, value) => {
+    state.defaultSubtitleLanguage = normalizeSubtitleLanguage(value)
+    LocalStorage.set(DEFAULT_SUBTITLE_LANGUAGE_KEY, state.defaultSubtitleLanguage)
   },
   SET_REWIND_SEEK_TIME: (state, value) => {
     const normalized = [5, 10, 30].includes(Number(value)) ? Number(value) : 5

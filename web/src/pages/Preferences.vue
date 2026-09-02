@@ -160,6 +160,16 @@
           <q-item-section side class="preference-control preference-control--wide"><q-btn-toggle v-model="playbackRate" dense unelevated no-caps toggle-color="primary" :options="playbackRateOptions" /></q-item-section>
         </q-item>
 
+        <q-item class="preference-row">
+          <q-item-section>
+            <q-item-label>默认字幕语言</q-item-label>
+            <q-item-label caption>自动加载时优先选择识别为该语言的本地字幕。</q-item-label>
+          </q-item-section>
+          <q-item-section side class="preference-control preference-control--select">
+            <q-select v-model="defaultSubtitleLanguage" :options="subtitleLanguageOptions" emit-value map-options dense outlined options-dense />
+          </q-item-section>
+        </q-item>
+
         <q-item tag="label" class="preference-row">
           <q-item-section>
             <q-item-label>启动时恢复上次队列</q-item-label>
@@ -228,7 +238,7 @@
 <script>
 import { mapState, mapMutations } from 'vuex'
 import { applyColorScheme, COLOR_SCHEMES, COLOR_SCHEME_EVENT, readColorScheme } from '../colorScheme'
-import { colorSchemeOptions, playbackRateOptions, seekOptions, sleepTimerOptions, transcodeOptions, workListModeOptions } from '../preferenceOptions'
+import { colorSchemeOptions, playbackRateOptions, seekOptions, sleepTimerOptions, subtitleLanguageOptions, transcodeOptions, workListModeOptions } from '../preferenceOptions'
 import { TRANSCODE_FILE_TYPES } from '../store/module-AudioPlayer/state'
 import { ACCENT_COLOR_EVENT, applyAccentColor, DEFAULT_ACCENT_COLOR, normalizeAccentColor, readAccentColor } from '../themeColor'
 import SmartPathSettings from '../components/SmartPathSettings.vue'
@@ -249,6 +259,7 @@ export default {
       seekOptions,
       playbackRateOptions,
       sleepTimerOptions,
+      subtitleLanguageOptions,
       transcodeOptions,
       transcodeFileTypes: TRANSCODE_FILE_TYPES,
     }
@@ -307,6 +318,10 @@ export default {
       get () { return this.$store.state.AudioPlayer.restoreLastQueue },
       set (value) { this.SET_RESTORE_LAST_QUEUE(value) },
     },
+    defaultSubtitleLanguage: {
+      get () { return this.$store.state.AudioPlayer.defaultSubtitleLanguage },
+      set (value) { this.SET_DEFAULT_SUBTITLE_LANGUAGE(value) },
+    },
     swapSeekButton: {
       get () { return this.$store.state.AudioPlayer.swapSeekButton },
       set (value) {
@@ -345,6 +360,7 @@ export default {
       'SET_ENABLE_VISUALIZER',
       'SET_FORWARD_SEEK_TIME',
       'SET_PLAYBACK_RATE',
+      'SET_DEFAULT_SUBTITLE_LANGUAGE',
       'SET_RESTORE_LAST_QUEUE',
       'SET_OLD_SLEEP_TIMER_UI_STYLE',
       'SET_OLD_WORK_CARD_UI_STYLE',
@@ -420,6 +436,7 @@ export default {
 .preference-control { padding-left: 24px; }
 .preference-control--types { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px; }
 .preference-control--color { width: 246px; align-items: stretch; }
+.preference-control--select { width: 180px; align-items: stretch; }
 .accent-color-control { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: center; gap: 8px; }
 .accent-color-picker-button { width: 34px; height: 34px; min-height: 34px !important; border-radius: 5px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff !important; }
 .accent-color-picker-button :deep(.q-btn__wrapper) { min-height: 34px; padding: 0; }
@@ -447,6 +464,7 @@ export default {
   .preference-control { width: 100%; align-items: flex-start; padding-left: 0; }
   .preference-control--types { align-items: center; justify-content: flex-start; }
   .preference-control--color { flex-basis: 100%; width: 100%; max-width: 100%; align-items: stretch; }
+  .preference-control--select { width: 100%; align-items: stretch; }
   .preference-control--wide .q-btn-toggle { width: 100%; }
   .preference-control--wide :deep(.q-btn) { min-width: 0; flex: 1 1 auto; }
 }

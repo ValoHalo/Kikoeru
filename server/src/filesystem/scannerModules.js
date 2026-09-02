@@ -251,7 +251,7 @@ async function retryScrapeWorkMetadata(id) {
     LOG.task.warn(rjcode, `所有尝试获取元数据的方法均失败，无法添加该作品`);
     return null;
 }
-async function getMetadata(id, rootFolderName, dir, hasLyric) {
+async function getMetadata(id, rootFolderName, dir, hasLyric, createdAt) {
     const rjcode = idConverter.idNumberToCode(id);
     LOG.task.info(rjcode, '从 DLSite 抓取元数据...');
     const metadata = await retryScrapeWorkMetadata(id);
@@ -263,6 +263,7 @@ async function getMetadata(id, rootFolderName, dir, hasLyric) {
     metadata.rootFolderName = rootFolderName;
     metadata.dir = dir;
     metadata.lyric_status = hasLyric ? "local" : "";
+    metadata.createdAt = createdAt;
     try {
         await db.insertWorkMetadata(metadata);
     }
@@ -274,7 +275,7 @@ async function getMetadata(id, rootFolderName, dir, hasLyric) {
     return 'added';
 }
 ;
-async function insertCustomMetadata(code, productAbsoluteFolder, rootFolderName, dir, hasLyric) {
+async function insertCustomMetadata(code, productAbsoluteFolder, rootFolderName, dir, hasLyric, createdAt) {
     const initCustomCodeRegex = /CC\d{6,}/g;
     const initMeta = {
         "tags": [],
@@ -302,6 +303,7 @@ async function insertCustomMetadata(code, productAbsoluteFolder, rootFolderName,
         "translation_lang": null,
         "rank": [],
         code: "",
+        createdAt,
     };
     await db.fillNewCustomMetaInfo(initMeta);
     console.log("insert custom metadata: ", initMeta);
@@ -395,7 +397,7 @@ async function processFolder(folder) {
             LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`);
             LOG.task.info(rjcode, `扫描音频文件时长`);
             const memo = await (0, utils_1.scrapeWorkMemo)(folder.absolutePath, {});
-            const insertedMetaOrNull = await insertCustomMetadata(folder.code, folder.absolutePath, folder.rootFolderName, folder.relativePath, hasLyric);
+            const insertedMetaOrNull = await insertCustomMetadata(folder.code, folder.absolutePath, folder.rootFolderName, folder.relativePath, hasLyric, folder.initialCreatedAt);
             if (!insertedMetaOrNull) {
                 return 'failed';
             }
@@ -429,7 +431,7 @@ async function processFolder(folder) {
         LOG.task.info(rjcode, `扫描音频文件时长`);
         const memo = await (0, utils_1.scrapeWorkMemo)(folder.absolutePath, {});
         const work_id = idConverter.codeToIdNumber(folder.code);
-        const result = await getMetadata(work_id, folder.rootFolderName, folder.relativePath, hasLyric);
+        const result = await getMetadata(work_id, folder.rootFolderName, folder.relativePath, hasLyric, folder.initialCreatedAt);
         if (result === 'failed') {
             return 'failed';
         }
@@ -603,8 +605,17 @@ async function performScan() {
         }
     }
     const fixVADatabaseSuccess = await fixVADatabase();
+    const existingWorkCount = Number((await db.knex('t_work').count({ count: '*' }).first()).count);
     await tryCleanupStage();
-    const folderList = await tryScanRootFolders();
+    let folderList = await tryScanRootFolders();
+    if (existingWorkCount === 0) {
+        folderList = (0, utils_1.sortFoldersByCreatedTime)(folderList);
+        folderList.forEach(folder => {
+            if (Number.isFinite(folder.createdAtMs))
+                folder.initialCreatedAt = new Date(folder.createdAtMs);
+        });
+        LOG.main.info('首次建立媒体库，按文件夹创建时间从旧到新加入作品.');
+    }
     const folderResult = await tryProcessFolderListParallel(folderList);
     const message = folderResult.updated ? `扫描完成: 更新 ${folderResult.updated} 个，新增 ${folderResult.added} 个，跳过 ${folderResult.skipped} 个，失败 ${folderResult.failed} 个.` : `扫描完成: 新增 ${folderResult.added} 个，跳过 ${folderResult.skipped} 个，失败 ${folderResult.failed} 个.`;
     LOG.finish(message);
