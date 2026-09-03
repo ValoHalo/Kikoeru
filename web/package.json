@@ -39,11 +39,14 @@
     "vuex": "4.1.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "3.3.7",
+    "@eslint/js": "10.0.1",
     "@quasar/app-vite": "2.6.2",
     "autoprefixer": "10.5.4",
-    "eslint": "7.32.0",
-    "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-vue": "9.33.0",
+    "eslint": "10.4.0",
+    "eslint-plugin-import-x": "4.17.1",
+    "eslint-plugin-vue": "10.10.0",
+    "vue-eslint-parser": "10.4.1",
     "workbox-build": "7.4.1"
   },
   "engines": {
@@ -53,9 +56,5 @@
   "browserslist": [
     "last 2 versions",
     "not dead"
-  ],
-  "eslintIgnore": [
-    "dist/*",
-    "src/router/index.js"
   ]
 }
