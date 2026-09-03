@@ -12,12 +12,113 @@ exports.calculateLUFS = calculateLUFS;
 exports.calculateLUFSSplit = calculateLUFSSplit;
 exports.getAudioPeaks = getAudioPeaks;
 const path_1 = __importDefault(require("path"));
-const fluent_ffmpeg_1 = __importDefault(require("fluent-ffmpeg"));
 const fs_1 = __importDefault(require("fs"));
 const os_1 = __importDefault(require("os"));
+const child_process_1 = require("child_process");
 const utils_1 = require("./utils");
 const lodash_1 = require("lodash");
 const tempDir = os_1.default.tmpdir();
+const processOutputTailLimit = 64 * 1024;
+function createLineReader(onLine) {
+    let buffered = '';
+    return {
+        write(chunk) {
+            buffered += chunk;
+            const lines = buffered.split(/\r?\n/);
+            buffered = lines.pop() || '';
+            lines.forEach(onLine);
+        },
+        end() {
+            if (buffered) {
+                onLine(buffered);
+                buffered = '';
+            }
+        },
+    };
+}
+function runMediaProcess(executable, args, options = {}) {
+    return new Promise((resolve, reject) => {
+        const child = (0, child_process_1.spawn)(executable, args, {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            windowsHide: true,
+        });
+        let stdout = '';
+        let stderr = '';
+        let settled = false;
+        const stdoutReader = createLineReader(options.onStdoutLine || lodash_1.noop);
+        const stderrReader = createLineReader(options.onStderrLine || lodash_1.noop);
+        child.stdout.setEncoding('utf8');
+        child.stderr.setEncoding('utf8');
+        child.stdout.on('data', (chunk) => {
+            if (options.collectStdout) {
+                stdout += chunk;
+            }
+            stdoutReader.write(chunk);
+        });
+        child.stderr.on('data', (chunk) => {
+            stderr = options.collectStderr
+                ? stderr + chunk
+                : (stderr + chunk).slice(-processOutputTailLimit);
+            stderrReader.write(chunk);
+        });
+        child.stdout.on('end', () => stdoutReader.end());
+        child.stderr.on('end', () => stderrReader.end());
+        child.on('error', (error) => {
+            settled = true;
+            reject(new Error(`无法启动 ${executable}: ${error.message}`));
+        });
+        child.on('close', (code, signal) => {
+            if (settled)
+                return;
+            settled = true;
+            if (code === 0) {
+                resolve({ stdout, stderr });
+                return;
+            }
+            const reason = signal ? `signal ${signal}` : `exit code ${code}`;
+            const detail = stderr.trim();
+            reject(new Error(`${executable} failed with ${reason}${detail ? `\n${detail}` : ''}`));
+        });
+    });
+}
+function runFfmpeg(args, options) {
+    return runMediaProcess('ffmpeg', args, options);
+}
+function runFfprobe(args) {
+    return runMediaProcess('ffprobe', args, { collectStdout: true });
+}
+function parseNumericProgressValue(value) {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+function createProgressReader(duration, onProgress) {
+    const values = {};
+    return (line) => {
+        const separator = line.indexOf('=');
+        if (separator < 0)
+            return;
+        const key = line.slice(0, separator);
+        values[key] = line.slice(separator + 1);
+        if (key !== 'progress')
+            return;
+        const outTimeUs = parseNumericProgressValue(values.out_time_us || values.out_time_ms);
+        const percent = duration > 0
+            ? Math.min(100, Math.max(0, outTimeUs / (duration * 1000000) * 100))
+            : undefined;
+        const progress = {
+            frames: parseNumericProgressValue(values.frame),
+            currentFps: parseNumericProgressValue(values.fps),
+            currentKbps: parseNumericProgressValue(values.bitrate),
+            targetSize: Math.round(parseNumericProgressValue(values.total_size) / 1024),
+            timemark: values.out_time || '00:00:00.000000',
+            percent,
+        };
+        console.log(` transcoding progress: ${JSON.stringify(progress)}`);
+        if (onProgress) {
+            onProgress(progress);
+        }
+    };
+}
 function genTranscodeTaskIdentifier(workId, hashIndex, targetBitRate) {
     return `${workId}_${hashIndex}_${targetBitRate}`;
 }
@@ -29,36 +130,36 @@ function genTranscodeTempOutputPath(transcodeTempOutputDirectory) {
     const transcodeTempName = (0, utils_1.genUniqueRandomName)() + '.m4a';
     return path_1.default.join(transcodeTempOutputDirectory, transcodeTempName);
 }
-function convertAudioToM4a(inputFile, outputFile, bitRate = 128, onProgress = lodash_1.noop) {
-    return new Promise((resolve, reject) => {
-        console.log(`transcode(bitRate:${bitRate}kb/s) start`);
-        console.log(` input: `, inputFile);
-        console.log(` temp output: `, outputFile);
-        (0, fluent_ffmpeg_1.default)(inputFile)
-            .audioCodec("aac")
-            .format('ipod')
-            .audioBitrate(bitRate)
-            .noVideo()
-            .output(outputFile)
-            .outputOptions([
-            "-movflags frag_keyframe+empty_moov",
-        ])
-            .on('end', () => {
-            console.log('transcode finished');
-            resolve();
-        })
-            .on('progress', (progress) => {
-            console.log(` transcoding progress: ${JSON.stringify(progress)}`);
-            if (onProgress) {
-                onProgress(progress);
-            }
-        })
-            .on('error', (err) => {
-            console.error(`转换失败: ${err.message}`);
-            reject(err);
-        })
-            .run();
-    });
+async function convertAudioToM4a(inputFile, outputFile, bitRate = 128, onProgress = lodash_1.noop) {
+    console.log(`transcode(bitRate:${bitRate}kb/s) start`);
+    console.log(` input: `, inputFile);
+    console.log(` temp output: `, outputFile);
+    let duration = NaN;
+    try {
+        duration = await getAudioDuration(inputFile);
+    }
+    catch (_a) { }
+    try {
+        await runFfmpeg([
+            '-i', inputFile,
+            '-y',
+            '-acodec', 'aac',
+            '-b:a', `${bitRate}k`,
+            '-vn',
+            '-f', 'ipod',
+            '-movflags', 'frag_keyframe+empty_moov',
+            '-progress', 'pipe:1',
+            '-nostats',
+            outputFile,
+        ], {
+            onStdoutLine: createProgressReader(duration, onProgress),
+        });
+        console.log('transcode finished');
+    }
+    catch (err) {
+        console.error(`转换失败: ${err.message}`);
+        throw err;
+    }
 }
 function getFilesWithAccessTime(folder) {
     const files = fs_1.default.readdirSync(folder);
@@ -88,17 +189,19 @@ function deleteOldFiles(folder, maxFiles) {
         console.log(`Deleted file: ${files[i].file}`);
     }
 }
-function getAudioDuration(inputPath) {
-    return new Promise((resolve, reject) => {
-        fluent_ffmpeg_1.default.ffprobe(inputPath, (err, metadata) => {
-            if (err) {
-                reject(err);
-            }
-            else {
-                resolve(metadata.format.duration);
-            }
-        });
-    });
+async function getAudioDuration(inputPath) {
+    const { stdout } = await runFfprobe([
+        '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'json',
+        inputPath,
+    ]);
+    const metadata = JSON.parse(stdout);
+    const duration = Number.parseFloat(metadata.format && metadata.format.duration);
+    if (!Number.isFinite(duration)) {
+        throw new Error(`无法读取音频时长: ${inputPath}`);
+    }
+    return duration;
 }
 function generateTempDirPath() {
     let tempPath;
@@ -123,31 +226,25 @@ function deleteDirRecursive(dirPath) {
     }
 }
 async function calculateLUFS(inputPath) {
-    return new Promise((resolve, reject) => {
-        const command = (0, fluent_ffmpeg_1.default)(inputPath)
-            .audioFilters('loudnorm=print_format=json')
-            .format("null")
-            .output('-');
-        let stderr = '';
-        command.on('stderr', (line) => {
-            console.log(line);
-            stderr += line;
-        });
-        command.on('end', () => {
-            try {
-                const jsonStart = stderr.indexOf('{');
-                const jsonEnd = stderr.lastIndexOf('}') + 1;
-                const jsonString = stderr.slice(jsonStart, jsonEnd);
-                const result = JSON.parse(jsonString);
-                resolve(result);
-            }
-            catch (e) {
-                reject(new Error(`解析失败: ${e.message}\n原始输出: ${stderr}`));
-            }
-        });
-        command.on('error', reject);
-        command.run();
+    const { stderr } = await runFfmpeg([
+        '-i', inputPath,
+        '-y',
+        '-filter:a', 'loudnorm=print_format=json',
+        '-f', 'null',
+        '-',
+    ], {
+        collectStderr: true,
+        onStderrLine: (line) => console.log(line),
     });
+    try {
+        const jsonStart = stderr.indexOf('{');
+        const jsonEnd = stderr.lastIndexOf('}') + 1;
+        const jsonString = stderr.slice(jsonStart, jsonEnd);
+        return JSON.parse(jsonString);
+    }
+    catch (e) {
+        throw new Error(`解析失败: ${e.message}\n原始输出: ${stderr}`);
+    }
 }
 async function calculateLUFSSplit(inputPath) {
     const tempDir = generateTempDirPath();
@@ -179,15 +276,12 @@ async function calculateLUFSSplit(inputPath) {
                 if (actualEnd > actualStart) {
                     const tempFile = path_1.default.join(tempDir, `segment_${i}.wav`);
                     tempFiles.push(tempFile);
-                    await new Promise((resolve, reject) => {
-                        (0, fluent_ffmpeg_1.default)(inputPath)
-                            .inputOptions(['-ss', actualStart.toString()])
-                            .inputOptions(['-t', (actualEnd - actualStart).toString()])
-                            .output(tempFile)
-                            .on('end', () => resolve())
-                            .on('error', reject)
-                            .run();
-                    });
+                    await runFfmpeg([
+                        '-ss', actualStart.toString(),
+                        '-t', (actualEnd - actualStart).toString(),
+                        '-i', inputPath,
+                        '-y', tempFile,
+                    ]);
                 }
             }
             if (tempFiles.length === 0) {
@@ -197,16 +291,12 @@ async function calculateLUFSSplit(inputPath) {
             const fileListContent = tempFiles.map(file => `file '${file}'`).join('\n');
             fs_1.default.writeFileSync(fileListPath, fileListContent);
             const concatenatedFile = path_1.default.join(tempDir, 'concatenated.wav');
-            await new Promise((resolve, reject) => {
-                (0, fluent_ffmpeg_1.default)()
-                    .input(fileListPath)
-                    .inputOptions(['-f', 'concat'])
-                    .inputOptions(['-safe', '0'])
-                    .output(concatenatedFile)
-                    .on('end', () => resolve())
-                    .on('error', reject)
-                    .run();
-            });
+            await runFfmpeg([
+                '-f', 'concat',
+                '-safe', '0',
+                '-i', fileListPath,
+                '-y', concatenatedFile,
+            ]);
             const result = await calculateLUFS(concatenatedFile);
             return result;
         }
@@ -234,32 +324,18 @@ function uniformSample(arr, m) {
     });
 }
 async function getAudioPeaks(inputPath, frameInterval = 20) {
-    return new Promise((resolve, reject) => {
-        const ptsTimeRegex = /frame:\d+\s*pts:\d+\s*pts_time:([\d.]+)/;
-        const peakLeveRegex = /lavfi.astats.Overall.Peak_level=([-\d.inf]+)/;
-        const command = (0, fluent_ffmpeg_1.default)(inputPath)
-            .complexFilter([
-            {
-                filter: 'astats',
-                options: { metadata: 1, reset: 1 },
-                outputs: 'astats'
-            },
-            {
-                filter: 'aselect',
-                options: { expr: `not(mod(n,${frameInterval}))` },
-                inputs: 'astats',
-                outputs: 'aselect'
-            },
-            {
-                filter: 'ametadata',
-                options: { mode: 'print', key: 'lavfi.astats.Overall.Peak_level' },
-                inputs: 'aselect'
-            }
-        ])
-            .outputOptions('-f', 'null')
-            .output('-');
-        const datas = [];
-        command.on('stderr', (line) => {
+    const ptsTimeRegex = /frame:\d+\s*pts:\d+\s*pts_time:([\d.]+)/;
+    const peakLeveRegex = /lavfi.astats.Overall.Peak_level=([-\d.inf]+)/;
+    const datas = [];
+    const filter = `astats=metadata=1:reset=1[astats];[astats]aselect=expr='not(mod(n,${frameInterval}))'[aselect];[aselect]ametadata=mode=print:key=lavfi.astats.Overall.Peak_level`;
+    await runFfmpeg([
+        '-i', inputPath,
+        '-y',
+        '-filter_complex', filter,
+        '-f', 'null',
+        '-',
+    ], {
+        onStderrLine: (line) => {
             if (!line.includes("Parsed_ametadata")) {
                 return;
             }
@@ -280,20 +356,15 @@ async function getAudioPeaks(inputPath, frameInterval = 20) {
                     datas.pop();
                 }
             }
-        });
-        command.on('end', () => {
-            if (datas.length <= 0) {
-                reject(new Error('解析电平水平失败'));
-                return;
-            }
-            let retDatas = datas.filter(e => (isFinite(e.ptsTime) && isFinite(e.peakLevel)));
-            const maxSamples = 200;
-            if (retDatas.length > maxSamples) {
-                retDatas = uniformSample(retDatas, maxSamples);
-            }
-            resolve(retDatas);
-        });
-        command.on('error', reject);
-        command.run();
+        },
     });
+    if (datas.length <= 0) {
+        throw new Error('解析电平水平失败');
+    }
+    let retDatas = datas.filter(e => (isFinite(e.ptsTime) && isFinite(e.peakLevel)));
+    const maxSamples = 200;
+    if (retDatas.length > maxSamples) {
+        retDatas = uniformSample(retDatas, maxSamples);
+    }
+    return retDatas;
 }
