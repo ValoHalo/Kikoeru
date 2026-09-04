@@ -58,14 +58,14 @@ export default defineConfig(function () {
       injectPwaMetaTags: true,
       swFilename: 'service-worker.js',
       manifestFilename: 'manifest.json',
-      workboxOptions: {
-        skipWaiting: true,
-        clientsClaim: true,
-        globIgnores: [
+      extendGenerateSWOptions (options) {
+        options.globIgnores = [
+          ...(options.globIgnores || []),
           'manifest.json',
           '**/*.map'
-        ],
-        navigateFallbackDenylist: [
+        ]
+        options.navigateFallbackDenylist = [
+          ...(options.navigateFallbackDenylist || []),
           /^\/api\//,
           /\/media\//
         ]
