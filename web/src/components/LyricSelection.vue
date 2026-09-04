@@ -1,17 +1,27 @@
 <template>
   <q-card class="lyric-selection">
-    <q-card-section class="row justify-between items-center">
-      <div>
+    <q-card-section class="row no-wrap items-start lyric-header">
+      <div class="col lyric-header-copy">
         <div class="text-h5">歌词选择</div>
-        <div class="text-caption text-grey-7">{{ currentPlayingFile.title || '尚未选择曲目' }}</div>
+        <div class="text-caption text-grey-7 ellipsis">{{ currentPlayingFile.title || '尚未选择曲目' }}</div>
       </div>
-      <q-btn v-close-popup flat round icon="close" />
+      <q-btn v-close-popup flat round class="col-auto" icon="close" aria-label="关闭歌词选择" @click="isEditingLyrics = false" />
     </q-card-section>
 
     <q-separator />
 
     <q-card-section class="row items-center lyric-actions">
       <q-btn
+        v-if="isAdministrator"
+        color="primary"
+        :icon="isEditingLyrics ? 'edit_off' : 'edit'"
+        :label="$q.screen.lt.sm ? undefined : (isEditingLyrics ? '退出编辑' : '编辑歌词')"
+        :round="$q.screen.lt.sm"
+        :aria-label="isEditingLyrics ? '退出歌词编辑' : '编辑歌词'"
+        @click="isEditingLyrics = !isEditingLyrics"
+      />
+      <q-btn
+        v-if="isEditingLyrics"
         color="warning"
         icon="save"
         :label="$q.screen.lt.sm ? undefined : '保存歌词'"
@@ -49,6 +59,7 @@
         @click="showCurrentLyric"
       />
       <q-btn
+        v-if="isEditingLyrics"
         outline
         color="primary"
         icon="timer"
@@ -96,7 +107,7 @@
             </q-item-label>
           </q-item-section>
 
-          <q-item-section v-if="isAdministrator" side>
+          <q-item-section v-if="isAdministrator && isEditingLyrics" side>
             <div class="row no-wrap q-gutter-xs">
               <q-btn flat round dense icon="edit" color="primary" @click.stop="openLineEditor(index)">
                 <q-tooltip>编辑文字和时间</q-tooltip>
@@ -210,6 +221,7 @@ export default {
   data () {
     return {
       autoTrackCurrentLine: true,
+      isEditingLyrics: false,
       openEditor: false,
       editLyricLineNumber: 0,
       editLyricText: '',
@@ -462,6 +474,10 @@ export default {
 .lyric-actions {
   flex: 0 0 auto;
   gap: 8px;
+}
+
+.lyric-header-copy {
+  min-width: 0;
 }
 
 @media (max-width: 599px) {

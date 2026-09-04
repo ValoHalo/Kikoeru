@@ -1,6 +1,24 @@
 <template>
   <span class="library-actions" @click.stop>
-    <q-btn flat round dense icon="more_vert" aria-label="整理作品" @click="loadCollections">
+    <template v-if="inline">
+      <q-btn
+        dense
+        class="shadow-4"
+        color="cyan"
+        icon="create_new_folder"
+        label="加入作品分组"
+        @click="openCollectionDialog"
+      />
+      <q-btn
+        dense
+        class="shadow-4"
+        color="cyan"
+        :icon="archived ? 'unarchive' : 'archive'"
+        :label="archived ? '移出归档' : '归档作品'"
+        @click="toggleArchive"
+      />
+    </template>
+    <q-btn v-else flat round dense icon="more_vert" aria-label="整理作品" @click="loadCollections">
       <q-tooltip>整理作品</q-tooltip>
       <q-menu>
         <q-list dense style="min-width: 170px">
@@ -43,7 +61,8 @@ export default {
   mixins: [NotifyMixin],
   props: {
     workId: { type: Number, required: true },
-    archived: { type: Boolean, default: false }
+    archived: { type: Boolean, default: false },
+    inline: { type: Boolean, default: false }
   },
   emits: ['changed'],
   data () {
@@ -75,6 +94,10 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    openCollectionDialog () {
+      this.showCollectionDialog = true
+      this.loadCollections()
     },
     async toggleArchive () {
       try {

@@ -107,75 +107,90 @@
         </router-link>
       </div>
 
-      <q-btn
-        v-if="isAdministrator"
-        dense
-        color="cyan q-mt-sm shadow-4 q-mx-xs q-px-sm"
-        label="修改作品信息"
-        @click="showEditMetaDialog = true"
-      />
+      <div class="work-actions q-mt-sm q-px-xs">
+        <div class="work-action-group">
+          <q-btn-dropdown dense class="shadow-4" color="cyan" icon="bookmark" label="标记进度">
+            <q-list>
+              <q-item clickable @click="setProgress('marked')" class="q-pa-xs">
+                <q-item-section avatar>
+                  <q-avatar icon="headset" v-show="progress === 'marked'" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>想听</q-item-label>
+                </q-item-section>
+              </q-item>
 
-      <q-btn-dropdown
-        dense
-        class="q-mt-sm shadow-4 q-mx-xs q-pl-sm"
-        color="cyan"
-        label="标记进度"
-      >
-        <q-list>
-          <q-item clickable @click="setProgress('marked')" class="q-pa-xs">
-            <q-item-section avatar>
-              <q-avatar icon="headset" v-show="progress === 'marked'" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>想听</q-item-label>
-            </q-item-section>
-          </q-item>
+              <q-item clickable @click="setProgress('listening')" class="q-pa-xs">
+                <q-item-section avatar>
+                  <q-avatar icon="headset" v-show="progress === 'listening'" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>在听</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable @click="setProgress('listened')" class="q-pa-xs">
+                <q-item-section avatar>
+                  <q-avatar icon="headset" v-show="progress === 'listened'" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>听过</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable @click="setProgress('replay')" class="q-pa-xs">
+                <q-item-section avatar>
+                  <q-avatar icon="headset" v-show="progress === 'replay'" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>重听</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable @click="setProgress('postponed')" class="q-pa-xs">
+                <q-item-section avatar>
+                  <q-avatar icon="headset" v-show="progress === 'postponed'" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>搁置</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
 
-          <q-item clickable @click="setProgress('listening')" class="q-pa-xs">
-            <q-item-section avatar>
-              <q-avatar icon="headset" v-show="progress === 'listening'" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>在听</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item clickable @click="setProgress('listened')" class="q-pa-xs">
-            <q-item-section avatar>
-              <q-avatar icon="headset" v-show="progress === 'listened'" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>听过</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item clickable @click="setProgress('replay')" class="q-pa-xs">
-            <q-item-section avatar>
-              <q-avatar icon="headset" v-show="progress === 'replay'" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>重听</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item clickable @click="setProgress('postponed')" class="q-pa-xs">
-            <q-item-section avatar>
-              <q-avatar icon="headset" v-show="progress === 'postponed'" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>搁置</q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-btn-dropdown>
+          <q-btn dense class="shadow-4" color="cyan" icon="rate_review" label="写评论" @click="showReviewDialog = true" />
+          <q-btn
+            v-if="metadata.state && playWorkId !== metadata.id"
+            dense
+            class="shadow-4"
+            color="cyan"
+            icon="history"
+            label="播放历史进度"
+            @click="resumeThisHistroy"
+          />
+        </div>
 
-      <q-btn dense @click="showReviewDialog = true" color="cyan q-mt-sm shadow-4 q-mx-xs q-px-sm" label="写评论" />
+        <LibraryActions
+          inline
+          class="work-action-group"
+          :work-id="Number(metadata.id)"
+          :archived="Boolean(metadata.archived_at)"
+          @changed="$emit('reset')"
+        />
 
-      <LibraryActions :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('reset')" />
-
-      <q-btn v-if="metadata.state && playWorkId !== metadata.id" dense @click="resumeThisHistroy" color="cyan q-mt-sm shadow-4 q-mx-xs q-px-sm" label="播放此作品的历史记录" />
-      <q-btn v-if="metadata.state" dense @click="clearThisHistroy" color="cyan q-mt-sm shadow-4 q-mx-xs q-px-sm" label="删除播放记录">
-        <q-tooltip>当历史记录中有已被删除的音频文件，可能会无法正确播放文件，可通过此按钮解决</q-tooltip>
-      </q-btn>
-
-      <q-btn dense @click="scanWorkFile" color="cyan q-mt-sm shadow-4 q-mx-xs q-px-sm" label="扫描本地文件" />
+        <div class="work-action-group">
+          <q-btn
+            v-if="isAdministrator"
+            dense
+            class="shadow-4"
+            color="cyan"
+            icon="edit"
+            label="修改作品信息"
+            @click="showEditMetaDialog = true"
+          />
+          <q-btn dense class="shadow-4" color="cyan" icon="sync" label="扫描本地文件" @click="scanWorkFile" />
+          <q-btn v-if="metadata.state" dense outline color="negative" icon="delete_sweep" label="删除播放记录" @click="clearThisHistroy">
+            <q-tooltip>当历史记录中有已被删除的音频文件，可能会无法正确播放文件，可通过此按钮解决</q-tooltip>
+          </q-btn>
+        </div>
+      </div>
 
       <WriteReview v-if="showReviewDialog" @closed="processReview" :workid="metadata.id" :metadata="metadata"></WriteReview>
       <q-dialog v-model="showEditMetaDialog">
@@ -371,3 +386,36 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.work-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.work-action-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.work-actions :deep(.q-btn) {
+  font-size: 12px;
+  min-height: 28px;
+  padding: 0 12.6px 0 8.4px;
+}
+
+.work-actions :deep(.q-btn .block) {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+}
+
+.work-actions :deep(.q-btn .q-icon.on-left) {
+  font-size: 21px;
+  margin-right: 4.2px;
+}
+</style>
