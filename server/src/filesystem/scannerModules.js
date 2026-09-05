@@ -393,10 +393,10 @@ async function processFolder(folder) {
             coverResult = "skipped";
         }
         else {
-            const hasLyric = await (0, utils_1.isContainLyric)(folder.absolutePath);
-            LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`);
             LOG.task.info(rjcode, `扫描音频文件时长`);
             const memo = await (0, utils_1.scrapeWorkMemo)(folder.absolutePath, {});
+            const hasLyric = memo.isContainLyric;
+            LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`);
             const insertedMetaOrNull = await insertCustomMetadata(folder.code, folder.absolutePath, folder.rootFolderName, folder.relativePath, hasLyric, folder.initialCreatedAt);
             if (!insertedMetaOrNull) {
                 return 'failed';
@@ -426,10 +426,10 @@ async function processFolder(folder) {
     else {
         LOG.task.add(rjcode);
         LOG.task.info(rjcode, `发现新文件夹: "${folder.absolutePath}"`);
-        const hasLyric = await (0, utils_1.isContainLyric)(folder.absolutePath);
-        LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`);
         LOG.task.info(rjcode, `扫描音频文件时长`);
         const memo = await (0, utils_1.scrapeWorkMemo)(folder.absolutePath, {});
+        const hasLyric = memo.isContainLyric;
+        LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`);
         const work_id = idConverter.codeToIdNumber(folder.code);
         const result = await getMetadata(work_id, folder.rootFolderName, folder.relativePath, hasLyric, folder.initialCreatedAt);
         if (result === 'failed') {
@@ -785,13 +785,12 @@ async function scanWorkFile(work, index, total) {
         if (!rootFolder)
             return "skipped";
         const absoluteWorkDir = path_1.default.join(rootFolder.path, work.dir);
-        const hasLocalLyric = await (0, utils_1.isContainLyric)(absoluteWorkDir);
-        if (await db.updateWorkLocalLyricStatus(hasLocalLyric, work.lyric_status, work.id)) {
-            LOG.main.info(`[${rjcode}] 歌词状态发生改变`);
-        }
         const memo = await (0, utils_1.scrapeWorkMemo)(absoluteWorkDir, (work.memo
             ? (0, utils_1.ensureIsJsonObject)(work.memo)
             : {}));
+        if (await db.updateWorkLocalLyricStatus(memo.isContainLyric, work.lyric_status, work.id)) {
+            LOG.main.info(`[${rjcode}] 歌词状态发生改变`);
+        }
         await db.setWorkMemo(work.id, memo);
         await db.clearScanFailure({ code: rjcode, rootFolder: work.root_folder, relativeDir: work.dir });
         return "updated";

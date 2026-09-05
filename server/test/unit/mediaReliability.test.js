@@ -124,10 +124,11 @@ test("matching transcode requests share one promise and publish waiting, progres
         await conversionGate.promise;
     };
 
-    const first = await mediaTesting.startTranscodeTask(1001, 0, 128);
-    const second = await mediaTesting.startTranscodeTask(1001, 0, 128);
-    assert.equal(first.started, true);
-    assert.equal(second.started, false);
+    const [first, second] = await Promise.all([
+        mediaTesting.startTranscodeTask(1001, 0, 128),
+        mediaTesting.startTranscodeTask(1001, 0, 128),
+    ]);
+    assert.equal([first, second].filter(task => task.started).length, 1);
     assert.strictEqual(first.promise, second.promise);
     assert.equal((await mediaTesting.getTranscodeStatusResponse(1001, 0, 128)).status, "waiting");
 
@@ -154,7 +155,7 @@ test("cached transcodes bypass a full queue", async () => {
     const cachedPath = audioProcessor.genTranscodeOutputPath(1004, 0, 128, transcodeFolder);
     fs.mkdirSync(path.dirname(cachedPath), { recursive: true });
     fs.writeFileSync(cachedPath, "cached transcoded output");
-    mediaTesting.writeTranscodeCacheMetadata(cachedPath, mediaTesting.getSourceFingerprint(sourcePath));
+    mediaTesting.writeTranscodeCacheMetadata(cachedPath, await mediaTesting.getSourceFingerprint(sourcePath));
 
     const gate = deferred();
     const queuedTasks = [];
@@ -206,7 +207,7 @@ test("a missing source removes its previous transcode instead of reporting ready
     const outputPath = audioProcessor.genTranscodeOutputPath(1006, 0, 128, transcodeFolder);
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, "cached transcoded output");
-    mediaTesting.writeTranscodeCacheMetadata(outputPath, mediaTesting.getSourceFingerprint(sourcePath));
+    mediaTesting.writeTranscodeCacheMetadata(outputPath, await mediaTesting.getSourceFingerprint(sourcePath));
     const metadataPath = mediaTesting.getTranscodeCacheMetadataPath(outputPath);
     fs.unlinkSync(sourcePath);
 
@@ -255,7 +256,7 @@ test("expired failed status returns to waiting instead of remaining stuck", asyn
         progress: null,
         error: "synthetic failure",
         failedAt: 1000,
-        sourceFingerprint: mediaTesting.getSourceFingerprint(sourcePath),
+        sourceFingerprint: await mediaTesting.getSourceFingerprint(sourcePath),
     });
 
     assert.equal((await mediaTesting.getTranscodeStatusResponse(1003, 0, 128, 60_999)).status, "failed");

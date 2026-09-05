@@ -326,7 +326,7 @@ export default {
 
   created () {
     this.refreshPageTitle();
-    this.seed = Math.floor(Math.random() * 100);
+    this.seed = Math.floor(Math.random() * 98) + 2;
   },
 
   mounted() {
@@ -455,6 +455,7 @@ export default {
 
     sortCategoryOption (v) {
       localStorage.sortCategoryOption = v;
+      if (v === 'random') this.seed = Math.floor(Math.random() * 98) + 2;
       this.reset()
     },
 
@@ -660,8 +661,11 @@ export default {
       }
     },
 
-    reset (page = 1) {
-      this.seed = Math.floor(Math.random() * 100);
+    async reset (page = 1) {
+      const requestId = ++this.worksRequestId
+      // Coalesce filter watchers and invalidate responses before the next request.
+      await this.$nextTick()
+      if (requestId !== this.worksRequestId) return
       this.stopLoad = true
       this.refreshPageTitle()
       this.pagination = { currentPage: page - 1, pageSize: this.pagination.pageSize || 12, totalCount: this.pagination.totalCount || 0 }
@@ -739,7 +743,6 @@ export default {
         d: keyword,
       });
       this.editKeyword = "";
-      this.reset();
     },
 
     removeAdvanceSearchKeyword(index) {

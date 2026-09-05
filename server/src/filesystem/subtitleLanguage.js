@@ -75,8 +75,8 @@ function detectSubtitleLanguage(content, fileName = "") {
     return languageFromFileName(fileName) || "und";
 }
 
-function detectSubtitleFileLanguage(fileName) {
-    const fileBuffer = fs.readFileSync(fileName);
+async function detectSubtitleFileLanguage(fileName) {
+    const fileBuffer = await fs.promises.readFile(fileName);
     const charset = jschardet.detect(fileBuffer).encoding || "utf-8";
     return detectSubtitleLanguage(iconv.decode(fileBuffer, charset), path.basename(fileName));
 }

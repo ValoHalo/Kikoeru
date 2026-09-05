@@ -152,6 +152,7 @@ export default {
       lrcContent: "",
       lrcObj: null,
       lrcAvailable: false,
+      lrcRequestId: 0,
       playableLyricLineIndexes: [],
       preTranscodeTimerId: null,
       playerInstance: null,
@@ -239,10 +240,10 @@ export default {
     source (url) {
       this.clearPreTranscodeTimer()
       this.SET_PLAYING_TRANSCODE(this.shouldTranscodeTrack(this.currentPlayingFile))
+      this.loadLrcFile();
       if (url) {
         // 加载新音频/视频文件
         this.player.media.load();
-        this.loadLrcFile();
         this.updateMediaSessionMetadata();
       }
     },
@@ -549,12 +550,17 @@ export default {
     },
 
     async loadLrcFile () {
-      const fileHash = this.queue[this.queueIndex].hash;
+      const requestId = ++this.lrcRequestId
+      const fileHash = this.currentPlayingFile.hash;
+      const isCurrentRequest = () => requestId === this.lrcRequestId && fileHash === this.currentPlayingFile.hash
+      this.resetToNoLyricStatus()
+      if (!fileHash) return
       const url = `/api/media/check-lrc/${fileHash}`;
 
       try {
         // 首先向服务器查询是否有歌词
         const check_response = await this.$axios.get(url, { params: { language: this.defaultSubtitleLanguage } })
+        if (!isCurrentRequest()) return
         if (!check_response.data.result) {
           this.resetToNoLyricStatus()
           return;
@@ -568,6 +574,7 @@ export default {
           const lrcUrl = `/api/media/stream/${check_response.data.hash}`;
           const lyricExtension = String(check_response.data.lyricExtension || '').toLowerCase();
           const response = await this.$axios.get(lrcUrl)
+          if (!isCurrentRequest()) return
           let lrcContent = response.data
           if (lyricExtension == ".srt" || lyricExtension == ".vtt") {
             lrcContent = convert_srt_vtt_to_lrc(lrcContent);
@@ -577,6 +584,7 @@ export default {
         }
         this.SET_LYRIC_LINES(lyricLines)
       } catch(error) {
+        if (!isCurrentRequest()) return
         if (error.response) {
           // 请求已发出，但服务器响应的状态码不在 2xx 范围内
           if (error.response.status !== 401) {
@@ -587,7 +595,7 @@ export default {
           console.error(error)
           this.showErrNotif(error.message || error);
         }
-        this.SET_HAS_LYRIC(false);
+        this.resetToNoLyricStatus()
       }
     },
 
@@ -762,6 +770,7 @@ export default {
   },
 
   beforeUnmount () {
+    this.lrcRequestId++
     this.clearPreTranscodeTimer()
     this.clearMediaSessionActionHandlers()
     this.SET_PLAYING_TRANSCODE(false)

@@ -60,7 +60,7 @@ async function addSubtitleLanguages(lyricTracks, rootFolder, workDir) {
     return Promise.all(lyricTracks.map(async (lyricTrack) => {
         const fileName = path_1.default.join(rootFolder.path, workDir, lyricTrack.subtitle || '', lyricTrack.title);
         try {
-            return Object.assign({ language: (0, subtitleLanguage_1.detectSubtitleFileLanguage)(fileName) }, lyricTrack);
+            return Object.assign({ language: await (0, subtitleLanguage_1.detectSubtitleFileLanguage)(fileName) }, lyricTrack);
         }
         catch (error) {
             console.warn(`[subtitle-language] 无法识别 ${fileName}: ${error.message || error}`);
@@ -106,12 +106,12 @@ router.get('/stream/:id/:index', (0, express_validator_1.param)('id').isInt(), (
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (rootFolder) {
             (0, utils_1.getTrackList)(req.params.id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo))
-                .then((tracks) => {
+                .then(async (tracks) => {
                 const track = tracks[req.params.index];
                 const fileName = path_1.default.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
                 const extName = path_1.default.extname(fileName).toLocaleLowerCase();
                 if (extName === '.txt' || extName === '.lrc') {
-                    const fileBuffer = fs_1.default.readFileSync(fileName);
+                    const fileBuffer = await fs_1.default.promises.readFile(fileName);
                     const charsetMatch = jschardet_1.default.detect(fileBuffer).encoding;
                     if (charsetMatch) {
                         res.setHeader('Content-Type', `text/plain; charset=${charsetMatch}`);
@@ -246,7 +246,7 @@ router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id').isInt(),
         const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
         const track = tracks[hash];
         const fileName = path_1.default.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
-        const fileBuffer = fs_1.default.readFileSync(fileName);
+        const fileBuffer = await fs_1.default.promises.readFile(fileName);
         const charsetMatch = jschardet_1.default.detect(fileBuffer).encoding;
         const fileContent = iconv_lite_1.default.decode(fileBuffer, charsetMatch);
         let lrc = [];
@@ -384,7 +384,7 @@ router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
         }
         const bestLrcTrack = matchedTracks[0];
         const fileName = path_1.default.join(rootFolder.path, work.dir, bestLrcTrack.subtitle || '', bestLrcTrack.title);
-        const fileBuffer = fs_1.default.readFileSync(fileName);
+        const fileBuffer = await fs_1.default.promises.readFile(fileName);
         const charsetMatch = jschardet_1.default.detect(fileBuffer).encoding;
         const fileContent = iconv_lite_1.default.decode(fileBuffer, charsetMatch);
         let lrc = [];
@@ -457,11 +457,11 @@ function isSourceFingerprint(value) {
         && Number.isFinite(value.mtimeMs)
         && Number.isFinite(value.ctimeMs);
 }
-function getSourceFingerprint(filePath) {
+async function getSourceFingerprint(filePath) {
     const normalizedPath = normalizeFingerprintPath(filePath);
     let stat;
     try {
-        stat = fs_1.default.statSync(filePath);
+        stat = await fs_1.default.promises.stat(filePath);
     }
     catch (cause) {
         const error = new Error(`源音频文件不存在或不可读: ${filePath}`);
@@ -489,8 +489,8 @@ function sourceFingerprintsEqual(left, right) {
         && left.mtimeMs === right.mtimeMs
         && left.ctimeMs === right.ctimeMs;
 }
-function assertSourceFingerprintCurrent(filePath, expectedFingerprint) {
-    const currentFingerprint = getSourceFingerprint(filePath);
+async function assertSourceFingerprintCurrent(filePath, expectedFingerprint) {
+    const currentFingerprint = await getSourceFingerprint(filePath);
     if (!sourceFingerprintsEqual(currentFingerprint, expectedFingerprint)) {
         const error = new Error(`源音频文件在媒体处理期间发生了变化: ${filePath}`);
         error.code = 'SOURCE_MEDIA_CHANGED';
@@ -609,7 +609,7 @@ async function resolveTranscodeSource(workId, hashIndex) {
     }
     return {
         fileFullPath,
-        sourceFingerprint: getSourceFingerprint(fileFullPath),
+        sourceFingerprint: await getSourceFingerprint(fileFullPath),
     };
 }
 async function doTranscodeOrReadFromCache(workId, hashIndex, targetBitRate, readOnly = false, onProgress = () => { }, preparedSource = null) {
@@ -617,7 +617,7 @@ async function doTranscodeOrReadFromCache(workId, hashIndex, targetBitRate, read
     let source;
     try {
         source = preparedSource || await resolveTranscodeSource(workId, hashIndex);
-        assertSourceFingerprintCurrent(source.fileFullPath, source.sourceFingerprint);
+        await assertSourceFingerprintCurrent(source.fileFullPath, source.sourceFingerprint);
     }
     catch (error) {
         invalidateTranscodeCache(transcodePath);
@@ -637,14 +637,14 @@ async function doTranscodeOrReadFromCache(workId, hashIndex, targetBitRate, read
         if (!fs_1.default.existsSync(transcodeTempPath)) {
             throw new Error('转码完成，但未生成临时输出文件.');
         }
-        assertSourceFingerprintCurrent(source.fileFullPath, source.sourceFingerprint);
+        await assertSourceFingerprintCurrent(source.fileFullPath, source.sourceFingerprint);
         if (readValidatedTranscodeCache(transcodePath, source.sourceFingerprint)) {
             return transcodePath;
         }
         fs_1.default.renameSync(transcodeTempPath, transcodePath);
         try {
             writeTranscodeCacheMetadata(transcodePath, source.sourceFingerprint);
-            assertSourceFingerprintCurrent(source.fileFullPath, source.sourceFingerprint);
+            await assertSourceFingerprintCurrent(source.fileFullPath, source.sourceFingerprint);
         }
         catch (error) {
             invalidateTranscodeCache(transcodePath);
@@ -892,9 +892,9 @@ function cacheAudioInfo(fileName, sourceFingerprint, audioInfo) {
 function schedulePeakCalculation(fileName, sourceFingerprint, audioInfo) {
     const taskIdentifier = getAudioInfoTaskIdentifier(fileName, sourceFingerprint);
     const peakTask = getOrStartSharedTask(peakCalculateTaskStatus, taskIdentifier, () => TaskQueue_1.heavyTaskQueue.add(async () => {
-        assertSourceFingerprintCurrent(fileName, sourceFingerprint);
+        await assertSourceFingerprintCurrent(fileName, sourceFingerprint);
         const peakLevels = await audioProcessor.getAudioPeaks(fileName);
-        assertSourceFingerprintCurrent(fileName, sourceFingerprint);
+        await assertSourceFingerprintCurrent(fileName, sourceFingerprint);
         const completedAudioInfo = Object.assign({}, audioInfo, { peakLevels });
         cacheAudioInfo(fileName, sourceFingerprint, completedAudioInfo);
         console.log("peakLevels compute finished for: ", fileName);
@@ -910,7 +910,7 @@ function schedulePeakCalculation(fileName, sourceFingerprint, audioInfo) {
 async function getOrCalculateAudioInfo(fileName) {
     let sourceFingerprint;
     try {
-        sourceFingerprint = getSourceFingerprint(fileName);
+        sourceFingerprint = await getSourceFingerprint(fileName);
     }
     catch (error) {
         lufsPersistentCache.delete(fileName);
@@ -925,10 +925,10 @@ async function getOrCalculateAudioInfo(fileName) {
     }
     const taskIdentifier = getAudioInfoTaskIdentifier(fileName, sourceFingerprint);
     const loudnormTask = getOrStartSharedTask(lufsCalculateTaskStatus, taskIdentifier, () => TaskQueue_1.lightTaskQueue.add(async () => {
-        assertSourceFingerprintCurrent(fileName, sourceFingerprint);
+        await assertSourceFingerprintCurrent(fileName, sourceFingerprint);
         console.log("start computing loudnorm for: ", fileName);
         const loudnorm = await audioProcessor.calculateLUFSSplit(fileName);
-        assertSourceFingerprintCurrent(fileName, sourceFingerprint);
+        await assertSourceFingerprintCurrent(fileName, sourceFingerprint);
         const audioInfo = {
             loudnorm,
             peakLevels: [],
