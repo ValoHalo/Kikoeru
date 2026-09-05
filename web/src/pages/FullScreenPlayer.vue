@@ -1,10 +1,8 @@
 <template>
   <div class="container" ref="container" @dblclick="clickOnContainer" :style="{'--cover-url': `url(${coverUrl})`}">
-    <q-img contain v-if="!enableDrawVideo"
+    <q-img fit="contain" v-if="!enableDrawVideo"
       :src="coverUrl"
       class="constrain-height"
-      img-class="scale-animation image-style"
-      :img-style="{'animation-play-state': playing ? 'running' : 'paused'}"
     />
     <canvas class="visualizer" ref="visualizer" width="1000" height="1000"></canvas>
     <div v-if="isInFullScreen" class="simple-progress" :style="progressBarStyle"></div>
@@ -638,8 +636,11 @@ export default {
   width: 100%;
   height: 100%;
   display: flex;
+  overflow: hidden;
+  background: #18181a;
 }
 .container::before {
+  pointer-events: none;
   position: absolute;
   left: 0;
   right: 0;
@@ -654,8 +655,8 @@ export default {
 }
 
 .constrain-height {
-  /* max-height: calc(100vh - 110px); */
-  max-height: 100%;
+  height: 100%;
+  width: 100%;
 }
 
 .visualizer {
@@ -689,22 +690,4 @@ export default {
   text-shadow: 1px 1px 0px rgb(82, 82, 82);
 }
 
-</style>
-
-<style>
-
-.scale-animation {
-  animation-name: bump-shrink;
-  animation-duration: 9s;
-  animation-iteration-count: infinite;
-  transform-origin: center;
-  border-radius: 0px;
-  overflow: hidden;
-}
-
-@keyframes bump-shrink {
-  0% {transform: scale(1.0);}
-  50% {transform: scale(1.1);}
-  100% {transform: scale(1.0);}
-}
 </style>

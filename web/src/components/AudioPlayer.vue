@@ -5,21 +5,26 @@
     <div>
       <q-card 
         class="fixed-bottom-right box-shadow audio-player" 
-        @mousewheel.prevent 
-        @touchmove.prevent
+        @wheel.stop
+        @touchmove.stop
         color="primary"
         :class="{showStyle: showAudioPlayer, hideStyle: !showAudioPlayer}"
         :style="{'--cover-url': `url(${coverUrl})`}"
       >
-        <!--顶部小横条-->
-        <div class="pull-handler" @click="toggleHide" v-touch-swipe.mouse.down="toggleHide"></div>
+        <div class="player-header" v-touch-swipe.mouse.down="toggleHide">
+          <button type="button" class="pull-handler" aria-label="收起播放器" @click="toggleHide">
+            <svg class="player-handle" viewBox="0 0 96 14" fill="none" aria-hidden="true" focusable="false">
+              <path d="M2.5 6 L44 6 Q48 6 52 6 L93.5 6" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
 
         <!-- 音声封面 -->
-        <div class="row items-center albumart q-mt-lg q-pa-sm relative-position flippable-cover-container non-selectable"
+        <div class="row items-center albumart relative-position flippable-cover-container non-selectable"
           v-touch-swipe.mouse="onCoverSwipe"
         >
           <q-img
-            contain
+            fit="contain"
             class="rounded-borders box-shadow flippable-cover cover-img"
             :class="{
               'flip-on-front': !isFlipCover,
@@ -46,9 +51,44 @@
 
         </div>
 
+        <div class="player-titles column non-selectable">
+          <Scrollable class="full-width" :stop="hide" name="audioTitle">
+            <span class="audio-name">{{ currentPlayingFile.title }}</span>
+          </Scrollable>
+          <Scrollable class="full-width" :stop="hide" name="workTitle">
+            <span class="work-name">{{ currentPlayingFile.workTitle }}</span>
+          </Scrollable>
+        </div>
+
+        <div class="player-progress non-selectable relative-position">
+          <AudioElement class="player-seek" />
+          <div class="player-times">
+            <span>{{ formatSeconds(currentTime) }}</span>
+            <span>{{ formatSeconds(duration) }}</span>
+          </div>
+          <div v-if="playingTranscode" class="transcoding-status-anchor text-caption">
+            <TranscodingStatus :track-hash="currentPlayingFile.hash" />
+          </div>
+        </div>
+
+        <div class="player-transport">
+          <q-btn flat round icon="skip_previous" aria-label="上一曲" @click="previousTrack()"><q-tooltip>上一曲</q-tooltip></q-btn>
+          <q-btn flat round :icon="rewindIcon" aria-label="快退" @click="rewind(true)"><q-tooltip>快退</q-tooltip></q-btn>
+          <q-btn flat round class="player-toggle" size="24px" :icon="playingIcon" aria-label="播放或暂停" @click="togglePlaying()"><q-tooltip>播放或暂停</q-tooltip></q-btn>
+          <q-btn flat round :icon="forwardIcon" aria-label="快进" @click="forward(true)"><q-tooltip>快进</q-tooltip></q-btn>
+          <q-btn flat round icon="skip_next" aria-label="下一曲" @click="nextTrack()"><q-tooltip>下一曲</q-tooltip></q-btn>
+        </div>
+
+        <!-- HTML5 volume in iOS is read-only -->
+        <div class="player-volume row items-center" v-if="!$q.platform.is.ios">
+          <q-icon name="volume_down" size="20px" />
+          <q-slider v-model="volume" :min="0" :max="1" :step="0.01" class="col q-mx-md" aria-label="音量" />
+          <q-icon name="volume_up" size="20px" />
+        </div>
+
         <!-- 设置菜单 -->
         <div
-          class="player-tools row justify-between q-mr-sm q-my-sm"
+          class="player-tools"
           @pointerover="updatePlayerToolHint"
           @pointerleave="playerToolHint = ''"
           @focusin="updatePlayerToolHint"
@@ -76,35 +116,32 @@
             >
             </q-btn>
 
-            <!--视频画中画-->
+            <!--播放顺序切换-->
             <q-btn 
-              v-if="enableVideoSource && isCurrentPlayingFileVideo" 
+              class="player-play-mode"
+              flat
               dense 
               size="md" 
               padding="none sm" 
-              :flat="!enableVideoSourcePIP"
-              :outline="enableVideoSourcePIP"
-              icon="picture_in_picture_alt" 
-              aria-label="视频画中画"
-              @click="onSetEnableVideoSourcePIP(!enableVideoSourcePIP)" 
+              :icon="playModeIcon"
+              :aria-label="playModeString"
+              @click="changePlayMode()"
             >
             </q-btn>
 
-            <!--画中画歌词-->
-            <q-btn 
-              v-if="hasLyric || enablePIPLyrics" 
-              dense 
-              size="md" 
-              padding="none sm"
+            <q-btn
+              v-if="hasLyric || enablePIPLyrics"
               :flat="!enablePIPLyrics"
               :outline="enablePIPLyrics"
-              icon="picture_in_picture" 
+              dense
+              size="md"
+              padding="none sm"
+              icon="picture_in_picture"
               aria-label="桌面歌词"
-              @click="setPIPLyrics" 
-            >
-            </q-btn>
+              :aria-pressed="enablePIPLyrics"
+              @click="setPIPLyrics"
+            />
 
-            <!--歌词选择与编辑-->
             <q-btn
               flat
               dense
@@ -113,71 +150,7 @@
               icon="subtitles"
               aria-label="歌词选择"
               @click="showLyricSelection = true"
-            >
-            </q-btn>
-
-            <!--播放顺序切换-->
-            <q-btn 
-              flat 
-              dense 
-              size="md" 
-              padding="none sm" 
-              :icon="playModeIcon" 
-              :aria-label="playModeString"
-              @click="changePlayMode()" 
-            >
-            </q-btn>
-
-            <!--大屏幕-->
-            <q-btn 
-              flat 
-              dense 
-              size="md" 
-              padding="none sm" 
-              icon="fullscreen" 
-              aria-label="网页全屏"
-              @click="gotoFullScreenPlayer"
-            >
-            </q-btn>
-
-            <!--equalizer-->
-            <q-btn 
-              v-if="enableVisualizer"
-              flat 
-              dense 
-              size="md" 
-              padding="none sm" 
-              icon="equalizer" 
-              aria-label="音效均衡器"
-              @click="flipCover"
-            >
-            </q-btn>
-
-            <q-btn
-              flat
-              dense
-              no-caps
-              size="md"
-              padding="none sm"
-              :label="`${playbackRate}×`"
-              style="min-width: 44px"
-              aria-label="播放速度"
-            >
-              <q-menu anchor="bottom right" self="top right">
-                <q-list dense style="min-width: 132px">
-                  <q-item
-                    v-for="rate in playbackRates"
-                    :key="rate"
-                    clickable
-                    v-close-popup
-                    @click="setPlaybackRate(rate)"
-                  >
-                    <q-item-section avatar><q-icon :name="playbackRate === rate ? 'done' : ''" /></q-item-section>
-                    <q-item-section>{{ rate }}×</q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
+            />
 
           <!-- 放在尾部 -->
             <q-btn
@@ -188,53 +161,32 @@
               icon="more_horiz"
               aria-label="更多播放设置"
             >
-              <q-menu anchor="bottom right" self="top right">
-                <q-item clickable v-ripple @click="hideSeekButton = !hideSeekButton">
-                  <q-item-section avatar>
-                    <q-icon :name="hideSeekButton ? 'done' : ''" />
-                  </q-item-section>
-
+              <q-menu class="player-settings-menu" anchor="top right" self="bottom right">
+                <q-item>
+                  <q-item-section avatar><q-icon name="speed" /></q-item-section>
                   <q-item-section>
-                    隐藏封面按钮
+                    <q-select
+                      dense
+                      borderless
+                      label="播放速度"
+                      :model-value="playbackRate"
+                      :options="playbackRates"
+                      :option-label="rate => `${rate}×`"
+                      @update:model-value="setPlaybackRate"
+                    />
                   </q-item-section>
                 </q-item>
-                
-                <q-item clickable v-ripple @click="toggleSwapSeekButton">
-                  <q-item-section avatar>
-                    <q-icon :name="swapSeekButton ? 'done' : ''" />
-                  </q-item-section>
-                  <q-item-section>
-                    交换进度按钮与切换按钮
-                  </q-item-section>
+                <q-item v-if="enableVideoSource && isCurrentPlayingFileVideo" clickable v-close-popup @click="onSetEnableVideoSourcePIP(!enableVideoSourcePIP)">
+                  <q-item-section avatar><q-icon name="picture_in_picture_alt" /></q-item-section>
+                  <q-item-section>视频画中画</q-item-section>
+                  <q-item-section side v-if="enableVideoSourcePIP"><q-icon name="done" /></q-item-section>
                 </q-item>
-                
-                <q-item clickable v-ripple @click="openWorkDetail()" v-close-popup>
-                  <q-item-section avatar>
-                    <!-- placeholder -->
-                  </q-item-section>
-                  <q-item-section>
-                    打开作品详情（或双击封面）
-                  </q-item-section>
+                <q-item v-if="enableVisualizer" clickable v-close-popup @click="flipCover">
+                  <q-item-section avatar><q-icon name="equalizer" /></q-item-section>
+                  <q-item-section>音效均衡器</q-item-section>
+                  <q-item-section side v-if="isFlipCover"><q-icon name="done" /></q-item-section>
                 </q-item>
-                
-                <q-item clickable v-ripple @click="toggleEnableVisualizer">
-                  <q-item-section avatar>
-                    <q-icon :name="enableVisualizer ? 'done' : ''" />
-                  </q-item-section>
-                  <q-item-section>
-                    开启音频可视化（需要刷新页面）
-                  </q-item-section>
-                </q-item>
-                
-                <q-item clickable v-ripple @click="onToggleVideoSource">
-                  <q-item-section avatar>
-                    <q-icon :name="enableVideoSource ? 'done' : ''" />
-                  </q-item-section>
-                  <q-item-section>
-                    视频源绘制功能（需要刷新页面）
-                  </q-item-section>
-                </q-item>
-
+                <q-separator v-if="hasLyric" spaced />
                 <q-item v-if="hasLyric">
                   <q-item-section>
                     <q-input
@@ -273,48 +225,6 @@
             </q-btn>
         </div>
 
-        <!-- 进度条控件 -->
-        <div class="row items-center q-mx-sm q-mb-sm non-selectable relative-position">
-          <div class="col-auto relative-position">{{ formatSeconds(currentTime) }}</div>
-          <AudioElement class="col" />
-          <div class="col-auto relative-position">{{ formatSeconds(duration) }}</div>
-          <div v-if="playingTranscode" class="transcoding-status-anchor text-caption">
-            <TranscodingStatus :track-hash="currentPlayingFile.hash" />
-          </div>
-        </div>
-
-        <!-- Place holder for iOS -->
-        <div style="height: 5px" v-if="$q.platform.is.ios" />
-
-        <!-- 标题 -->
-        <div class="column text-center non-selectable ">
-          <Scrollable class="full-width" :stop="hide" name="audioTitle">
-            <span class="audio-name relative-position q-px-md">{{ currentPlayingFile.title }}</span>
-          </Scrollable>
-          <Scrollable class="full-width" :stop="hide" name="workTitle">
-            <span class="work-name relative-position q-px-md">{{ currentPlayingFile.workTitle }}</span>
-          </Scrollable>
-        </div>
-
-        <!-- Place holder for iOS -->
-        <div  style="height: 10px" v-if="$q.platform.is.ios" />
-
-        <!-- 播放按钮控件 -->
-        <div class="row justify-around" style="height: 65px">
-          <q-btn flat dense class="col-auto" size="lg"   icon="skip_previous" @click="previousTrack()" style="width: 55px" />
-          <q-btn flat dense class="col-auto" size="lg"   :icon="rewindIcon" @click="rewind(true)" style="width: 55px" />
-          <q-btn flat dense class="col-auto" size="28px" :icon="playingIcon" @click="togglePlaying()" style="width: 65px" />
-          <q-btn flat dense class="col-auto" size="lg"   :icon="forwardIcon" @click="forward(true)" style="width: 55px" />
-          <q-btn flat dense class="col-auto" size="lg"   icon="skip_next" @click="nextTrack()" style="width: 55px" />
-        </div>
-
-        <!-- 音量控件 -->
-        <!-- HTML5 volume in iOS is read-only -->
-        <div class="row items-center q-mx-lg" style="height: 50px" v-if="!$q.platform.is.ios">
-          <q-icon name="volume_down" size="sm" class="col-auto" />
-          <q-slider v-model="volume" :min="0" :max="1" :step="0.01" class="col q-mx-md"/>
-          <q-icon name="volume_up" size="sm" class="col-auto" />
-        </div>
       </q-card>
     </div>
 
@@ -448,7 +358,6 @@ export default {
       showCurrentPlayList: false,
       editCurrentPlayList: false,
       queueCopy: [],
-      hideSeekButton: false,
       isAndroid: navigator.userAgent.toLowerCase().indexOf('android') > -1,
       histroyCheckIntervalId: -1,
       latestUpdatedHistory: null, // 记录最近一次更新的历史记录，防止反复对同一个播放历史进行远程数据更新
@@ -471,9 +380,6 @@ export default {
   },
 
   mounted () {
-    if (this.$q.localStorage.has('hideSeekButton')) {
-      this.hideSeekButton = this.$q.localStorage.getItem('hideSeekButton')
-    }
     this.histroyCheckIntervalId = setInterval(() => {
       this.onUpdatePlayingStatus()
     }, 60 * 1000) // 每隔一段时间更新一次播放记录
@@ -517,10 +423,6 @@ export default {
       if (flag === false) {
         this.editCurrentPlayList = false
       }
-    },
-
-    hideSeekButton (option) {
-      this.$q.localStorage.set('hideSeekButton', option)
     },
 
     playing() {
@@ -745,9 +647,6 @@ export default {
       setPlaybackRate: 'SET_PLAYBACK_RATE',
       rewind: 'SET_REWIND_SEEK_MODE',
       forward: 'SET_FORWARD_SEEK_MODE',
-      toggleSwapSeekButton: 'TOGGLE_SWAP_SEEK_BUTTON',
-      toggleEnableVisualizer: 'TOGGLE_ENABLE_VISUALIZER',
-      toggleEnableVideoSource: 'TOGGLE_ENABLE_VIDEO_SOURCE',
       setEnableVideoSourcePIP: 'SET_ENABLE_VIDEO_SOURCE_PIP',
       setEnablePIPLyrics: 'SET_ENABLE_PIP_LYRICS',
       setLyricOffsetSeconds: 'SET_LYRIC_OFFSET_SECONDS',
@@ -912,25 +811,6 @@ export default {
         })
     },
 
-    // 中转一道这个设置，加一些用户提示
-    onToggleVideoSource() {
-
-      // 如果是关闭的话，直接关掉，无需用户提示
-      if (this.enableVideoSource) {
-        this.toggleEnableVideoSource();
-        return;
-      }
-
-      // 打开的话，需要提示一些用户信息
-      this.$q.dialog({
-        title: '注意',
-        message: '开启视频源绘制功能会增加性能开销，移动设备上可能会发热严重，请谨慎选择。此外，在iOS safari系统中，safari会强制将页面中正在播放的视频元素设置为画中画模式，无法规避，建议iOS safari环境下关闭此项功能',
-        cancel: true,
-      }).onOk(() => {
-        this.toggleEnableVideoSource()
-      }).onCancel(() => {})
-    },
-
     onSetEnableVideoSourcePIP(enable) {
       this.setEnableVideoSourcePIP(enable)
 
@@ -955,10 +835,6 @@ export default {
       } else if (isAlreadyInPIP) {
         document.exitPictureInPicture();
       }
-    },
-
-    gotoFullScreenPlayer() {
-      this.$router.push(`/fullScreenPlayer`)
     },
 
     // 当发生特定配置改动，需要用户刷新页面时，通过这个通知来提示用户
@@ -1030,42 +906,190 @@ export default {
 }
 
 .audio-player {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px max(10px, env(safe-area-inset-bottom));
+  background: #fafafa;
+  color: #242629;
+  box-shadow: 0 8px 32px #0004;
+  transition: transform 0.35s ease;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  isolation: isolate;
 
-  // 宽度 > $breakpoint-sm-min
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--cover-url) center / cover;
+    filter: blur(32px);
+    opacity: 0.12;
+  }
+
+  > * {
+    flex-shrink: 0;
+  }
+
+  &.q-card--dark {
+    background: #202022;
+    color: #f5f5f6;
+
+    &::before {
+      opacity: 0.22;
+    }
+  }
+
   @media (min-width: $breakpoint-sm-min) {
-    width: 330px;
-    margin: 0px 10px 10px 0px;
+    width: 340px;
+    max-height: calc(100dvh - 20px);
+    margin: 0 10px 10px 0;
     border-radius: 8px;
   }
 
-  // 宽度 < $breakpoint-xs-max (599px)
   @media (max-width: $breakpoint-xs-max) {
     width: 100%;
-    height: 100%;
+    height: 100dvh;
+    padding-top: env(safe-area-inset-top);
     border-radius: 0;
   }
-
-  transition: 0.6s;
-  overflow: hidden;
-
-  /* flex布局，让封面占据主要空间，其余空间留给其他控件 */
-  display: flex;
-  flex-direction: column;
 }
 
-.audio-player::before {
-  pointer-events: none;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  content: "";
-  background-image: var(--cover-url);
-  background-position: 50% 50%;
-  background-size: contain;
-  background-repeat: repeat;
-  filter: blur(30px) brightness(0.7); // blur bigger than 80 will cause safari wrong render result
+.player-header {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pull-handler {
+  width: 132px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+  }
+
+  .player-handle {
+    display: block;
+    width: 96px;
+    height: 14px;
+    transform: translateY(3px);
+    opacity: 0.4;
+    transition: opacity 320ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    path {
+      d: path('M2.5 6 L44 6 Q48 6 52 6 L93.5 6');
+      transition: d 320ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  &:hover .player-handle,
+  &:focus-visible .player-handle {
+    opacity: 0.9;
+
+    path {
+      d: path('M2.5 4 L46 9 Q48 9.23 50 9 L93.5 4');
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .player-handle,
+    .player-handle path {
+      transition: none;
+    }
+  }
+}
+
+.player-titles {
+  gap: 4px;
+  padding: 24px 0 6px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.player-progress {
+  padding: 0 12px 2px;
+}
+
+.player-seek {
+  padding: 0;
+}
+
+.player-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.player-transport {
+  display: grid;
+  grid-template-columns: 1fr 1fr 60px 1fr 1fr;
+  align-items: center;
+  justify-items: center;
+  height: 60px;
+
+  > .q-btn {
+    width: 44px;
+    height: 44px;
+
+    :deep(.q-icon) {
+      font-size: 28px;
+    }
+  }
+
+  > .player-toggle {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+
+    :deep(.q-icon) {
+      font-size: 40px;
+    }
+  }
+}
+
+.player-volume {
+  height: 46px;
+  padding: 0 12px;
+}
+
+.player-tools {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin-top: 2px;
+
+  > .q-btn {
+    min-width: 0;
+    height: 40px;
+    border-radius: 4px;
+  }
+
+  .player-play-mode :deep(.q-icon) {
+    font-size: 30px;
+  }
+}
+
+:global(.player-settings-menu) {
+  width: 300px;
+  max-width: calc(100vw - 24px);
 }
 
 .hideStyle {
@@ -1077,14 +1101,40 @@ export default {
 }
 
 .albumart {
+  height: 231px;
+  min-height: 140px;
+  justify-content: center;
 
-  // 宽度 < $breakpoint-xs-max (599px)
-  @media (max-width: $breakpoint-xs-max) {
-    width: 100%;
+  .cover-img {
+    height: auto;
+    max-height: 100%;
+    max-width: 480px;
+    box-shadow: none;
+    border-radius: 6px;
+
+    :deep(.q-img__container) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    :deep(.q-img__image) {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 6px;
+    }
   }
 
-  /* 播放控件中，封面占据几乎所有剩余空间，将其他控件挤到底部去 */
-  flex-grow: 1;
+  @media (max-height: 700px) {
+    height: min(231px, max(140px, calc(100dvh - 340px)));
+  }
+
+  @media (max-width: $breakpoint-xs-max) {
+    flex: 1 0 140px;
+    height: 0;
+  }
 }
 
 .current-play-list {
@@ -1107,28 +1157,14 @@ export default {
   border-radius: 8px;
 }
 
-.pull-handler {
-  height: 6px;
-  width: 100px;
-  background: rgba(255, 255, 255, 0.3);
-  position: absolute;
-  border-radius: 4px !important;
-  overflow: hidden;
-  left: 50%;
-  top: 12px;
-  transform: translateX(-50%);
-}
-
-.pull-handler:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
 .audio-name {
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .work-name {
+  font-size: 13px;
   opacity: 0.7;
   white-space: nowrap;
 }
@@ -1171,7 +1207,7 @@ export default {
 .transcoding-status-anchor {
   position: absolute;
   left: 50%;
-  bottom: -12px;
+  bottom: 0;
   transform: translateX(-50%);
   z-index: 1;
 }
