@@ -165,7 +165,19 @@
           <q-spinner-dots color="primary" size="40px" />
         </div>
 
-        <q-list v-if="listMode" bordered separator class="shadow-2">
+        <q-virtual-scroll
+          v-if="listMode && workListMode === WORK_LIST_MODES.WATERFALL"
+          ref="virtualList"
+          :items="works"
+          scroll-target="body"
+          :virtual-scroll-item-size="90"
+          bordered separator class="shadow-2"
+        >
+          <template #default="{ item }">
+            <WorkListItem :key="item.id" :metadata="item" :showLabel="showLabel && $q.screen.width > 700" />
+          </template>
+        </q-virtual-scroll>
+        <q-list v-else-if="listMode" bordered separator class="shadow-2">
           <WorkListItem v-for="work in works" :key="work.id" :metadata="work" :showLabel="showLabel && $q.screen.width > 700" />
         </q-list>
 
@@ -244,6 +256,8 @@ export default {
       detailMode: true,
       stopLoad: false,
       isLoading: false,
+      worksRequestId: 0,
+      titleRequestId: 0,
       activeWorkListMode: null,
       savedScrollPosition: 0,
       WORK_LIST_MODES,
@@ -394,6 +408,11 @@ export default {
     this.stopLoad = true
   },
 
+  beforeUnmount () {
+    this.worksRequestId++
+    this.titleRequestId++
+  },
+
   watch: {
     url () {
       this.reset()
@@ -422,6 +441,7 @@ export default {
 
     showLabel (newLabelSetting) {
       localStorage.showLabel = newLabelSetting;
+      this.$nextTick(() => this.$refs.virtualList?.refresh())
     },
 
     listMode (newListModeSetting) {
@@ -471,6 +491,8 @@ export default {
     },
 
     requestWorksQueue (pageOverride) {
+      if (this.isLoading && pageOverride === undefined) return Promise.resolve(false)
+      const requestId = ++this.worksRequestId
       this.isLoading = true
       const params = {
         page: pageOverride || this.pagination.currentPage + 1 || 1,
@@ -490,17 +512,18 @@ export default {
 
       return this.$axios.get(this.url, { params })
         .then((response) => {
+          if (requestId !== this.worksRequestId) return false
           const works = response.data.works
           this.works = this.workListMode === WORK_LIST_MODES.PAGINATION || params.page === 1
             ? works.concat()
             : this.works.concat(works)
           this.pagination = response.data.pagination
 
-          if (this.works.length >= this.pagination.totalCount) {
-            this.stopLoad = true
-          }
+          this.stopLoad = this.works.length >= this.pagination.totalCount
+          return true
         })
         .catch((error) => {
+          if (requestId !== this.worksRequestId) return false
           if (error.response) {
             // 请求已发出，但服务器响应的状态码不在 2xx 范围内
             if (error.response.status !== 401) {
@@ -510,13 +533,15 @@ export default {
             this.showErrNotif(error.message || error)
           }
           this.stopLoad = true
+          return false
         })
         .finally(() => {
-          this.isLoading = false
+          if (requestId === this.worksRequestId) this.isLoading = false
         })
     },
 
     refreshPageTitle () {
+      const requestId = ++this.titleRequestId
       if (this.$route.query.circleId || this.$route.query.tagId || this.$route.query.vaId) {
         let url = '', restrict = ''
         if (this.$route.query.circleId) {
@@ -532,6 +557,7 @@ export default {
 
         this.$axios.get(url)
           .then((response) => {
+            if (requestId !== this.titleRequestId) return
             const name = response.data.name
             let pageTitle
 
@@ -551,6 +577,7 @@ export default {
             this.pageTitle = pageTitle
           })
           .catch((error) => {
+            if (requestId !== this.titleRequestId) return
             if (error.response) {
               // 请求已发出，但服务器响应的状态码不在 2xx 范围内
               if (error.response.status !== 401) {
@@ -579,9 +606,6 @@ export default {
       this.pagination = { currentPage: page - 1, pageSize: this.pagination.pageSize || 12, totalCount: this.pagination.totalCount || 0 }
       this.works = []
       this.requestWorksQueue(this.workListMode === WORK_LIST_MODES.PAGINATION ? page : 1)
-        .then(() => {
-          if (this.workListMode === WORK_LIST_MODES.WATERFALL && this.works.length < this.pagination.totalCount) this.stopLoad = false
-        })
     },
 
     gotoPage (page) {

@@ -1,6 +1,5 @@
 <template>
   <q-card class="card hover-show">
-    <LibraryActions class="work-card-actions" :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('library-changed')" />
     <router-link :to="`/work/${metadata.id}`">
       <CoverSFW :workid="metadata.id" :nsfw="false" :release="metadata.release" :lyric_status="metadata.lyric_status" :tags="metadata.tags" />
     </router-link>
@@ -81,10 +80,13 @@
         <q-chip size="sm" icon="sell">{{ metadata.dl_count }}</q-chip>
         <q-chip v-if="!metadata.nsfw" class="q-mx-sm" dense style="background: #e6f7d6; color: #56842a">全年龄</q-chip>
       </div>
+    </div>
 
+    <div class="work-card-footer q-mx-xs q-mb-sm q-pt-sm">
       <!-- 声优 -->
       <div
-        class="q-mx-xs q-my-sm"
+        v-if="!thumbnailMode"
+        class="work-card-vas"
         :class="{ 'horize-scroll-va-list': $q.platform.has.touch }"
       >
         <router-link
@@ -97,6 +99,7 @@
           </q-chip>
         </router-link>
       </div>
+      <LibraryActions class="work-card-actions" :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('library-changed')" />
     </div>
   </q-card>
 </template>
@@ -201,19 +204,31 @@ export default {
 
 <style scoped>
 .card {
+  display: flex;
+  flex-direction: column;
   position: relative;
   overflow: hidden;
   border-radius: 8px;
   box-shadow: 0 0px 8px rgba(0, 0, 0, 0.4);
 }
 
+.work-card-footer {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  min-height: 32px;
+  margin-top: auto;
+}
+
+.work-card-vas {
+  flex: 1;
+  min-width: 0;
+}
+
 .work-card-actions {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 3;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .9);
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 4px;
 }
 
 .horize-scroll-va-list {

@@ -452,30 +452,25 @@ function lyricFilter(lyricFilter, knexQuery) {
     }
     return query;
 }
-const getWorksBy = (username, field, id) => {
-    let workIdQuery;
+function worksQuery(username, idsOnly = false) {
     const ratingSubQuery = knex('t_review')
         .select(['t_review.work_id', 't_review.rating'])
-        .join('t_work', 't_work.id', 't_review.work_id')
         .where('t_review.user_name', username).as('userrate');
+    return knex(idsOnly ? 't_work as staticMetadata' : 'staticMetadata')
+        .select([idsOnly ? 'staticMetadata.id' : 'staticMetadata.*', 'userrate.rating AS userRating'])
+        .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id');
+}
+const getWorksBy = (username, field, id, idsOnly = false) => {
+    const query = archiveFilter(worksQuery(username, idsOnly), username);
     switch (field) {
         case 'circle':
-            return archiveFilter(knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
-                .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-                .where('circle_id', '=', id), username);
+            return query.where('circle_id', '=', id);
         case 'tag':
-            workIdQuery = knex('r_tag_work').select('work_id').where('tag_id', '=', id);
-            return archiveFilter(knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
-                .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-                .where('id', 'in', workIdQuery), username);
+            return query.whereIn('id', knex('r_tag_work').select('work_id').where('tag_id', id));
         case 'va':
-            workIdQuery = knex('r_va_work').select('work_id').where('va_id', '=', id);
-            return archiveFilter(knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
-                .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-                .where('id', 'in', workIdQuery), username);
+            return query.whereIn('id', knex('r_va_work').select('work_id').where('va_id', id));
         default:
-            return archiveFilter(knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
-                .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id'), username);
+            return query;
     }
 };
 exports.getWorksBy = getWorksBy;
@@ -487,7 +482,7 @@ const AdvanceSearchCondType = {
     CIRCLE: 4,
     CODE: 5,
 };
-function advanceSearch(conditions, username) {
+function advanceSearch(conditions, username, idsOnly = false) {
     const intersectQueryList = [];
     for (let cond of conditions) {
         const data = cond.d;
@@ -538,26 +533,16 @@ function advanceSearch(conditions, username) {
             intersectQueryList.push(workIdQuery);
         }
     }
-    const ratingSubQuery = knex('t_review')
-        .select(['t_review.work_id', 't_review.rating'])
-        .join('t_work', 't_work.id', 't_review.work_id')
-        .where('t_review.user_name', username).as('userrate');
-    let query = knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
-        .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id');
+    const query = worksQuery(username, idsOnly);
     const originalWorkIds = intersectQueryList.reduce((accQuery, idQuery) => accQuery.andWhere("id", "in", idQuery), knex('t_work').select('original_work_id'));
     const relatedWorkIds = archiveFilter(query.andWhere("original_work_id", "in", originalWorkIds), username);
     return relatedWorkIds;
 }
-const getWorksByKeyWord = (username = 'admin', keyword) => {
-    const ratingSubQuery = knex('t_review')
-        .select(['t_review.work_id', 't_review.rating'])
-        .join('t_work', 't_work.id', 't_review.work_id')
-        .where('t_review.user_name', username).as('userrate');
+const getWorksByKeyWord = (username = 'admin', keyword, idsOnly = false) => {
     const codeRegex = /(RJ|BJ|VJ)?(\d{6,8})/i;
     const searchCode = keyword.match(codeRegex) ? keyword.match(codeRegex)[0].toUpperCase() : '';
     if (searchCode) {
-        let query = knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
-            .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id');
+        let query = worksQuery(username, idsOnly);
         if (/^[a-zA-Z]{2}/.test(searchCode)) {
             const idNumber = (0, idConverter_1.codeToIdNumber)(searchCode);
             query = query.where('id', '=', idNumber);
@@ -581,8 +566,7 @@ const getWorksByKeyWord = (username = 'admin', keyword) => {
     const workIdQuery = knex('r_tag_work').select('work_id').where('tag_id', 'in', tagIdQuery).union([
         knex('r_va_work').select('work_id').where('va_id', 'in', vaIdQuery)
     ]);
-    const query = knex('staticMetadata').select(['staticMetadata.*', 'userrate.rating AS userRating'])
-        .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
+    const query = worksQuery(username, idsOnly)
         .where((builder) => builder
         .where('title', 'like', `%${keyword}%`)
         .orWhere('circle_id', 'in', circleIdQuery)
@@ -590,6 +574,76 @@ const getWorksByKeyWord = (username = 'admin', keyword) => {
     return archiveFilter(query, username);
 };
 exports.getWorksByKeyWord = getWorksByKeyWord;
+
+async function getWorksPage(query, { order, sort, seed, offset, limit }) {
+    const [{ count }] = await query.clone().clearSelect().clearOrder().count('staticMetadata.id as count');
+    const pageQuery = query.clone();
+    if (order === 'betterRandom') {
+        pageQuery.limit(1).orderBy(knex.raw('random()'));
+    }
+    else if (order === 'random') {
+        pageQuery.offset(offset).limit(limit).orderBy(knex.raw('id % ?', seed));
+    }
+    else {
+        pageQuery.offset(offset).limit(limit).orderBy(order, sort)
+            .orderBy([{ column: 'release', order: 'desc' }, { column: 'id', order: 'desc' }]);
+    }
+    const page = await pageQuery;
+    if (page.length === 0) return { works: [], totalCount: count };
+
+    // Load relations only for this page, avoiding whole-library JSON aggregation.
+    const ids = page.map(work => work.id);
+    const columns = ['id', 'created_at', 'updated_at', 'title', 'circle_id', 'nsfw', 'release',
+        'dl_count', 'price', 'review_count', 'rate_count', 'rate_average_2dp', 'rate_count_detail',
+        'rank', 'lyric_status', 'original_work_id', 'memo'];
+    const works = await knex('t_work').whereIn('t_work.id', ids)
+        .leftJoin('t_circle', 't_circle.id', 't_work.circle_id')
+        .select(columns.map(column => `t_work.${column}`))
+        .select('t_circle.name')
+        .select(knex.raw("json_object('id', t_work.circle_id, 'name', t_circle.name) AS circleObj"));
+    const byId = new Map(works.map(work => [String(work.id), work]));
+    for (const [field, table, key] of [['va', 'r_va_work', 'va_id'], ['tag', 'r_tag_work', 'tag_id']]) {
+        const rows = await knex(table).whereIn(`${table}.work_id`, ids)
+            .join(`t_${field}`, `t_${field}.id`, `${table}.${key}`)
+            .select(`${table}.work_id`, `t_${field}.id`, `t_${field}.name`)
+            .orderBy(`${table}.${knex.client.config.client.includes('sqlite3') ? 'rowid' : key}`);
+        for (const work of works) {
+            work[`${field}Names`] = [];
+            work[`${field}Ids`] = [];
+        }
+        for (const row of rows) {
+            const work = byId.get(String(row.work_id));
+            work[`${field}Names`].push(row.name);
+            work[`${field}Ids`].push(row.id);
+        }
+        for (const work of works) {
+            work[`${field}Names`] = work[`${field}Names`].length ? JSON.stringify(work[`${field}Names`]) : null;
+            work[`${field}Ids`] = work[`${field}Ids`].length ? JSON.stringify(work[`${field}Ids`]) : null;
+        }
+    }
+    const originalIds = [...new Set(works.map(work => work.original_work_id).filter(id => id !== null))];
+    const relatedRows = await knex('t_work').select('id', 'title', 'original_work_id')
+        .whereIn('original_work_id', originalIds).orderBy('id');
+    const related = new Map();
+    for (const row of relatedRows) {
+        const key = String(row.original_work_id);
+        if (!related.has(key)) related.set(key, { ids: [], titles: [] });
+        related.get(key).ids.push(row.id);
+        related.get(key).titles.push(row.title);
+    }
+    return {
+        totalCount: count,
+        works: page.filter(({ id }) => byId.has(String(id))).map(({ id, userRating }) => {
+            const work = byId.get(String(id));
+            const group = related.get(String(work.original_work_id));
+            work.related_work_ids = group ? JSON.stringify(group.ids) : null;
+            work.related_work_titles = group ? JSON.stringify(group.titles) : null;
+            work.userRating = userRating;
+            return work;
+        }),
+    };
+}
+exports.getWorksPage = getWorksPage;
 const getLabels = (field) => {
     if (field === 'circle') {
         return knex('t_work')

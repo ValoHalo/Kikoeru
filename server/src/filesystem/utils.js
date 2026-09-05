@@ -29,7 +29,6 @@ exports.sortFoldersByCreatedTime = sortFoldersByCreatedTime;
 const fs_1 = __importDefault(require("fs"));
 const fsPromises = fs_1.default.promises;
 const path_1 = __importDefault(require("path"));
-const recursive_readdir_1 = __importDefault(require("recursive-readdir"));
 const iconv_lite_1 = __importDefault(require("iconv-lite"));
 const natural_orderby_1 = require("natural-orderby");
 const url_1 = require("../routes/utils/url");
@@ -43,17 +42,31 @@ const supportedSubtitleExtList = ['.lrc', '.srt', '.ass', ".vtt"];
 const supportedImageExtList = ['.jpg', '.jpeg', '.png', '.webp'];
 const limit_promise_1 = __importDefault(require("limit-promise"));
 const limitP = new limit_promise_1.default(config_1.config.maxParallelism);
+const fileStatLimit = new limit_promise_1.default(config_1.config.maxParallelism);
 const util_1 = __importDefault(require("util"));
 const idConverter_1 = require("./idConverter");
 const child_process_1 = __importDefault(require("child_process"));
 const execFile = util_1.default.promisify(child_process_1.default.execFile);
 async function recursiveReaddirWithFilter(dir) {
-    const files = await (0, recursive_readdir_1.default)(dir);
-    if (!config_1.config.excludeFolderGlobs) {
-        return files;
+    const matchers = (config_1.config.excludeFolderGlobs || []).map(rule => new minimatch_1.default.Minimatch(rule));
+    const files = [];
+    async function visit(directory) {
+        const entries = await fsPromises.readdir(directory, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path_1.default.join(directory, entry.name);
+            const info = entry.isSymbolicLink() ? await fsPromises.stat(fullPath) : entry;
+            if (info.isDirectory()) {
+                // Exclusions historically match files, including dotfile semantics.
+                // A matching directory alone does not imply all descendants match.
+                await visit(fullPath);
+            }
+            else if (!matchers.some(matcher => matcher.match(fullPath))) {
+                files.push(fullPath);
+            }
+        }
     }
-    const filteredFiles = files.filter((file) => !config_1.config.excludeFolderGlobs.some((rule) => (0, minimatch_1.default)(file, rule)));
-    return filteredFiles;
+    await visit(dir);
+    return files;
 }
 async function getAudioFileDuration(filePath) {
     try {
@@ -103,7 +116,7 @@ async function scrapeWorkMemo(dir, oldMemo) {
         shortPath: file.replace(path_1.default.join(dir, '/'), '')
     }))
         .map(async (fileDict) => {
-        const fstat = fs_1.default.statSync(fileDict.fullPath);
+        const fstat = await fileStatLimit.call(() => fsPromises.stat(fileDict.fullPath));
         const newMTime = Math.round(fstat.mtime.getTime());
         const oldMTime = oldMemoMtime[fileDict.shortPath];
         const oldDuration = oldMemoDuration[fileDict.shortPath];
@@ -159,14 +172,14 @@ const getTrackList = async function (id, dir, readMemo) {
             duration: undefined,
         }));
         const durationMemo = readMemo.duration ?? {};
-        const filesAddAudioDuration = await Promise.all(sortedHashedFiles.map(async (file) => {
+        const filesAddAudioDuration = sortedHashedFiles.map((file) => {
             if (supportedMediaExtList.includes(file.ext) && (undefined !== durationMemo[file.shortFilePath])) {
                 file.duration = durationMemo[file.shortFilePath];
             }
             delete file.fullPath;
             delete file.shortFilePath;
             return file;
-        }));
+        });
         return filesAddAudioDuration;
     }
     catch (err) {

@@ -140,20 +140,10 @@ router.get('/works', (0, express_validator_1.query)('page').optional({ nullable:
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
     const shuffleSeed = req.query.seed ? req.query.seed : 7;
     try {
-        const query = () => db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksBy(username)));
-        const totalCount = await db.countQuery(query(), 'id');
-        let works = null;
-        if (order === 'random') {
-            works = await query().offset(offset).limit(PAGE_SIZE).orderBy(db.knex.raw('id % ?', shuffleSeed));
-        }
-        else if (order === 'betterRandom') {
-            works = await query().limit(1).orderBy(db.knex.raw('random()'));
-        }
-        else {
-            works = await query().offset(offset).limit(PAGE_SIZE).orderBy(order, sort)
-                .orderBy([{ column: 'release', order: 'desc' }, { column: 'id', order: 'desc' }]);
-        }
-        works = (0, normalize_1.default)(works);
+        const query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksBy(username, undefined, undefined, true)));
+        const result = await db.getWorksPage(query, { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
+        const works = (0, normalize_1.default)(result.works);
+        const totalCount = result.totalCount;
         res.send({
             works,
             pagination: {
@@ -202,21 +192,14 @@ router.get('/search', async (req, res) => {
         let query = null;
         if (isAdvance) {
             const conditions = JSON.parse(keyword);
-            query = () => db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.advanceSearch(conditions, username)));
+            query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.advanceSearch(conditions, username, true)));
         }
         else {
-            query = () => db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksByKeyWord(username, keyword)));
+            query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksByKeyWord(username, keyword, true)));
         }
-        const totalCount = await db.countQuery(query(), 'id');
-        let works = null;
-        if (order === 'random') {
-            works = await query().offset(offset).limit(PAGE_SIZE).orderBy(db.knex.raw('id % ?', shuffleSeed));
-        }
-        else {
-            works = await query().offset(offset).limit(PAGE_SIZE).orderBy(order, sort)
-                .orderBy([{ column: 'release', order: 'desc' }, { column: 'id', order: 'desc' }]);
-        }
-        works = (0, normalize_1.default)(works);
+        const result = await db.getWorksPage(query, { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
+        const works = (0, normalize_1.default)(result.works);
+        const totalCount = result.totalCount;
         res.send({
             works,
             pagination: {
@@ -243,17 +226,10 @@ router.get('/:field(circle|tag|va)s/:id/works', (0, express_validator_1.param)('
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
     const shuffleSeed = req.query.seed ? req.query.seed : 7;
     try {
-        const query = () => db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksBy(username, req.params.field, req.params.id)));
-        const totalCount = await db.countQuery(query(), 'id');
-        let works = null;
-        if (order === 'random') {
-            works = await query().offset(offset).limit(PAGE_SIZE).orderBy(db.knex.raw('id % ?', shuffleSeed));
-        }
-        else {
-            works = await query().offset(offset).limit(PAGE_SIZE).orderBy(order, sort)
-                .orderBy([{ column: 'release', order: 'desc' }, { column: 'id', order: 'desc' }]);
-        }
-        works = (0, normalize_1.default)(works);
+        const query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksBy(username, req.params.field, req.params.id, true)));
+        const result = await db.getWorksPage(query, { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
+        const works = (0, normalize_1.default)(result.works);
+        const totalCount = result.totalCount;
         res.send({
             works,
             pagination: {

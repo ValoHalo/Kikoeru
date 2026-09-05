@@ -32,6 +32,8 @@ const createSchema = (connection = db_1.knex) => connection.schema
     table.integer('is_custom_meta').defaultTo(0);
     table.foreign('circle_id').references('id').inTable('t_circle');
     table.index(['circle_id', 'release', 'dl_count', 'review_count', 'price', 'rate_average_2dp'], 't_work_index');
+    table.index(['release', 'id'], 't_work_release_id_index');
+    table.index(['original_work_id', 'id'], 't_work_original_work_id_index');
 })
     .createTable('t_tag', (table) => {
     table.increments();
@@ -48,6 +50,7 @@ const createSchema = (connection = db_1.knex) => connection.schema
     table.foreign('tag_id').references('id').inTable('t_tag');
     table.foreign('work_id').references('id').inTable('t_work');
     table.primary(['tag_id', 'work_id']);
+    table.index(['work_id'], 'r_tag_work_work_id_index');
 })
     .createTable('r_va_work', (table) => {
     table.string('va_id');
@@ -55,6 +58,7 @@ const createSchema = (connection = db_1.knex) => connection.schema
     table.foreign('va_id').references('id').inTable('t_va').onUpdate('CASCADE').onDelete('CASCADE');
     table.foreign('work_id').references('id').inTable('t_work').onUpdate('CASCADE').onDelete('CASCADE');
     table.primary(['va_id', 'work_id']);
+    table.index(['work_id'], 'r_va_work_work_id_index');
 })
     .createTable('t_user', (table) => {
     table.string('name').notNullable();
