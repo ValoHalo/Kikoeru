@@ -4,7 +4,7 @@
       <q-toolbar>
         <q-btn flat round dense icon="menu" aria-label="菜单" @click="drawerOpen = !drawerOpen" />
         <q-toolbar-title class="admin-toolbar-title">
-          <router-link to="/" class="text-white">Kikoeru</router-link>
+          <router-link to="/" class="header-brand">Kikoeru</router-link>
           <span class="admin-toolbar-divider" aria-hidden="true" />
           <span class="admin-toolbar-section gt-xs">{{ currentSectionTitle }}</span>
           <span class="admin-toolbar-section xs">{{ compactSectionTitle }}</span>

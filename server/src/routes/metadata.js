@@ -49,6 +49,11 @@ const utils_1 = require("../filesystem/utils");
 const idConverter_1 = require("../filesystem/idConverter");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
+router.get(['/works', '/search', '/:field(circle|tag|va)s/:id/works'],
+    (0, express_validator_1.query)('collectionId').optional().isInt({ min: 1 }),
+    (req, res, next) => {
+        if ((0, validate_1.isValidRequest)(req, res)) next();
+    });
 router.get('/cover/:id', (0, express_validator_1.param)('id').isInt(), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
@@ -141,7 +146,7 @@ router.get('/works', (0, express_validator_1.query)('page').optional({ nullable:
     const shuffleSeed = req.query.seed ? req.query.seed : 7;
     try {
         const query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksBy(username, undefined, undefined, true)));
-        const result = await db.getWorksPage(query, { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
+        const result = await db.getWorksPage(db.collectionFilter(req.query.collectionId, username, query), { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
         const works = (0, normalize_1.default)(result.works);
         const totalCount = result.totalCount;
         res.send({
@@ -197,7 +202,7 @@ router.get('/search', async (req, res) => {
         else {
             query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksByKeyWord(username, keyword, true)));
         }
-        const result = await db.getWorksPage(query, { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
+        const result = await db.getWorksPage(db.collectionFilter(req.query.collectionId, username, query), { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
         const works = (0, normalize_1.default)(result.works);
         const totalCount = result.totalCount;
         res.send({
@@ -227,7 +232,7 @@ router.get('/:field(circle|tag|va)s/:id/works', (0, express_validator_1.param)('
     const shuffleSeed = req.query.seed ? req.query.seed : 7;
     try {
         const query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksBy(username, req.params.field, req.params.id, true)));
-        const result = await db.getWorksPage(query, { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
+        const result = await db.getWorksPage(db.collectionFilter(req.query.collectionId, username, query), { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
         const works = (0, normalize_1.default)(result.works);
         const totalCount = result.totalCount;
         res.send({

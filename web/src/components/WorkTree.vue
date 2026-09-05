@@ -1,17 +1,17 @@
 <template>
   <div class="q-ma-md " style="">
-    <q-breadcrumbs gutter="xs" v-if="path.length">
-      <q-breadcrumbs-el   >
-        <q-btn no-caps flat dense size="md" icon="folder" @click="path = []">ROOT</q-btn>
-      </q-breadcrumbs-el>
-      
-      <q-breadcrumbs-el v-for="(folderName, index) in path"  :key="index"  class="cursor-pointer" >
-        <q-btn no-caps flat dense size="md" icon="folder" @click="onClickBreadcrumb(index)">{{folderName}}</q-btn>
-      </q-breadcrumbs-el>
-    </q-breadcrumbs>
+    <div class="work-tree-toolbar">
+      <q-breadcrumbs gutter="xs" class="work-tree-breadcrumbs">
+        <q-breadcrumbs-el>
+          <q-btn no-caps flat dense size="md" icon="folder" label="ROOT" @click="path = []" />
+        </q-breadcrumbs-el>
 
-    <div class="row justify-end q-mb-sm">
-      <q-btn flat round icon="playlist_add" :disable="allAudioTracks.length === 0" aria-label="将整个作品加入已保存列表" @click="openPlaylistPicker(allAudioTracks)"><q-tooltip>将整个作品加入已保存列表</q-tooltip></q-btn>
+        <q-breadcrumbs-el v-for="(folderName, index) in path" :key="index" class="cursor-pointer">
+          <q-btn no-caps flat dense size="md" icon="folder" :label="folderName" @click="onClickBreadcrumb(index)" />
+        </q-breadcrumbs-el>
+      </q-breadcrumbs>
+
+      <q-btn flat round class="work-tree-playlist" icon="playlist_add" :disable="allAudioTracks.length === 0" aria-label="将整个作品加入已保存列表" @click="openPlaylistPicker(allAudioTracks)"><q-tooltip>将整个作品加入已保存列表</q-tooltip></q-btn>
     </div>
 
     <q-dialog v-model="showPlaylistPicker">
@@ -472,6 +472,42 @@ export default {
 </script>
 
 <style scoped>
+.work-tree-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.work-tree-breadcrumbs {
+  min-width: 0;
+  padding: 6px 0;
+}
+
+.work-tree-breadcrumbs :deep(.q-breadcrumbs__el),
+.work-tree-breadcrumbs :deep(.q-btn) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.work-tree-breadcrumbs :deep(.q-btn .block) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.work-tree-breadcrumbs :deep(.q-btn__content) {
+  flex-wrap: nowrap;
+}
+
+.work-tree-playlist {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+}
+
 .playlist-picker-dialog {
   width: 460px;
   max-width: 92vw;

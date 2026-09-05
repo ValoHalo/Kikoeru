@@ -28,6 +28,17 @@ function archiveFilter(query, username, mode = 'exclude', column = 'staticMetada
     return query.whereNotIn(column, archivedWorkIds(username));
 }
 exports.archiveFilter = archiveFilter;
+
+function collectionFilter(collectionId, username, query) {
+    if (!collectionId)
+        return query;
+    return query.whereIn('staticMetadata.id', knex('t_work_collection_item as collection_item')
+        .select('collection_item.work_id')
+        .join('t_work_collection as collection', 'collection.id', 'collection_item.collection_id')
+        .where('collection.id', collectionId)
+        .where('collection.user_name', username));
+}
+exports.collectionFilter = collectionFilter;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const config_1 = require("../config");

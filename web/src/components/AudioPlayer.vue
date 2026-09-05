@@ -47,7 +47,22 @@
         </div>
 
         <!-- 设置菜单 -->
-        <div class="row justify-between q-mr-sm q-my-sm">
+        <div
+          class="player-tools row justify-between q-mr-sm q-my-sm"
+          @pointerover="updatePlayerToolHint"
+          @pointerleave="playerToolHint = ''"
+          @focusin="updatePlayerToolHint"
+          @focusout="leavePlayerTools"
+          @click="playerToolHint = ''"
+        >
+          <q-tooltip
+            :model-value="Boolean(playerToolHint)"
+            @update:model-value="value => { if (!value) playerToolHint = '' }"
+            no-parent-event
+            anchor="top middle"
+            self="bottom middle"
+            :transition-duration="0"
+          >{{ playerToolHint }}</q-tooltip>
           <!-- 顶在前面 -->
             <!-- 曲目列表 -->
             <q-btn 
@@ -56,11 +71,9 @@
               size="md" 
               padding="none sm" 
               icon="queue_music" 
+              aria-label="切换曲目"
               @click="showCurrentPlayList = !showCurrentPlayList" 
             >
-              <q-tooltip anchor="top middle" self="bottom middle">
-                切换曲目
-              </q-tooltip>
             </q-btn>
 
             <!--视频画中画-->
@@ -72,11 +85,9 @@
               :flat="!enableVideoSourcePIP"
               :outline="enableVideoSourcePIP"
               icon="picture_in_picture_alt" 
+              aria-label="视频画中画"
               @click="onSetEnableVideoSourcePIP(!enableVideoSourcePIP)" 
             >
-            <q-tooltip anchor="top middle" self="bottom middle">
-              视频画中画
-            </q-tooltip>
             </q-btn>
 
             <!--画中画歌词-->
@@ -88,11 +99,9 @@
               :flat="!enablePIPLyrics"
               :outline="enablePIPLyrics"
               icon="picture_in_picture" 
+              aria-label="桌面歌词"
               @click="setPIPLyrics" 
             >
-              <q-tooltip anchor="top middle" self="bottom middle">
-                桌面歌词
-              </q-tooltip>
             </q-btn>
 
             <!--歌词选择与编辑-->
@@ -102,11 +111,9 @@
               size="md"
               padding="none sm"
               icon="subtitles"
+              aria-label="歌词选择"
               @click="showLyricSelection = true"
             >
-              <q-tooltip anchor="top middle" self="bottom middle">
-                歌词选择
-              </q-tooltip>
             </q-btn>
 
             <!--播放顺序切换-->
@@ -116,11 +123,9 @@
               size="md" 
               padding="none sm" 
               :icon="playModeIcon" 
+              :aria-label="playModeString"
               @click="changePlayMode()" 
             >
-              <q-tooltip anchor="top middle" self="bottom middle">
-                {{ playModeString }}
-              </q-tooltip>
             </q-btn>
 
             <!--大屏幕-->
@@ -130,11 +135,9 @@
               size="md" 
               padding="none sm" 
               icon="fullscreen" 
+              aria-label="网页全屏"
               @click="gotoFullScreenPlayer"
             >
-              <q-tooltip anchor="top middle" self="bottom middle">
-                网页全屏
-              </q-tooltip>
             </q-btn>
 
             <!--equalizer-->
@@ -145,11 +148,9 @@
               size="md" 
               padding="none sm" 
               icon="equalizer" 
+              aria-label="音效均衡器"
               @click="flipCover"
             >
-              <q-tooltip anchor="top middle" self="bottom middle">
-                音效均衡器
-              </q-tooltip>
             </q-btn>
 
             <q-btn
@@ -162,7 +163,6 @@
               style="min-width: 44px"
               aria-label="播放速度"
             >
-              <q-tooltip anchor="top middle" self="bottom middle">播放速度</q-tooltip>
               <q-menu anchor="bottom right" self="top right">
                 <q-list dense style="min-width: 132px">
                   <q-item
@@ -186,10 +186,8 @@
               size="md"
               padding="none sm"
               icon="more_horiz"
+              aria-label="更多播放设置"
             >
-              <q-tooltip anchor="top middle" self="bottom middle">
-                更多播放设置
-              </q-tooltip>
               <q-menu anchor="bottom right" self="top right">
                 <q-item clickable v-ripple @click="hideSeekButton = !hideSeekButton">
                   <q-item-section avatar>
@@ -468,6 +466,7 @@ export default {
       fixStartMills: 0,
       fixStopMills: 0,
       showLyricSelection: false,
+      playerToolHint: '',
     }
   },
 
@@ -704,6 +703,18 @@ export default {
   },
 
   methods: {
+    updatePlayerToolHint (event) {
+      if (event.pointerType === 'touch') return
+      const button = event.target.closest('button[aria-label]')
+      if (button && event.currentTarget.contains(button)) {
+        this.playerToolHint = button.getAttribute('aria-label')
+      }
+    },
+
+    leavePlayerTools (event) {
+      if (!event.currentTarget.contains(event.relatedTarget)) this.playerToolHint = ''
+    },
+
     formatSeconds,
 
     startFixLyricSync(whoStartFirst) {
@@ -1043,6 +1054,7 @@ export default {
 }
 
 .audio-player::before {
+  pointer-events: none;
   position: absolute;
   left: 0;
   right: 0;

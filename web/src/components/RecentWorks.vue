@@ -5,13 +5,21 @@
       <q-btn flat icon="navigate_next" @click="$router.push('/favourites/histroy')"></q-btn>
     </div>
     <q-virtual-scroll
-      class="q-px-sm"
-      :class="{'scroll-style-change': !$q.platform.has.touch}"
+      class="q-px-sm recent-works-scroll"
+      :class="{'scroll-style-change': !$q.platform.has.touch, 'is-dragging': mouseDrag && mouseDrag.active}"
       :items="works"
       ref="scroll"
       virtual-scroll-horizontal
       @virtual-scroll="onVirtualScroll"
       @wheel.stop.prevent="onMouseWheel"
+      @pointerdown="startMouseDrag"
+      @pointermove="moveMouseDrag"
+      @pointerup="endMouseDrag"
+      @pointercancel="endMouseDrag"
+      @lostpointercapture="endMouseDrag"
+      @pointerleave="leaveMouseDrag"
+      @click.capture="onScrollClick"
+      @dragstart.prevent
     >
       <template v-slot="{ item }">
         <div
@@ -61,10 +69,57 @@ export default {
       works: [],
       stopLoad: false,
       isLoading: false,
+      mouseDrag: null,
+      suppressMouseClick: false,
     }
   },
 
   methods: {
+    startMouseDrag(event) {
+      this.suppressMouseClick = false;
+      const element = event.currentTarget;
+      if (event.pointerType !== 'mouse' || event.button !== 0 || element.scrollWidth <= element.clientWidth) return;
+      if (event.clientY >= element.getBoundingClientRect().top + element.clientHeight) return;
+      this.mouseDrag = { pointerId: event.pointerId, startX: event.clientX, scrollLeft: element.scrollLeft, active: false };
+    },
+
+    moveMouseDrag(event) {
+      const drag = this.mouseDrag;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (!(event.buttons & 1)) {
+        this.endMouseDrag(event);
+        return;
+      }
+      const distance = event.clientX - drag.startX;
+      if (!drag.active) {
+        if (Math.abs(distance) < 6) return;
+        drag.active = true;
+        this.suppressMouseClick = true;
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+      event.preventDefault();
+      event.currentTarget.scrollLeft = drag.scrollLeft - distance;
+    },
+
+    endMouseDrag(event) {
+      if (!this.mouseDrag || this.mouseDrag.pointerId !== event.pointerId) return;
+      this.mouseDrag = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    },
+
+    leaveMouseDrag(event) {
+      if (this.mouseDrag && !this.mouseDrag.active) this.endMouseDrag(event);
+    },
+
+    onScrollClick(event) {
+      if (!this.suppressMouseClick || event.detail === 0) return;
+      this.suppressMouseClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+    },
+
     async getHistory() {
       if (this.stopLoad || this.isLoading) return;
 
@@ -135,6 +190,17 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
+@media (hover: hover) and (pointer: fine) {
+  .recent-works-scroll {
+    cursor: grab;
+    user-select: none;
+  }
+
+  .recent-works-scroll.is-dragging {
+    cursor: grabbing;
+  }
+}
 
 .card {
   border-radius: 8px;

@@ -1,7 +1,7 @@
 <template>
   <div>
     <!--没有搜索的情况下，显示最近播放作品-->
-    <RecentWorks v-if="enableShowRecent && !isAdvanceSearch && searchMetas.length == 0" />
+    <RecentWorks v-if="enableShowRecent && !isAdvanceSearch && searchMetas.length == 0 && !collectionId" />
 
     <!--
       TODO: 当前版本的quasar的input在iOSsafari中输入中文时有bug，
@@ -48,7 +48,8 @@
       </div>
     </div>
 
-    <div class="row justify-between q-mb-md q-mx-sm">
+    <div class="works-filters row justify-between q-mb-md q-mx-sm">
+      <div class="works-filter-fields">
       <!-- 排序属性 -->
       <q-select
         dense
@@ -85,7 +86,6 @@
         rounded
         outlined
         bg-color=""
-        style="min-width: 8rem;"
         transition-show="scale"
         transition-hide="scale"
         v-model="lyricOption"
@@ -94,9 +94,31 @@
         label="字幕筛选"
         clearable
         multiple
-        class="col-auto"
+        class="col-auto works-filter-lyrics"
       />
 
+      <q-select
+        dense
+        rounded
+        outlined
+        :model-value="collectionId"
+        @update:model-value="setCollectionFilter"
+        :options="collectionOptions"
+        :loading="loadingCollections"
+        emit-value
+        map-options
+        clearable
+        label="作品分组"
+        :display-value="collectionId ? (collections.find(item => String(item.id) === collectionId)?.name || '分组不可用') : '全部分组'"
+        @popup-show="loadCollections"
+      >
+        <template #no-option>
+          <q-item><q-item-section class="text-grey">暂无作品分组</q-item-section></q-item>
+        </template>
+      </q-select>
+      </div>
+
+      <div class="works-display-controls">
       <!-- 排序顺序 -->
       <q-toggle v-model="sortInDesc" :label="sortInDesc ? '降序' : '升序'" />
 
@@ -114,7 +136,7 @@
           { icon: 'list', value: true }
         ]"
         style="width: 85px;"
-        class="col-auto"
+        class="col-auto works-view-toggle"
       />
 
       <q-btn-toggle
@@ -152,6 +174,7 @@
         v-if="$q.screen.width > 700 && !listMode"
       />
 
+      </div>
     </div>
 
     <div :class="`row justify-center ${listMode ? 'list' : 'q-mx-md'}`">
@@ -277,6 +300,8 @@ export default {
 
       lyricOption: [], // 注意，这个选项可多选，但是clear的时候，quasar可能会将其设置为null，需要特别注意
       lyricOptions: ["lyric_local"],
+      collections: [],
+      loadingCollections: false,
 
       // 排序顺序，true表示降序，false表示升序
       sortInDesc: true,
@@ -341,6 +366,15 @@ export default {
   },
 
   computed: {
+    collectionId () {
+      const id = this.$route.query.collectionId
+      return typeof id === 'string' && /^[1-9]\d*$/.test(id) ? id : null
+    },
+
+    collectionOptions () {
+      return this.collections.map(item => ({ label: item.name, value: String(item.id) }))
+    },
+
     url () {
       const query = this.$route.query
       if (query.circleId) {
@@ -385,6 +419,7 @@ export default {
   // keep-alive hooks
   // <keep-alive /> is set in MainLayout
   activated () {
+    this.loadCollections()
     if (this.activeWorkListMode !== this.workListMode) {
       this.activeWorkListMode = this.workListMode
       if (!this.polishPageQuery()) this.reset(this.workListMode === WORK_LIST_MODES.PAGINATION ? this.requestedPage : 1)
@@ -475,12 +510,37 @@ export default {
       this.reset()
     },
 
+    '$route.query.collectionId'() {
+      this.reset(this.requestedPage)
+    },
+
     '$route.query.page'() {
       if (this.workListMode === WORK_LIST_MODES.PAGINATION) this.reset(this.requestedPage)
     },
   },
 
   methods: {
+    async loadCollections () {
+      if (this.loadingCollections) return
+      this.loadingCollections = true
+      try {
+        const response = await this.$axios.get('/api/library/collections')
+        this.collections = response.data.collections || []
+      } catch (error) {
+        this.showErrNotif(error.response?.data?.error || '读取作品分组失败')
+      } finally {
+        this.loadingCollections = false
+      }
+    },
+
+    setCollectionFilter (value) {
+      const query = { ...this.$route.query }
+      delete query.page
+      if (value) query.collectionId = String(value)
+      else delete query.collectionId
+      this.$router.push({ query })
+    },
+
     onLoad (index, done) {
       if (this.workListMode === WORK_LIST_MODES.PAGINATION) {
         done()
@@ -503,6 +563,7 @@ export default {
         seed: this.seed,
         isAdvance: this.isAdvanceSearch ? 1 : 0
       }
+      if (this.collectionId) params.collectionId = this.collectionId
 
       if (this.isAdvanceSearch) {
         params.keyword = JSON.stringify(this.advanceSearchKeywords, null, 0)
@@ -690,6 +751,55 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.works-filters {
+  align-items: center;
+  gap: 12px;
+}
+
+.works-filter-lyrics {
+  min-width: 0;
+}
+
+.works-filter-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  flex: 1 1 540px;
+}
+
+.works-filter-fields > .q-field {
+  min-width: 0;
+  width: 100%;
+}
+
+.works-display-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 1 0 auto;
+}
+
+.works-filters :deep(.q-btn.bg-white.text-primary) {
+  color: var(--kikoeru-accent-text-light) !important;
+}
+
+@media (max-width: 700px) {
+  .works-filters {
+    margin: 12px 16px 20px;
+  }
+
+  .works-filter-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-basis: 100%;
+  }
+
+  .works-display-controls {
+    justify-content: space-between;
+    flex-basis: 100%;
+  }
+}
+
   .list {
     // 宽度 >= $breakpoint-sm-min
     @media (min-width: $breakpoint-sm-min) {

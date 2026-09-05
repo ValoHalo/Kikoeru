@@ -4,8 +4,8 @@
       <q-toolbar class="row justify-between">
         <q-btn flat dense round @click="drawerOpen = !drawerOpen" icon="menu" aria-label="菜单" />
         <q-btn flat size="md" icon="arrow_back_ios" @click="back()" v-if="isNotAtHomePage" aria-label="返回" />
-        <q-toolbar-title class="gt-xs"><router-link :to="'/'" class="text-white">Kikoeru</router-link></q-toolbar-title>
-        <q-input v-if="$route.name !== 'advance search'" dark dense rounded standout v-model="keyword" debounce="500" input-class="text-right" class="q-mr-sm">
+        <q-toolbar-title class="gt-xs"><router-link :to="'/'" class="header-brand">Kikoeru</router-link></q-toolbar-title>
+        <q-input v-if="$route.name !== 'advance search'" dense rounded borderless v-model="keyword" debounce="500" input-class="text-right" class="header-search q-mr-sm">
           <template v-slot:before><q-btn round dense flat icon="manage_search" to="/search"><q-tooltip>点此进入聚合搜索，支持多关键字搜索</q-tooltip></q-btn></template>
           <template v-slot:append><q-icon v-if="keyword === ''" name="search" /><q-icon v-else name="clear" class="cursor-pointer" @click="keyword = ''" /></template>
         </q-input>
@@ -106,7 +106,7 @@
     <SleepMode v-if="oldSleepTimerUIStyle" v-model="showTimer" />
     <CountDownSleepMode v-else v-model="showTimer" />
 
-    <q-page-container :class="{'page-container-style': isFullScreenPage, 'padding-bottom-play-bar': !isFullScreenPage}">
+    <q-page-container :class="{'page-container-style': isFullScreenPage, 'padding-bottom-play-bar': !isFullScreenPage, 'works-page-container': $route.name === 'works' || $route.name === 'advance search'}">
       <router-view v-slot="{ Component }">
         <keep-alive include="Works">
           <component :is="Component" />
@@ -412,6 +412,8 @@ export default {
   .color-scheme-toggle__track, .color-scheme-toggle__thumb { transition: none; }
 }
 .page-container-style { position: absolute; left: 0; right: 0; bottom: 0; top: 0; }
+.works-page-container { min-height: 100vh; }
+.body--light .works-page-container { background: #f2f3f5; }
 .padding-bottom-play-bar { padding-bottom: 80px !important; }
 .scroller { transition: .3s; }
 .scroller-show { opacity: 1; visibility: visible; }

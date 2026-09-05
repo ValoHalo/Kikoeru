@@ -3,20 +3,26 @@
     <template v-if="inline">
       <q-btn
         dense
-        class="shadow-4"
-        color="cyan"
+        :flat="flat"
+        :round="compact"
+        :class="{ 'shadow-4': !flat }"
+        :color="compact ? undefined : (flat ? 'teal' : 'cyan')"
         icon="create_new_folder"
-        label="加入作品分组"
+        :label="compact ? undefined : '加入作品分组'"
+        aria-label="加入作品分组"
         @click="openCollectionDialog"
-      />
+      ><q-tooltip v-if="compact">加入作品分组</q-tooltip></q-btn>
       <q-btn
         dense
-        class="shadow-4"
-        color="cyan"
+        :flat="flat"
+        :round="compact"
+        :class="{ 'shadow-4': !flat }"
+        :color="compact ? undefined : (flat ? 'teal' : 'cyan')"
         :icon="archived ? 'unarchive' : 'archive'"
-        :label="archived ? '移出归档' : '归档作品'"
+        :label="compact ? undefined : (archived ? '移出归档' : '归档作品')"
+        :aria-label="archived ? '移出归档' : '归档作品'"
         @click="toggleArchive"
-      />
+      ><q-tooltip v-if="compact">{{ archived ? '移出归档' : '归档作品' }}</q-tooltip></q-btn>
     </template>
     <q-btn v-else flat round dense icon="more_vert" aria-label="整理作品" @click="loadCollections">
       <q-tooltip>整理作品</q-tooltip>
@@ -62,7 +68,9 @@ export default {
   props: {
     workId: { type: Number, required: true },
     archived: { type: Boolean, default: false },
-    inline: { type: Boolean, default: false }
+    inline: { type: Boolean, default: false },
+    flat: { type: Boolean, default: false },
+    compact: { type: Boolean, default: false }
   },
   emits: ['changed'],
   data () {

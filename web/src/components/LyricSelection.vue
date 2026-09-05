@@ -32,6 +32,7 @@
         @click="saveLyrics"
       />
       <q-btn
+        v-if="!isEditingLyrics"
         color="secondary"
         icon="library_music"
         :label="$q.screen.lt.sm ? undefined : '选择其他歌词'"
@@ -42,6 +43,7 @@
         @click="fetchOtherLyricFiles"
       />
       <q-btn
+        v-if="!isEditingLyrics"
         color="negative"
         icon="subtitles_off"
         :label="$q.screen.lt.sm ? undefined : '关闭歌词'"
@@ -51,6 +53,7 @@
         @click="closeLyric"
       />
       <q-btn
+        v-if="!isEditingLyrics"
         color="primary"
         icon="my_location"
         :label="$q.screen.lt.sm ? undefined : '转到当前段落'"
@@ -69,7 +72,7 @@
         :disable="!isAdministrator || lyricLines.length === 0"
         @click="setCurrentLineEndTime"
       />
-      <q-toggle class="lyric-auto-track" v-model="autoTrackCurrentLine" label="自动跟踪当前歌词" />
+      <q-toggle v-if="!isEditingLyrics" class="lyric-auto-track" v-model="autoTrackCurrentLine" label="自动跟踪当前歌词" />
       <div v-if="!isAdministrator" class="text-caption text-grey-7">
         当前用户可查看和切换歌词；编辑及保存需要管理员权限。
       </div>
