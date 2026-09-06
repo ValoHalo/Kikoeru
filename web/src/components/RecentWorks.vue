@@ -207,6 +207,11 @@ export default {
   overflow: hidden;
 }
 
+.card :deep(.bg-brown) {
+  background: rgba(25, 25, 25, 0.8) !important;
+  box-shadow: none;
+}
+
 .playInfo {
   background: linear-gradient(to top, black, rgba(0, 0, 0, 0.5), transparent);
   width: 100%;
