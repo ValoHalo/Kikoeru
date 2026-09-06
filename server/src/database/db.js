@@ -3,12 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fillNewCustomMetaInfo = exports.customWorkMetadata = exports.updatePlayHistroy = exports.getPlayHistroy = exports.deleteUserReview = exports.updateUserReview = exports.getWorksWithReviews = exports.deleteUser = exports.resetUserPassword = exports.updateUserPassword = exports.createUser = exports.getMetadata = exports.getLabels = exports.updateWorkLyricStatus = exports.updateWorkMetadata = exports.getWorksByKeyWord = exports.getWorksBy = exports.removeWork = exports.getWorkMetadata = exports.insertWorkMetadata = exports.knex = void 0;
+exports.fillNewCustomMetaInfo = exports.customWorkMetadata = exports.updatePlayHistroy = exports.getPlayHistroy = exports.deleteUserReview = exports.updateUserReview = exports.getWorksWithReviews = exports.deleteUser = exports.updateUserPassword = exports.createUser = exports.getMetadata = exports.getLabels = exports.updateWorkLyricStatus = exports.updateWorkMetadata = exports.getWorksByKeyWord = exports.getWorksBy = exports.removeWork = exports.getWorkMetadata = exports.insertWorkMetadata = exports.knex = void 0;
 exports.updateWorkLocalLyricStatus = updateWorkLocalLyricStatus;
 exports.deletePlayHistroy = deletePlayHistroy;
 exports.nsfwFilter = nsfwFilter;
 exports.lyricFilter = lyricFilter;
-exports.getWorkMemo = getWorkMemo;
 exports.setWorkMemo = setWorkMemo;
 exports.advanceSearch = advanceSearch;
 exports.uncensorDlsiteTags = uncensorDlsiteTags;
@@ -44,7 +43,6 @@ const path_1 = __importDefault(require("path"));
 const config_1 = require("../config");
 const idConverter_1 = require("../filesystem/idConverter");
 const dlsite_tag_uncensored_lut_1 = require("../scraper/dlsite_tag_uncensored_lut");
-const utils_1 = require("../filesystem/utils");
 const knexfile_1 = require("./knexfile");
 const utils_2 = require("../scraper/utils");
 const knexfile_2 = require("./knexfile");
@@ -697,20 +695,6 @@ const updateUserPassword = (user, newPassword) => knex.transaction(trx => trx('t
     });
 }));
 exports.updateUserPassword = updateUserPassword;
-const resetUserPassword = (user) => knex.transaction(trx => trx('t_user')
-    .where('name', '=', user.name)
-    .first()
-    .then((res) => {
-    if (!res) {
-        throw new Error('用户名错误.');
-    }
-    return trx('t_user')
-        .where('name', '=', user.name)
-        .update({
-        password: 'password'
-    });
-}));
-exports.resetUserPassword = resetUserPassword;
 const deleteUser = (users) => knex.transaction(trx => trx('t_user')
     .where('name', 'in', users.map((user) => user.name))
     .del());
@@ -1093,13 +1077,6 @@ const getMetadata = ({ field = 'circle', id } = {}) => {
         .first();
 };
 exports.getMetadata = getMetadata;
-async function getWorkMemo(work_id) {
-    const work = await knex('t_work')
-        .select('id', 'memo')
-        .where('id', '=', work_id)
-        .first();
-    return (0, utils_1.ensureIsJsonObject)(work.memo);
-}
 async function setWorkMemo(work_id, memo) {
     await knex('t_work')
         .where('id', '=', work_id)

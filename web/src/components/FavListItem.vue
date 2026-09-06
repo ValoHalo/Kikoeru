@@ -2,7 +2,7 @@
   <q-item clickable class="row">
       <q-item-section class="col-auto" top> 
         <router-link :to="`/work/${metadata.id}`">
-          <q-img transition="fade" :src="coverUrl" style="height: 120px; width: 160px;" />
+          <q-img :key="coverUrl" transition="fade" :src="coverUrl" style="height: 120px; width: 160px;" />
         </router-link>
       </q-item-section>
 
@@ -154,7 +154,7 @@ export default {
 
   computed: {
     coverUrl () {
-      return this.workid ? `/api/cover/${this.workid}?type=240x240` : ""
+      return this.$store.getters['AudioPlayer/coverUrl'](this.workid, '240x240')
     },
   },
 

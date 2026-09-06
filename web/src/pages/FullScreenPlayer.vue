@@ -1,6 +1,6 @@
 <template>
   <div class="container" ref="container" @dblclick="clickOnContainer" :style="{'--cover-url': `url(${coverUrl})`}">
-    <q-img fit="contain" v-if="!enableDrawVideo"
+    <q-img :key="coverUrl" fit="contain" v-if="!enableDrawVideo"
       :src="coverUrl"
       class="constrain-height"
     />
@@ -152,7 +152,6 @@ class HaloManager {
     this.inner_radius_list = []; // [r1, r2, r3, ...]
     this.outter_radius_list = []; // [r1, r2, r3, ...]
     this.motion_routine_list = [];
-    this.is_data_dirty = true; // 上述三个属性是否发生变化，如果变化，则需要在update函数中重新计算radial gradient
 
     this.radial_gradient_list = []; // [CanvasGradient1, CanvasGradient2, ...] // created on update method
     this.absolute_center_inner_list = []; // 更新后的canvas上绘制圆形的绝对坐标地址
@@ -168,7 +167,6 @@ class HaloManager {
     this.inner_radius_list.push(0);
     this.outter_radius_list.push(radius);
     this.motion_routine_list.push(new RandomMotionRoutine(10, interval_mills, 0.1));
-    this.is_data_dirty = true;
   }
 
   absolutePoint(relative_point) {
@@ -180,11 +178,9 @@ class HaloManager {
   update(mills_time, canvas_ctx) {
     if (this.last_canvas_height != canvas_ctx.canvas.height) {
       this.last_canvas_height = canvas_ctx.canvas.height;
-      this.is_data_dirty = true;
     }
     if (this.last_canvas_width != canvas_ctx.canvas.width) {
       this.last_canvas_width = canvas_ctx.canvas.width;
-      this.is_data_dirty = true;
     }
 
     for (let i = 0; i < this.relative_center_inner_list.length; ++i) {
@@ -204,7 +200,6 @@ class HaloManager {
       this.radial_gradient_list[i] = gradient;
       this.absolute_center_inner_list[i] = ap;
     }
-    this.is_data_dirty = false
   }
 
   // 在canvas当中绘制
@@ -239,13 +234,6 @@ function fillFrequencyData(dataArray, canvasCtx, direction, halos) {
     ? canvasWidth * offsetBarPerent
     : canvasWidth - canvasWidth * offsetBarPerent);
 
-  // frequency count is allways even
-  function mapFrequencyIndexToBarIndex(freqIdx) {
-    return freqIdx % 2 == 0 
-      ? (len / 2 - freqIdx / 2 - 1)
-      : (len / 2 + (freqIdx - 1) / 2);
-  }
-
   function mapBarIdxToFrequencyIndex(barIdx) {
     return barIdx < len / 2
       ? len - 2 * barIdx - 1
@@ -253,8 +241,6 @@ function fillFrequencyData(dataArray, canvasCtx, direction, halos) {
   }
 
   const barGap = canvasHeight / len;
-  const barHeight = barGap / 2;
-  const minimalBarWidth = barHeight;
   const isCanvasResized =
     fillFrequencyData.gradient[direction].w != canvasWidth
     || fillFrequencyData.gradient[direction].h != canvasHeight;
@@ -286,16 +272,6 @@ function fillFrequencyData(dataArray, canvasCtx, direction, halos) {
   canvasCtx.lineWidth = 3;
   canvasCtx.shadowColor = 'rgb(255, 42, 73)';
   canvasCtx.shadowBlur = 10;
-  // for (let i = 0; i < len; ++i) {
-  //   const barIdx = mapFrequencyIndexToBarIndex(i);
-  //   let x,y,w,h;
-  //   const barWidth = Math.max(minimalBarWidth, maxBarWidth * (dataArray[i] / 255));
-  //   x = barCenterX - barWidth * 0.5;
-  //   y = barIdx * barGap;
-  //   w = barWidth;
-  //   h = barHeight;
-  //   canvasCtx.fillRect(x, y, w, h);
-  // }
 
   // 绘制波形图
   let lastY = 0;
@@ -363,7 +339,6 @@ export default {
   data () {
     return {
       workid: this.$route.params.id,
-      counter: 0,
       renderNotifier: { stop: false, pause: false },
       isInFullScreen: false,
 
@@ -372,7 +347,6 @@ export default {
       enableDrawVideo: true, 
 
       haloManager: null,
-      videoElement: null,
     }
   },
 
@@ -544,15 +518,7 @@ export default {
 
   computed: {
     coverUrl () {
-      return this.visualPlayerCoverUrl
-        ? this.visualPlayerCoverUrl
-        : ""
-    },
-
-    containerStyle() {
-      return {
-        'background-image': `url("${this.coverUrl}")`,
-      }
+      return this.$store.getters['AudioPlayer/coverUrl'](this.$store.state.AudioPlayer.playWorkId, 'main', this.visualPlayerCoverUrl)
     },
 
     progressBarStyle() {

@@ -95,14 +95,16 @@ const lufsPersistentCache = new PersistentCache_1.PersistentCache(config_1.confi
         && data.audioInfo.loudnorm !== undefined
         && Array.isArray(data.audioInfo.peakLevels);
 });
+const { sendHiddenCover } = require("./utils/coverVisibility");
 router.get('/stream/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     db.knex('t_work')
-        .select('root_folder', 'dir', 'memo')
+        .select('root_folder', 'dir', 'memo', 'nsfw')
         .where('id', '=', req.params.id)
         .first()
         .then((work) => {
+        if (sendHiddenCover(req, res, next, work)) return;
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (rootFolder) {
             (0, utils_1.getTrackList)(req.params.id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo))
@@ -144,10 +146,11 @@ router.get('/download/:id/:index', (0, express_validator_1.param)('id').isInt(),
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     db.knex('t_work')
-        .select('root_folder', 'dir', 'memo')
+        .select('root_folder', 'dir', 'memo', 'nsfw')
         .where('id', '=', req.params.id)
         .first()
         .then((work) => {
+        if (sendHiddenCover(req, res, next, work)) return;
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (rootFolder) {
             (0, utils_1.getTrackList)(req.params.id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo))
@@ -170,7 +173,7 @@ router.get('/download/:id/:index', (0, express_validator_1.param)('id').isInt(),
         else {
             res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
         }
-    });
+    }).catch(err => next(err));
 });
 router.get('/query-lrc/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))

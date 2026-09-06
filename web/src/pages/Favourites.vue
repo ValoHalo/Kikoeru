@@ -61,7 +61,7 @@
           <draggable v-model="collectionWorks" item-key="id" handle=".collection-handle" @change="saveCollectionOrder">
             <template #item="{ element: work }">
               <q-item>
-                <q-item-section avatar><router-link :to="`/work/${work.id}`"><q-img :src="`/api/cover/${work.id}?type=240x240`" ratio="1" class="collection-cover" /></router-link></q-item-section>
+                <q-item-section avatar><router-link :to="`/work/${work.id}`"><q-img :key="$store.getters['AudioPlayer/coverUrl'](work.id, '240x240')" :src="$store.getters['AudioPlayer/coverUrl'](work.id, '240x240')" ratio="1" class="collection-cover" /></router-link></q-item-section>
                 <q-item-section>
                   <q-item-label lines="2"><router-link :to="`/work/${work.id}`" class="text-primary">{{ work.title }}</router-link></q-item-label>
                   <q-item-label caption>{{ work.circle && work.circle.name }}</q-item-label>

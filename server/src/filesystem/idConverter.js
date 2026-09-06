@@ -9,7 +9,6 @@ exports.idNumberToCode = idNumberToCode;
 exports.codeToIdNumber = codeToIdNumber;
 exports.getIDTypeString = getIDTypeString;
 exports.circleCodeToId = circleCodeToId;
-exports.circleIdToCode = circleIdToCode;
 exports.isCustomCode = isCustomCode;
 exports.getMinCustomNumber = getMinCustomNumber;
 exports.getMaxCustomNumber = getMaxCustomNumber;
@@ -77,13 +76,6 @@ function circleCodeToId(code) {
         }
     }
     throw new Error(`unknown circle code: ${code}, which is not started from ${exports.CIRCLE_ID_TYPE_LIST}`);
-}
-function circleIdToCode(id) {
-    const idTypeNumber = Math.floor(id / exports.circleIdSplitter);
-    const idDigit = Math.floor(id) % exports.circleIdSplitter;
-    const idTypeString = exports.CIRCLE_ID_TYPE_LIST[idTypeNumber];
-    const idDigitString = `00000${idDigit}`.slice(-5);
-    return `${idTypeString}${idDigitString}`;
 }
 function isCustomCode(code) {
     return code.startsWith("CC");

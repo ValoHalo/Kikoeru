@@ -74,7 +74,7 @@
           {{ metadata.price }}<small> 日元</small>
         </span>
         <span class="work-card-muted">售出 {{ metadata.dl_count }}</span>
-        <span v-if="!metadata.nsfw" class="work-card-age">全年龄</span>
+        <span v-if="metadata.nsfw === false" class="work-card-age">全年龄</span>
         <a v-if="!dlsiteCode.startsWith('CC')" class="work-card-store" :href="`https://www.dlsite.com/home/work/=/product_id/${dlsiteCode}.html`" rel="noreferrer noopener" target="_blank">DLsite <q-icon name="open_in_new" size="14px" /></a>
       </div>
     </div>

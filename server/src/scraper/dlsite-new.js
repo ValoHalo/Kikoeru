@@ -7,6 +7,7 @@ exports.newDLSiteStaticExtended = newDLSiteStaticExtended;
 exports.newDLSiteDynamicExtended = newDLSiteDynamicExtended;
 exports.newScrapeWorkMetadataFromDLsite = newScrapeWorkMetadataFromDLsite;
 exports.getCoverUrlsFromDLsite = getCoverUrlsFromDLsite;
+exports.extractStaticWorkMetadata = extractStaticWorkMetadata;
 const axios_1 = require("./axios");
 const utils_1 = require("./utils");
 const hvdb_1 = require("./hvdb");
@@ -98,7 +99,7 @@ function extractStaticWorkMetadata(id, rjcode, data) {
             id: (0, idConverter_1.circleCodeToId)(data.maker_id),
             name: data.maker_name || '',
         },
-        nsfw: data.age_category === 3,
+        nsfw: data.age_category == null ? null : data.age_category === 3,
         release: (RELEASE_PATTERN.exec(data.regist_date || data.update_date || '1970-01-01') || [''])[0],
         series: undefined,
         translation_info: data.translation_info,

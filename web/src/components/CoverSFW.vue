@@ -1,5 +1,6 @@
 <template>
   <q-img
+    :key="coverUrl"
     :src="coverUrl"
     :ratio="4/3"
     :img-class="imgClass"
@@ -86,7 +87,7 @@ export default {
 
   computed: {
     coverUrl () {
-      return this.workid ? `/api/cover/${this.workid}` : ""
+      return this.$store.getters['AudioPlayer/coverUrl'](this.workid)
     },
 
     workCode () {

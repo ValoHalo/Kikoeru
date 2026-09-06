@@ -22,7 +22,7 @@ process.env.NODE_ENV = "test";
 const db = require("../../src/database/db");
 const scanner = require("../../src/filesystem/scannerModules");
 const normalize = require("../../src/routes/utils/normalize").default;
-const { scrapeDlsiteJsonObject } = require("../../src/scraper/dlsite");
+const { extractStaticWorkMetadata } = require("../../src/scraper/dlsite-new");
 
 test.before(async () => {
     await db.knex.schema
@@ -153,7 +153,7 @@ test("DLsite JSON parsing accepts a null-prototype creators object", () => {
     const creators = Object.assign(Object.create(null), {
         voice_by: [{ name: "Voice Actor" }],
     });
-    const work = scrapeDlsiteJsonObject([{
+    const work = extractStaticWorkMetadata(1, "RJ000001", {
         product_name: "Work title",
         maker_id: "RG00001",
         maker_name: "Circle",
@@ -161,8 +161,28 @@ test("DLsite JSON parsing accepts a null-prototype creators object", () => {
         regist_date: "2026-08-03",
         genres: [],
         creaters: creators,
-    }]);
+    });
 
     assert.equal(work.vas.length, 1);
     assert.equal(work.vas[0].name, "Voice Actor");
+});
+
+test("DLsite metadata preserves missing age classifications", () => {
+    for (const [ageCategory, expected] of [[undefined, null], [null, null], [1, false], [3, true]]) {
+        const work = extractStaticWorkMetadata(1, "RJ000001", {
+            maker_id: "RG00001", age_category: ageCategory, genres: [], creaters: {},
+        });
+        assert.equal(work.nsfw, expected);
+    }
+});
+
+test("metadata responses distinguish unknown age from all ages", () => {
+    for (const [nsfw, expected] of [[null, null], [undefined, null], [0, false], [1, true]]) {
+        const [work] = normalize([{
+            nsfw, circleObj: '{}', rate_count_detail: '[]',
+            vaNames: null, vaIds: null, tagNames: null, tagIds: null,
+            related_work_titles: null, related_work_ids: null,
+        }]);
+        assert.equal(work.nsfw, expected);
+    }
 });

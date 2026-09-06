@@ -203,6 +203,7 @@ export default {
       'resumeHistroySeconds',
       'playWorkId',
       'visualPlayerCoverUrl',
+      'hideNsfwCovers',
       'duration',
       'currentTime',
       'newCurrentTime',
@@ -228,6 +229,9 @@ export default {
   },
 
   watch: {
+    hideNsfwCovers () {
+      this.updateMediaSessionMetadata()
+    },
     playing (flag) {
       if (this.player.duration) {
         // 缓冲至可播放状态
@@ -694,11 +698,9 @@ export default {
     // 'visualPlayerCover' 默认是 'main'，如果用户有手动设置过可视化封面的话，则使用用户设置过的那个图片
     genCoverUrl(workId, type) {
       if (type == "visualPlayerCover") {
-        return this.visualPlayerCoverUrl
-          ? this.visualPlayerCoverUrl
-          : ""
+        return this.$store.getters['AudioPlayer/coverUrl'](workId, 'main', this.visualPlayerCoverUrl)
       } else if (workId != 0) {
-        return `/api/cover/${workId}?type=${type}`
+        return this.$store.getters['AudioPlayer/coverUrl'](workId, type)
       } else {
         return ""
       }

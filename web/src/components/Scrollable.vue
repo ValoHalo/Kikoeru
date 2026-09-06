@@ -43,9 +43,6 @@ export default {
     slot() {
       return this.$refs.slot;
     },
-    animationDuration() {
-      return this.slotWidth / 30;
-    },
     scrollStyle() {
       return {
         // 'animation-duration': `${this.slotWidth / 90}s`,

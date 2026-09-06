@@ -18,7 +18,7 @@
           <draggable v-model="queueCopy" item-key="hash" handle=".current-queue-handle" @change="onCurrentQueueMoved">
             <template #item="{ element: track, index }">
               <q-item clickable v-ripple :active="queueIndex === index" active-class="bg-primary text-white" @click="SET_TRACK(index)">
-                <q-item-section avatar><q-img :src="coverUrl(track)" ratio="1" class="playlist-cover rounded-borders" /></q-item-section>
+                <q-item-section avatar><q-img :key="coverUrl(track)" :src="coverUrl(track)" ratio="1" class="playlist-cover rounded-borders" /></q-item-section>
                 <q-item-section><q-item-label lines="1">{{ track.title }}</q-item-label><q-item-label caption lines="1" :class="{ 'text-white': queueIndex === index }">{{ track.workTitle }}</q-item-label></q-item-section>
                 <q-item-section side class="current-queue-handle"><q-icon name="drag_handle" :color="queueIndex === index ? 'white' : 'grey-7'" /></q-item-section>
                 <q-item-section side><q-btn flat round dense icon="close" :color="queueIndex === index ? 'white' : 'negative'" aria-label="从当前队列移除" @click.stop="REMOVE_FROM_QUEUE(index)" /></q-item-section>
@@ -56,7 +56,7 @@
               <draggable v-model="playlistItems" item-key="itemId" handle=".saved-playlist-handle" @change="savePlaylistOrder">
                 <template #item="{ element: track }">
                   <q-item :class="{ 'text-grey-6': !track.available }">
-                    <q-item-section avatar><q-img v-if="track.available" :src="coverUrl(track)" ratio="1" class="playlist-cover rounded-borders" /><q-icon v-else name="link_off" size="28px" /></q-item-section>
+                    <q-item-section avatar><q-img v-if="track.available" :key="coverUrl(track)" :src="coverUrl(track)" ratio="1" class="playlist-cover rounded-borders" /><q-icon v-else name="link_off" size="28px" /></q-item-section>
                     <q-item-section><q-item-label lines="1">{{ track.title }}</q-item-label><q-item-label caption lines="1">{{ track.workTitle }}{{ track.available ? '' : ' · 文件不可用' }}</q-item-label></q-item-section>
                     <q-item-section side class="saved-playlist-handle"><q-icon name="drag_handle" /></q-item-section>
                     <q-item-section side><q-btn flat round dense icon="close" color="negative" aria-label="从播放列表移除" @click="removeSavedItem(track)" /></q-item-section>
@@ -103,7 +103,7 @@ export default {
     ...mapMutations('AudioPlayer', ['ADD_TO_QUEUE', 'EMPTY_QUEUE', 'REMOVE_FROM_QUEUE', 'SET_QUEUE', 'SET_TRACK']),
     coverUrl (track) {
       const workId = Number(track && track.workId) || Number(String((track && track.hash) || '').split('/')[0])
-      return workId ? `/api/cover/${workId}?type=sam` : ''
+      return this.$store.getters['AudioPlayer/coverUrl'](workId, 'sam')
     },
     toPlaylistItem (track) {
       const workId = Number(track.workId) || Number(String(track.hash || '').split('/')[0])

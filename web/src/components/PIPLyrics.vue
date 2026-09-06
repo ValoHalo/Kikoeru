@@ -44,12 +44,7 @@ export default {
       pixelRatio: window.devicePixelRatio,
 
 
-      lastProcessedWindowSize: {
-        height: 0,
-        width: 0
-      },
       pipWindow: null,
-      resizePatchTimeoutID: 0,
     }
   },
 

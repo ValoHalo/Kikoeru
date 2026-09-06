@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.joinFragments = void 0;
-exports.sanitizeFileNameForWindows = sanitizeFileNameForWindows;
 const path_1 = __importDefault(require("path"));
 const url_join_1 = __importDefault(require("url-join"));
 const encodeSplitFragments = (fragments) => {
@@ -22,18 +21,3 @@ const joinFragments = (baseUrl, ...fragments) => {
     }
 };
 exports.joinFragments = joinFragments;
-function sanitizeFileNameForWindows(filePath) {
-    if (process.platform !== 'win32') {
-        return filePath;
-    }
-    const dir = path_1.default.dirname(filePath);
-    const fileName = path_1.default.basename(filePath);
-    const sanitizedFileName = fileName
-        .replaceAll('?', '？')
-        .replaceAll('"', '“')
-        .replaceAll('<', '＜')
-        .replaceAll('>', '＞')
-        .replaceAll('|', '｜')
-        .replace(/[?#"<>|]/g, '');
-    return path_1.default.join(dir, sanitizedFileName);
-}

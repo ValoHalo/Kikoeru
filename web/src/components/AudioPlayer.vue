@@ -36,6 +36,7 @@
               'backface-visibility': 'hidden',
             }"
             transition="fade"
+            :key="coverUrl"
             :src="coverUrl"
             :ratio="4/3"
             @dblclick.prevent="openWorkDetail()"
@@ -265,7 +266,7 @@
                 </q-item-section>
 
                 <q-item-section avatar>
-                  <q-img transition="fade" :src="samCoverUrl(track.hash)" style="height: 38px; width: 38px" class="rounded-borders" />
+                  <q-img :key="samCoverUrl(track.hash)" transition="fade" :src="samCoverUrl(track.hash)" style="height: 38px; width: 38px" class="rounded-borders" />
                 </q-item-section>
 
                 <q-item-section>
@@ -358,7 +359,6 @@ export default {
       showCurrentPlayList: false,
       editCurrentPlayList: false,
       queueCopy: [],
-      isAndroid: navigator.userAgent.toLowerCase().indexOf('android') > -1,
       histroyCheckIntervalId: -1,
       latestUpdatedHistory: null, // 记录最近一次更新的历史记录，防止反复对同一个播放历史进行远程数据更新
       playbackRates: PLAYBACK_RATES,
@@ -483,7 +483,7 @@ export default {
 
     coverUrl () {
       const hash = this.currentPlayingFile.hash
-      return hash ? `/api/cover/${hash.split('/')[0]}` : ""
+      return this.$store.getters['AudioPlayer/coverUrl'](hash ? hash.split('/')[0] : 0)
     },
 
     workDetailUrl () {
@@ -660,7 +660,7 @@ export default {
     ]),
 
     samCoverUrl (hash) {
-      return hash ? `/api/cover/${hash.split('/')[0]}?type=sam` : ""
+      return this.$store.getters['AudioPlayer/coverUrl'](hash ? hash.split('/')[0] : 0, 'sam')
     },
 
     openSaveQueueDialog () {

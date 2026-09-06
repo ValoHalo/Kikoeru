@@ -49,15 +49,26 @@ const utils_1 = require("../filesystem/utils");
 const idConverter_1 = require("../filesystem/idConverter");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
+const { sendHiddenCover } = require("./utils/coverVisibility");
 router.get(['/works', '/search', '/:field(circle|tag|va)s/:id/works'],
     (0, express_validator_1.query)('collectionId').optional().isInt({ min: 1 }),
     (req, res, next) => {
         if ((0, validate_1.isValidRequest)(req, res)) next();
     });
-router.get('/cover/:id', (0, express_validator_1.param)('id').isInt(), (req, res, next) => {
+router.get('/cover/:id', (0, express_validator_1.param)('id').isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = parseInt(req.params.id || "0");
+    if (req.query.hideNsfw === '1') {
+        try {
+            const work = await db.knex('t_work').select('nsfw').where('id', work_id).first();
+            if (sendHiddenCover(req, res, next, work)) return;
+        }
+        catch (error) {
+            next(error);
+            return;
+        }
+    }
     const type = req.query.type || 'main';
     const coverPath = (0, utils_1.getCoverPath)(work_id, type);
     res.sendFile(coverPath, (err) => {

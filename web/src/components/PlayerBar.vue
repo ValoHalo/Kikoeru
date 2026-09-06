@@ -48,7 +48,7 @@
         @touchcancel.prevent.stop="touchCancel" 
       >
         <q-item-section avatar>
-          <q-img transition="fade" :src="samCoverUrl" style="height: 50px; width: 50px" class="rounded-borders" />
+          <q-img :key="samCoverUrl" transition="fade" :src="samCoverUrl" style="height: 50px; width: 50px" class="rounded-borders" />
         </q-item-section>
         
         <q-item-section>
@@ -76,7 +76,6 @@
 import { mapState, mapGetters, mapMutations } from 'vuex'
 import { formatSeconds } from '../utils'
 import Scrollable from 'components/Scrollable.vue'
-import { debounce } from 'quasar';
 const OpState = {
   idle: 0,
   up: 1,
@@ -92,7 +91,7 @@ export default {
   computed: {
     samCoverUrl () {
       const hash = this.currentPlayingFile.hash
-      return hash ? `/api/cover/${hash.split('/')[0]}?type=sam` : ""
+      return this.$store.getters['AudioPlayer/coverUrl'](hash ? hash.split('/')[0] : 0, 'sam')
     },
 
     showPlayBar () {

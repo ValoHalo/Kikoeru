@@ -82,4 +82,3 @@ exports.knexConnections = {
     },
 };
 Object.assign(module.exports, exports.knexConnections);
-module.exports.dbSqlImpl = exports.dbSpecifiedFunctionName;
