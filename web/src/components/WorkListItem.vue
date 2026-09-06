@@ -2,7 +2,7 @@
   <q-item clickable :to="`/work/${metadata.id}`" style="padding: 5px;">
     <q-item-section avatar style="padding: 0px 5px 0px 0px;">
       <router-link :to="`/work/${metadata.id}`">
-        <q-img transition="fade" :src="samCoverUrl" style="height: 60px; width: 60px;" />
+        <q-img :key="samCoverUrl" transition="fade" :src="samCoverUrl" style="height: 60px; width: 60px;" />
       </router-link>
     </q-item-section>
 
@@ -66,7 +66,7 @@ export default {
 
   computed: {
     samCoverUrl () {
-      return this.metadata.id ? `/api/cover/${this.metadata.id}?type=sam` : ""
+      return this.$store.getters['AudioPlayer/coverUrl'](this.metadata.id, 'sam')
     },
   }
 }

@@ -93,6 +93,13 @@
           </q-item-section>
         </q-item>
 
+        <q-item tag="label" class="preference-row cover-visibility-row">
+          <q-item-section>
+            <q-item-label>隐藏NSFW封面</q-item-label>
+          </q-item-section>
+          <q-item-section side class="preference-control"><q-toggle v-model="hideNsfwCovers" color="primary" aria-label="隐藏NSFW封面" /></q-item-section>
+        </q-item>
+
         <q-item tag="label" class="preference-row">
           <q-item-section>
             <q-item-label>显示最近播放</q-item-label>
@@ -286,6 +293,10 @@ export default {
       get () { return this.$store.state.AudioPlayer.enableShowRecent },
       set (value) { this.SET_ENABLE_SHOW_RECENT(value) },
     },
+    hideNsfwCovers: {
+      get () { return this.$store.state.AudioPlayer.hideNsfwCovers },
+      set (value) { this.SET_HIDE_NSFW_COVERS(value) },
+    },
     oldWorkCardUIStyle: {
       get () { return this.$store.state.AudioPlayer.oldWorkCardUIStyle },
       set (value) { this.SET_OLD_WORK_CARD_UI_STYLE(value) },
@@ -356,6 +367,7 @@ export default {
     ...mapMutations('AudioPlayer', [
       'CLEAR_SLEEP_MODE',
       'SET_ENABLE_SHOW_RECENT',
+      'SET_HIDE_NSFW_COVERS',
       'SET_ENABLE_VIDEO_SOURCE',
       'SET_ENABLE_VISUALIZER',
       'SET_FORWARD_SEEK_TIME',
@@ -436,6 +448,8 @@ export default {
 .preference-control { padding-left: 24px; }
 .preference-control--types { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px; }
 .preference-control--color { width: 246px; align-items: stretch; }
+.cover-visibility-row { align-items: center; flex-wrap: nowrap; }
+.cover-visibility-row .preference-control { width: auto; flex: 0 0 auto; padding-left: 16px; }
 .preference-control--select { width: 180px; align-items: stretch; }
 .accent-color-control { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: center; gap: 8px; }
 .accent-color-picker-button { width: 34px; height: 34px; min-height: 34px !important; border-radius: 5px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff !important; }

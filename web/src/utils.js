@@ -32,21 +32,6 @@ export function idNumberToCode(id) {
   return `${prefix}${formatID(parsedId % WORK_ID_SPLITTER)}`
 }
 
-export function codeToIdNumber(code) {
-  const normalizedCode = String(code).trim().toUpperCase()
-  const prefix = normalizedCode.slice(0, 2)
-  const typeIndex = WORK_ID_TYPES.indexOf(prefix)
-  const digits = normalizedCode.slice(2)
-  if (typeIndex < 0 || !/^\d+$/.test(digits)) {
-    throw new TypeError(`Invalid work code: ${code}`)
-  }
-  const id = typeIndex * WORK_ID_SPLITTER + Number(digits)
-  if (!Number.isSafeInteger(id)) {
-    throw new RangeError(`Work code is outside the safe integer range: ${code}`)
-  }
-  return id
-}
-
 export function lyricLinesToLrc(lines) {
   if (!Array.isArray(lines)) return ''
   return lines.map(line => {
@@ -91,11 +76,6 @@ export function formatSeconds(seconds) {
   return h === "00"
     ? m + ":" + s
     : h + ":" + m + ":" + s
-}
-
-// 解决字符串到正则当中的问题
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 
 export function extname(string) {
@@ -171,75 +151,6 @@ export function getImportantTreePath(tree) {
     importantFolder.title,
     ...getImportantTreePath(importantFolder.children)
   ]
-}
-
-export function editDistance(s1, s2) {
-  s1 = s1.toLowerCase();
-  s2 = s2.toLowerCase();
-
-  var costs = new Array();
-  for (var i = 0; i <= s1.length; i++) {
-    var lastValue = i;
-    for (var j = 0; j <= s2.length; j++) {
-      if (i == 0)
-        costs[j] = j;
-      else {
-        if (j > 0) {
-          var newValue = costs[j - 1];
-          if (s1.charAt(i - 1) != s2.charAt(j - 1))
-            newValue = Math.min(Math.min(newValue, lastValue),
-              costs[j]) + 1;
-          costs[j - 1] = lastValue;
-          lastValue = newValue;
-        }
-      }
-    }
-    if (i > 0)
-      costs[s2.length] = lastValue;
-  }
-  return costs[s2.length];
-}
-
-// return [similarity in 0.0~1.0, editDistance]
-export function similarity(s1, s2) {
-  let longer = s1;
-  let shorter = s2;
-  if (s1.length < s2.length) {
-    longer = s2;
-    shorter = s1;
-  }
-  const longerLength = longer.length;
-  if (longerLength == 0) {
-    return 1.0;
-  }
-
-  const ed = editDistance(longer, shorter);
-  return [(longerLength - ed) / parseFloat(longerLength), ed];
-}
-
-export function bidirectionSimilarity(s1, s2) {
-  let longer = s1;
-  let shorter = s2;
-  if (s1.length < s2.length) {
-    longer = s2;
-    shorter = s1;
-  }
-  const longerLength = longer.length;
-  const shorterLength = shorter.length;
-
-  if (longerLength == 0) {
-    return 1.0;
-  }
-
-  const buf = Array(longerLength).fill(0);
-  for (let i = 0; i < shorterLength; ++i) {
-    if (longer[i] == shorter[i]) buf[i]++;
-    if (longer[longerLength - i - 1] == shorter[shorterLength - i - 1]) buf[longerLength - i]++;
-  }
-
-  const samePortion = buf.reduce((acc, x) => acc + (x == 0 ? 0 : 1), 0);
-  const value =  samePortion / shorterLength;
-  return value;
 }
 
 // 多关键字搜索子条件类型

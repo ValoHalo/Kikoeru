@@ -1,10 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dbVersion = exports.createSchema = void 0;
+exports.createSchema = void 0;
 const db_1 = require("./db");
 const knexfile_1 = require("./knexfile");
-const dbVersion = '20210502081522';
-exports.dbVersion = dbVersion;
 const createSchema = (connection = db_1.knex) => connection.schema
     .createTable('t_circle', (table) => {
     table.increments();

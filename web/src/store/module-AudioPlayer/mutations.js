@@ -1,6 +1,6 @@
 import { LocalStorage } from 'quasar'
 import getters from './getters'
-import state, {
+import {
   SWAP_SEEK_BUTTON_KEY,
   ENABLE_VISUALIZER_KEY,
   ENABLE_PIP_LYRICS,
@@ -8,6 +8,7 @@ import state, {
   OLD_WORK_CARD_UI_STYLE_KEY,
   OLD_SLEEP_TIMER_UI_STYLE_KEY,
   ENABLE_SHOW_RECENT_KEY,
+  HIDE_NSFW_COVERS_KEY,
   WORK_LIST_MODE_KEY,
   REWIND_SEEK_TIME_KEY,
   FORWARD_SEEK_TIME_KEY,
@@ -341,6 +342,11 @@ const mutations = {
   SET_ENABLE_SHOW_RECENT: (state, value) => {
     state.enableShowRecent = Boolean(value)
     LocalStorage.set(ENABLE_SHOW_RECENT_KEY, state.enableShowRecent)
+  },
+
+  SET_HIDE_NSFW_COVERS: (state, value) => {
+    state.hideNsfwCovers = Boolean(value)
+    LocalStorage.set(HIDE_NSFW_COVERS_KEY, state.hideNsfwCovers)
   },
 
   SET_WORK_LIST_MODE: (state, value) => {

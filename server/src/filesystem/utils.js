@@ -18,9 +18,6 @@ exports.getSmartAudioFolderPath = getSmartAudioFolderPath;
 exports.assignImportantPathFlag = assignImportantPathFlag;
 exports.genUniqueRandomName = genUniqueRandomName;
 exports.ensureDir = ensureDir;
-exports.parseSafeInt = parseSafeInt;
-exports.asleep = asleep;
-exports.formatBytes = formatBytes;
 exports.isWorkFolderName = isWorkFolderName;
 exports.matchWorkCode = matchWorkCode;
 exports.tryMatchWorkCodeFromTopPath = tryMatchWorkCodeFromTopPath;
@@ -121,12 +118,12 @@ async function scrapeWorkMemo(dir, oldMemo) {
         const oldMTime = oldMemoMtime[fileDict.shortPath];
         const oldDuration = oldMemoDuration[fileDict.shortPath];
         if (oldMTime === undefined
-            || oldDuration === undefined
+            || !Number.isFinite(oldDuration) || oldDuration < 0
             || oldMTime !== newMTime) {
             console.log(`update data on file: ${fileDict.fullPath}, fstate.mtime: ${fstat.mtime.getTime()}, `);
             memo.mtime[fileDict.shortPath] = newMTime;
             const duration = await getAudioFileDurationLimited(fileDict.fullPath);
-            if (!isNaN(duration) && typeof (duration) === 'number') {
+            if (Number.isFinite(duration) && duration >= 0) {
                 memo.duration[fileDict.shortPath] = duration;
             }
         }
@@ -173,7 +170,7 @@ const getTrackList = async function (id, dir, readMemo) {
         }));
         const durationMemo = readMemo.duration ?? {};
         const filesAddAudioDuration = sortedHashedFiles.map((file) => {
-            if (supportedMediaExtList.includes(file.ext) && (undefined !== durationMemo[file.shortFilePath])) {
+            if (supportedMediaExtList.includes(file.ext) && Number.isFinite(durationMemo[file.shortFilePath]) && durationMemo[file.shortFilePath] >= 0) {
                 file.duration = durationMemo[file.shortFilePath];
             }
             delete file.fullPath;
@@ -613,28 +610,4 @@ function ensureDir(dirPath) {
 }
 function genUniqueRandomName() {
     return `${crypto_1.default.randomBytes(6).toString('hex')}_${Date.now()}`;
-}
-function parseSafeInt(strOrAnyThing, defaultValue = 0) {
-    if (typeof (strOrAnyThing) !== 'string') {
-        return defaultValue;
-    }
-    try {
-        return parseInt(strOrAnyThing);
-    }
-    catch {
-        return defaultValue;
-    }
-}
-async function asleep(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
-function formatBytes(bytes, decimals = 0) {
-    if (bytes === 0)
-        return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
 }

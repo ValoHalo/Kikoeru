@@ -37,7 +37,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.startWatcher = startWatcher;
-exports.stopWatcher = stopWatcher;
 const watcher_1 = __importDefault(require("@parcel/watcher"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
@@ -219,21 +218,4 @@ async function startWatcher() {
     for (const rootFolder of config_1.config.rootFolders) {
         await watchRootFolder(rootFolder);
     }
-}
-async function stopWatcher() {
-    if (debounceTimer) {
-        clearTimeout(debounceTimer);
-        debounceTimer = null;
-    }
-    pendingFolderChanges.clear();
-    const activeSubscriptions = subscriptions.splice(0, subscriptions.length);
-    const results = await Promise.allSettled(activeSubscriptions.map(subscription => subscription.unsubscribe()));
-    const failures = results.filter(result => result.status === 'rejected');
-    if (failures.length > 0) {
-        for (const failure of failures) {
-            console.error(`[FileWatcher] 停止监听失败: ${failure.reason?.message || failure.reason}`);
-        }
-        throw new Error(`${failures.length} 个文件监听器未能停止`);
-    }
-    console.log('[FileWatcher] 已停止文件监听');
 }

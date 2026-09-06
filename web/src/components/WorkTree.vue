@@ -99,7 +99,7 @@
 
             <!--音频文件时长-->
             <q-item-label
-              v-if="item.type === 'audio' && typeof(item.duration) === 'number'"
+              v-if="item.type === 'audio' && Number.isFinite(item.duration) && item.duration >= 0"
               caption
               lines="1"
             >
@@ -169,7 +169,6 @@ export default {
       edit_img_src: '',
       preview_img_idx: 0,
       preview_img_list: [],
-      preview_img_hash: "",
       showPlaylistPicker: false,
       savedPlaylists: [],
       pendingPlaylistTracks: [],

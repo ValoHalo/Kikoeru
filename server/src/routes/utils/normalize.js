@@ -18,7 +18,7 @@ function joinNameAndId(names, ids) {
 }
 function normalize(works, options = {}) {
     return works.map((record) => {
-        record.nsfw = Boolean(record.nsfw);
+        record.nsfw = record.nsfw == null ? null : Boolean(record.nsfw);
         record.circle = (0, utils_1.ensureIsJsonObject)(record.circleObj);
         record.rate_count_detail = JSON.parse(record.rate_count_detail);
         record.rank = record.rank ? JSON.parse(record.rank) : null;
