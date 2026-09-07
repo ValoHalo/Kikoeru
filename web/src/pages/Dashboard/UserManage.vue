@@ -1,93 +1,66 @@
 <template>
   <q-page class="admin-page admin-management-page">
     <header class="settings-heading">
-      <div class="text-h5">用户管理</div>
+      <h1>用户管理</h1>
     </header>
 
     <section class="settings-section" aria-labelledby="admin-password-title">
       <div class="settings-section__heading">
         <q-icon name="vpn_key" size="22px" />
-        <div id="admin-password-title" class="text-subtitle1 text-weight-medium">修改管理员密码</div>
-      </div>
-      <q-form @submit="updateAdminPassword()">
-        <q-list bordered separator class="settings-list">
-          <q-item class="settings-row">
-            <q-item-section><q-item-label>新密码</q-item-label></q-item-section>
-            <q-item-section side class="settings-control settings-control--input">
-              <q-input outlined dense hide-bottom-space type="password" aria-label="新密码"
-                v-model="adminNewPassword"
-                lazy-rules
-                :rules="[ val => val.length >= 5 || '密码长度至少为 5' ]"
-              />
-            </q-item-section>
-          </q-item>
-          <q-item class="settings-row">
-            <q-item-section><q-item-label>确认密码</q-item-label></q-item-section>
-            <q-item-section side class="settings-control settings-control--input">
-              <q-input outlined dense hide-bottom-space type="password" aria-label="确认密码"
-                v-model="adminConfirmPassword"
-                lazy-rules
-                :rules="[
-                  val => val.length >= 5 || '密码长度至少为 5',
-                  val => val === adminNewPassword || '两次密码输入不一致'
-                ]"
-              />
-            </q-item-section>
-          </q-item>
-        </q-list>
-        <div class="settings-form-actions">
-          <q-btn outline no-caps :loading="loadingUpdateAdminPassword" type="submit" color="primary" icon="vpn_key" label="修改密码" />
+        <div>
+          <h2 id="admin-password-title">修改管理员密码</h2>
+          <div class="text-caption text-grey-7">新密码至少 5 个字符。</div>
         </div>
+      </div>
+      <q-form class="user-management-form" @submit="updateAdminPassword()">
+        <q-input outlined dense hide-bottom-space type="password" label="新密码" aria-label="新密码"
+          v-model="adminNewPassword"
+          lazy-rules
+          :rules="[ val => val.length >= 5 || '密码长度至少为 5' ]"
+        />
+        <q-input outlined dense hide-bottom-space type="password" label="确认密码" aria-label="确认密码"
+          v-model="adminConfirmPassword"
+          lazy-rules
+          :rules="[
+            val => val.length >= 5 || '密码长度至少为 5',
+            val => val === adminNewPassword || '两次密码输入不一致'
+          ]"
+        />
+        <q-btn class="settings-action-button" outline no-caps :loading="loadingUpdateAdminPassword" type="submit" color="primary" icon="vpn_key" label="修改密码" />
       </q-form>
     </section>
 
     <section class="settings-section" aria-labelledby="add-user-title">
       <div class="settings-section__heading">
         <q-icon name="person_add" size="22px" />
-        <div id="add-user-title" class="text-subtitle1 text-weight-medium">添加新用户</div>
-      </div>
-      <q-form @submit="addNewUser()">
-        <q-list bordered separator class="settings-list">
-          <q-item class="settings-row">
-            <q-item-section><q-item-label>用户组</q-item-label></q-item-section>
-            <q-item-section side class="settings-control settings-control--input">
-              <q-select dense outlined hide-bottom-space options-dense aria-label="用户组" v-model="newuser.group" :options="groups" />
-            </q-item-section>
-          </q-item>
-          <q-item class="settings-row">
-            <q-item-section><q-item-label>用户名</q-item-label></q-item-section>
-            <q-item-section side class="settings-control settings-control--input">
-              <q-input outlined dense hide-bottom-space
-                v-model="newuser.name" aria-label="用户名"
-                required lazy-rules
-                :rules="[
-                val => val.length >= 5 || '用户名长度至少为 5',
-                val => !users.find(user => user.name === val) || '该名称已存在，用户名不能重复',
-                ]"
-              />
-            </q-item-section>
-          </q-item>
-          <q-item class="settings-row">
-            <q-item-section><q-item-label>密码</q-item-label></q-item-section>
-            <q-item-section side class="settings-control settings-control--input">
-              <q-input outlined dense hide-bottom-space aria-label="密码"
-                v-model="newuser.password"
-                lazy-rules
-                :rules="[ val => val.length >= 5 || '密码长度至少为 5' ]"
-              />
-            </q-item-section>
-          </q-item>
-        </q-list>
-        <div class="settings-form-actions">
-          <q-btn unelevated no-caps :loading="loadingAddNewUser" type="submit" color="primary" icon="person_add" label="添加用户" />
+        <div>
+          <h2 id="add-user-title">添加新用户</h2>
+          <div class="text-caption text-grey-7">用户名和密码均至少 5 个字符，用户名不可重复。</div>
         </div>
+      </div>
+      <q-form class="user-management-form user-management-form--add" @submit="addNewUser()">
+        <q-input outlined dense hide-bottom-space
+          v-model="newuser.name" label="用户名" aria-label="用户名"
+          required lazy-rules
+          :rules="[
+            val => val.length >= 5 || '用户名长度至少为 5',
+            val => !users.find(user => user.name === val) || '该名称已存在，用户名不能重复',
+          ]"
+        />
+        <q-input outlined dense hide-bottom-space label="密码" aria-label="密码"
+          v-model="newuser.password"
+          lazy-rules
+          :rules="[ val => val.length >= 5 || '密码长度至少为 5' ]"
+        />
+        <q-select dense outlined hide-bottom-space options-dense label="用户组" aria-label="用户组" v-model="newuser.group" :options="groups" />
+        <q-btn class="settings-action-button" unelevated no-caps :loading="loadingAddNewUser" type="submit" color="primary" icon="person_add" label="添加用户" />
       </q-form>
     </section>
 
     <section class="settings-section" aria-labelledby="users-title">
       <div class="settings-section__heading">
         <q-icon name="group" size="22px" />
-        <div id="users-title" class="text-subtitle1 text-weight-medium">所有用户</div>
+        <h2 id="users-title">所有用户</h2>
       </div>
       <q-table
         flat bordered

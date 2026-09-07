@@ -1,34 +1,32 @@
 <template>
   <q-page class="admin-page update-page">
-    <div class="update-heading row items-start q-col-gutter-md">
-      <div class="col">
-        <div class="text-h5">更新</div>
+    <header class="settings-heading">
+      <div>
+        <h1>更新</h1>
         <div class="text-caption text-grey-7">当前版本 {{ status.currentVersion || '—' }}</div>
       </div>
-      <div class="col-auto">
-        <q-btn outline color="primary" icon="refresh" label="检查更新" :loading="checking" @click="checkUpdate" />
-      </div>
-    </div>
+      <q-btn outline no-caps class="settings-action-button" color="primary" icon="refresh" label="检查更新" :loading="checking" @click="checkUpdate" />
+    </header>
 
-    <section class="update-section" aria-labelledby="update-status-title">
-      <div class="section-heading">
+    <section class="settings-section" aria-labelledby="update-status-title">
+      <div class="settings-section__heading">
         <q-icon name="system_update_alt" size="22px" />
         <div>
-          <div id="update-status-title" class="text-subtitle1 text-weight-medium">版本状态</div>
+          <h2 id="update-status-title">版本状态</h2>
           <div class="text-caption text-grey-7">{{ installKindLabel }}</div>
         </div>
       </div>
 
-      <q-banner v-if="status.error" rounded class="bg-red-1 text-negative q-mb-md">
+      <q-banner v-if="status.error" rounded class="update-notice update-notice--error q-mb-md">
         <template #avatar><q-icon name="error_outline" /></template>
         {{ status.error }}
       </q-banner>
-      <q-banner v-else-if="status.lastResult" rounded class="bg-green-1 text-positive q-mb-md">
+      <q-banner v-else-if="status.lastResult" rounded class="update-notice update-notice--success q-mb-md">
         <template #avatar><q-icon name="check_circle" /></template>
         {{ lastResultText }}
       </q-banner>
 
-      <q-list bordered separator class="update-list">
+      <q-list bordered separator class="settings-list">
         <q-item>
           <q-item-section>
             <q-item-label>已安装版本</q-item-label>
@@ -65,24 +63,24 @@
         <q-linear-progress rounded size="8px" color="primary" :value="downloadProgress" :indeterminate="!status.totalBytes" />
       </div>
 
-      <q-banner v-if="!status.installSupported && status.installUnsupportedReason" rounded class="bg-grey-2 text-grey-8 q-mt-md">
+      <q-banner v-if="!status.installSupported && status.installUnsupportedReason" rounded class="update-notice q-mt-md">
         <template #avatar><q-icon name="info" /></template>
         {{ status.installUnsupportedReason }}
       </q-banner>
 
-      <div class="row q-gutter-sm q-mt-md">
-        <q-btn v-if="status.phase !== 'downloading'" color="primary" icon="download" label="下载更新" :disable="!canDownload" @click="downloadUpdate" />
-        <q-btn v-else outline color="negative" icon="cancel" label="取消下载" @click="cancelDownload" />
-        <q-btn color="positive" icon="restart_alt" label="安装并重启" :disable="!canInstall" @click="confirmInstall" />
+      <div class="settings-form-actions update-actions">
+        <q-btn v-if="status.phase !== 'downloading'" unelevated no-caps color="primary" icon="download" label="下载更新" :disable="!canDownload" @click="downloadUpdate" />
+        <q-btn v-else outline no-caps color="negative" icon="cancel" label="取消下载" @click="cancelDownload" />
+        <q-btn outline no-caps color="positive" icon="restart_alt" label="安装并重启" :disable="!canInstall" @click="confirmInstall" />
       </div>
     </section>
 
-    <section class="update-section" aria-labelledby="update-settings-title">
-      <div class="section-heading">
+    <section class="settings-section" aria-labelledby="update-settings-title">
+      <div class="settings-section__heading">
         <q-icon name="tune" size="22px" />
-        <div id="update-settings-title" class="text-subtitle1 text-weight-medium">更新设置</div>
+        <h2 id="update-settings-title">更新设置</h2>
       </div>
-      <q-list bordered separator class="update-list">
+      <q-list bordered separator class="settings-list">
         <q-item tag="label">
           <q-item-section><q-item-label>自动检查更新</q-item-label></q-item-section>
           <q-item-section side><q-toggle v-model="settings.checkUpdate" color="primary" /></q-item-section>
@@ -99,8 +97,8 @@
           <q-item-section side><q-toggle v-model="settings.autoDownloadUpdate" color="primary" :disable="!settings.checkUpdate || !status.downloadSupported" /></q-item-section>
         </q-item>
       </q-list>
-      <div class="row justify-end q-mt-md">
-        <q-btn color="primary" icon="save" label="保存更新设置" :loading="saving" @click="saveSettings" />
+      <div class="settings-form-actions">
+        <q-btn unelevated no-caps color="primary" icon="save" label="保存更新设置" :loading="saving" @click="saveSettings" />
       </div>
     </section>
   </q-page>
@@ -243,14 +241,10 @@ export default {
 </script>
 
 <style scoped>
-.update-page { max-width: 920px; }
-.update-heading { margin: 8px 0 24px; }
-.update-section { margin-bottom: 28px; }
-.section-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.update-list { border-radius: 6px; }
-@media (max-width: 599px) {
-  .update-heading { align-items: stretch; }
-  .update-heading > .col-auto { width: 100%; }
-  .update-heading .q-btn { width: 100%; }
-}
+.update-page .update-actions { justify-content: flex-start; }
+.update-notice { border: 1px solid var(--admin-border); border-radius: 6px; background: var(--admin-control-bg); overflow-wrap: anywhere; }
+.update-notice--error { color: #b71c1c; }
+.update-notice--success { color: #216e39; }
+.body--dark .update-notice--error { color: #ff7b86; }
+.body--dark .update-notice--success { color: #81c995; }
 </style>

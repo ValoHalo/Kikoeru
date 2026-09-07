@@ -1,13 +1,15 @@
 <template>
   <q-page class="admin-page setup-page">
-    <div class="setup-heading">
-      <div class="text-h5">首次初始化</div>
-      <div class="text-caption text-grey-7">完成媒体目录、联网方式和默认播放方式设置。</div>
-    </div>
+    <header class="settings-heading">
+      <div>
+        <h1>首次初始化</h1>
+        <div class="text-caption text-grey-7">完成媒体目录、联网方式和默认播放方式设置。</div>
+      </div>
+    </header>
 
     <q-stepper v-model="step" vertical color="primary" animated flat bordered>
       <q-step :name="1" title="添加媒体目录" icon="folder" :done="step > 1">
-        <q-list v-if="config.rootFolders.length" bordered separator class="q-mb-md">
+        <q-list v-if="config.rootFolders.length" bordered separator class="settings-list q-mb-md">
           <q-item v-for="(folder, index) in config.rootFolders" :key="`${folder.name}-${folder.path}`">
             <q-item-section>
               <q-item-label>{{ folder.name }}</q-item-label>
@@ -27,21 +29,23 @@
           <div class="col-12 col-sm-4"><q-input v-model.trim="folder.name" outlined dense label="目录名称" /></div>
           <div class="col-12 col-sm-8"><q-input v-model.trim="folder.path" outlined dense label="绝对路径" /></div>
         </div>
-        <div class="row justify-between q-mt-md">
-          <q-btn outline color="primary" icon="playlist_add" label="检查并添加" :loading="folderChecking" @click="checkAndAddFolder" />
-          <q-btn color="primary" icon-right="navigate_next" label="下一步" :disable="config.rootFolders.length === 0" @click="step = 2" />
+        <div class="setup-step-actions row justify-between q-mt-md">
+          <q-btn no-caps class="settings-action-button" outline color="primary" icon="playlist_add" label="检查并添加" :loading="folderChecking" @click="checkAndAddFolder" />
+          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" label="下一步" :disable="config.rootFolders.length === 0" @click="step = 2" />
         </div>
       </q-step>
 
       <q-step :name="2" title="选择联网方式" icon="lan" :done="step > 2">
-        <q-btn-toggle
-          v-model="config.httpProxyMode"
-          spread
-          unelevated
-          no-caps
-          toggle-color="primary"
-          :options="proxyModeOptions"
-        />
+        <div class="settings-control">
+          <q-btn-toggle
+            v-model="config.httpProxyMode"
+            spread
+            unelevated
+            no-caps
+            toggle-color="primary"
+            :options="proxyModeOptions"
+          />
+        </div>
         <div v-if="config.httpProxyMode === 'environment'" class="text-caption text-grey-7 q-mt-md">
           服务器会读取 HTTP_PROXY、HTTPS_PROXY 和 NO_PROXY 环境变量。
         </div>
@@ -50,14 +54,14 @@
           <div class="col-12 col-sm-5"><q-input v-model.number="config.httpProxyPort" outlined dense type="number" min="1" max="65535" label="代理端口" /></div>
         </div>
         <q-stepper-navigation class="row justify-between">
-          <q-btn flat color="primary" icon="navigate_before" label="上一步" @click="step = 1" />
-          <q-btn color="primary" icon-right="navigate_next" label="下一步" :disable="!networkConfigValid" @click="step = 3" />
+          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" label="上一步" @click="step = 1" />
+          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" label="下一步" :disable="!networkConfigValid" @click="step = 3" />
         </q-stepper-navigation>
       </q-step>
 
       <q-step :name="3" title="测试服务器联网" icon="network_check" :done="step > 3">
-        <q-btn outline color="primary" icon="network_check" label="开始测试" :loading="networkTesting" @click="testNetwork" />
-        <q-list v-if="networkResults.length" bordered separator class="q-mt-md">
+        <q-btn no-caps class="settings-action-button" outline color="primary" icon="network_check" label="开始测试" :loading="networkTesting" @click="testNetwork" />
+        <q-list v-if="networkResults.length" bordered separator class="settings-list q-mt-md">
           <q-item v-for="result in networkResults" :key="result.key">
             <q-item-section avatar>
               <q-icon :name="result.ok ? 'check_circle' : 'error'" :color="result.ok ? 'positive' : 'negative'" />
@@ -69,8 +73,8 @@
           </q-item>
         </q-list>
         <q-stepper-navigation class="row justify-between">
-          <q-btn flat color="primary" icon="navigate_before" label="上一步" @click="step = 2" />
-          <q-btn color="primary" icon-right="navigate_next" label="下一步" @click="step = 4" />
+          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" label="上一步" @click="step = 2" />
+          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" label="下一步" @click="step = 4" />
         </q-stepper-navigation>
       </q-step>
 
@@ -78,8 +82,8 @@
         <q-option-group v-model="config.transcodeOption" :options="transcodeOptions" color="primary" />
         <div class="text-caption text-grey-7 q-mt-sm">AAC 会按需生成，不会改动 NAS 中的原始音频。</div>
         <q-stepper-navigation class="row justify-between">
-          <q-btn flat color="primary" icon="navigate_before" label="上一步" @click="step = 3" />
-          <q-btn color="primary" icon="done" label="保存并前往扫描" :loading="saving" @click="completeSetup" />
+          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" label="上一步" @click="step = 3" />
+          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon="done" label="保存并前往扫描" :loading="saving" @click="completeSetup" />
         </q-stepper-navigation>
       </q-step>
     </q-stepper>
@@ -203,11 +207,11 @@ export default {
 </script>
 
 <style scoped>
-.setup-page { max-width: 920px; }
-.setup-heading { margin: 8px 0 24px; }
-.setup-page :deep(.q-stepper) { border-radius: 6px; }
+.setup-page :deep(.q-stepper) { border-radius: 6px; border-color: var(--admin-border); background: var(--admin-surface); }
 .setup-page :deep(.q-stepper__step-inner) { padding-right: 24px; }
+.setup-page :deep(.q-stepper__nav), .setup-step-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 @media (max-width: 599px) {
-  .setup-page :deep(.q-stepper__step-inner) { padding-right: 12px; padding-left: 12px; }
+  .setup-page :deep(.q-stepper__step-inner) { padding-right: 12px; padding-left: 48px; }
+  .setup-page .settings-control :deep(.q-btn-toggle .q-btn) { padding-right: 4px; padding-left: 4px; }
 }
 </style>

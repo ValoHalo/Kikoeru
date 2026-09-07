@@ -2,7 +2,7 @@
   <section id="scanner" aria-labelledby="scanner-title" class="settings-section">
     <div class="settings-section__heading">
       <q-icon name="youtube_searched_for" size="22px" />
-      <div id="scanner-title" class="text-subtitle1 text-weight-medium">扫描</div>
+      <h2 id="scanner-title">扫描</h2>
     </div>
     <div class="library-scan-actions">
       <q-btn v-if="state === 'running'" unelevated no-caps class="settings-action-button" color="negative" icon="stop" label="终止扫描" aria-label="终止扫描进程"

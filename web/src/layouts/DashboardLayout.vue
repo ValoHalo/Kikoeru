@@ -16,7 +16,7 @@
       @focusin="drawerMini = false"
       @focusout="drawerMini = true"
     >
-      <q-scroll-area class="fit" :content-style="{ top: '0', bottom: '0' }" :content-active-style="{ top: '0', bottom: '0' }">
+      <q-scroll-area class="fit" :content-style="{ top: '0', bottom: '0', width: '100%' }" :content-active-style="{ top: '0', bottom: '0', width: '100%' }">
         <div class="admin-drawer-content">
           <q-list padding class="admin-drawer-primary">
             <q-item
@@ -176,37 +176,4 @@ export default {
 .admin-drawer .q-item__section--avatar { min-width: 40px; }
 .admin-page-container { min-height: 100vh; background: #f4f6f8; }
 .body--dark .admin-page-container { background: #121212; }
-.admin-page { width: 100%; max-width: 1120px; margin: 0 auto; padding: 24px; }
-.admin-page .q-card.q-ma-md { margin: 0 0 16px; overflow: hidden; border: 1px solid rgba(0, 0, 0, .08); border-radius: 6px; box-shadow: 0 2px 8px rgba(22, 32, 44, .07); }
-.body--dark .admin-page .q-card.q-ma-md { border-color: rgba(255, 255, 255, .1); box-shadow: 0 2px 10px rgba(0, 0, 0, .2); }
-.admin-page .q-toolbar { min-height: 52px; }
-.admin-page .q-toolbar__title { font-size: 1.1rem; font-weight: 500; letter-spacing: 0; }
-.admin-page .q-list > .q-item + .q-item { border-top: 1px solid rgba(0, 0, 0, .08); }
-.body--dark .admin-page .q-list > .q-item + .q-item { border-color: rgba(255, 255, 255, .1); }
-.admin-page .q-item__label--caption { overflow-wrap: anywhere; }
-.admin-page .q-field__native, .admin-page .q-field__input { letter-spacing: 0; }
-.admin-page--with-fixed-actions { padding-bottom: 112px; }
-.admin-page-actions {
-  position: fixed;
-  right: max(24px, calc((100vw - 56px - 1120px) / 2 + 24px));
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  z-index: 2000;
-  margin: 0;
-  padding: 8px;
-  border: 1px solid rgba(0, 0, 0, .1);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, .92);
-  box-shadow: 0 6px 18px rgba(22, 32, 44, .18);
-  backdrop-filter: blur(10px);
-}
-.admin-page-actions .q-btn { min-width: 116px; }
-.body--dark .admin-page-actions { border-color: rgba(255, 255, 255, .14); background: rgba(29, 29, 29, .92); box-shadow: 0 6px 18px rgba(0, 0, 0, .36); }
-
-@media (max-width: 599px) {
-  .admin-page { padding: 12px; }
-  .admin-page--with-fixed-actions { padding-bottom: 92px; }
-  .admin-page .q-toolbar__title { padding: 10px 0; line-height: 1.35; white-space: normal; }
-  .admin-page-actions { right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); left: 12px; }
-  .admin-page-actions .q-btn { width: 100%; }
-}
 </style>

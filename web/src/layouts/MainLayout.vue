@@ -16,7 +16,7 @@
       @focusin="drawerMini = false"
       @focusout="drawerMini = true"
     >
-      <q-scroll-area class="main-drawer-scroll fit" :content-style="{ top: '0', bottom: '0' }" :content-active-style="{ top: '0', bottom: '0' }">
+      <q-scroll-area class="main-drawer-scroll fit" :content-style="{ top: '0', bottom: '0', width: '100%' }" :content-active-style="{ top: '0', bottom: '0', width: '100%' }">
         <div class="drawer-content">
           <q-list padding class="drawer-primary">
             <q-item v-for="link in getLinks()" :key="link.path" clickable v-ripple exact :to="link.path" active-class="text-primary text-weight-medium">

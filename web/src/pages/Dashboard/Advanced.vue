@@ -1,14 +1,16 @@
 <template>
   <q-page class="admin-page admin-page--with-fixed-actions settings-page">
   <q-form class="settings-form" @submit="onSubmit">
-    <div class="settings-heading">
-      <div class="text-h5">高级设置</div>
-      <div class="text-caption text-grey-7">管理爬虫、扫描、服务器和媒体库存储配置。</div>
-    </div>
+    <header class="settings-heading">
+      <div>
+        <h1>高级设置</h1>
+        <div class="text-caption text-grey-7">管理爬虫、扫描、服务器和媒体库存储配置。</div>
+      </div>
+    </header>
     <section class="settings-section" aria-labelledby="crawler-settings-title">
       <div class="settings-section__heading">
         <q-icon name="travel_explore" size="22px" />
-        <div><div id="crawler-settings-title" class="text-subtitle1 text-weight-medium">爬虫设置</div><div class="text-caption text-grey-7">控制元数据语言、请求节奏和代理连接。</div></div>
+        <div><h2 id="crawler-settings-title">爬虫设置</h2><div class="text-caption text-grey-7">控制元数据语言、请求节奏和代理连接。</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
@@ -33,7 +35,7 @@
             <q-item-label caption>将数据库中的 DLsite 和谐标签名恢复为原始名称；此操作无法自动撤销。</q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-btn flat no-caps color="warning" icon="restart_alt" label="恢复标签" :loading="uncensorTagsLoading" @click="confirmUncensorTags" />
+            <q-btn outline no-caps class="settings-action-button" color="warning" icon="restart_alt" label="恢复标签" :loading="uncensorTagsLoading" @click="confirmUncensorTags" />
           </q-item-section>
         </q-item>
 
@@ -47,6 +49,7 @@
             <q-input
               v-model.number="config.dlsiteTimeout"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -70,6 +73,7 @@
             <q-input
               v-model.number="config.hvdbTimeout"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -93,6 +97,7 @@
             <q-input
               v-model.number="config.retryDelay"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -116,6 +121,7 @@
             <q-input
               v-model.number="config.retry"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -139,6 +145,7 @@
             <q-input
               v-model.number="config.maxParallelism"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -175,7 +182,7 @@
             <q-item-label caption>留空时使用 127.0.0.1</q-item-label>
           </q-item-section>
           <q-item-section avatar>
-            <q-input v-model="config.httpProxyHost" input-class="text-right" style="max-width: 160px;" />
+            <q-input v-model="config.httpProxyHost" dense outlined hide-bottom-space aria-label="HTTP 代理主机" input-class="text-right" style="max-width: 160px;" />
           </q-item-section>
         </q-item>
 
@@ -189,6 +196,7 @@
             <q-input
               v-model.number="config.httpProxyPort"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -213,7 +221,7 @@
             </div>
           </q-item-section>
           <q-item-section side>
-            <q-btn flat no-caps color="primary" icon="network_check" label="测试" :loading="networkTestLoading" @click="testNetwork" />
+            <q-btn outline no-caps class="settings-action-button" color="primary" icon="network_check" label="测试联网" :loading="networkTestLoading" @click="testNetwork" />
           </q-item-section>
         </q-item>
       </q-list>
@@ -222,7 +230,7 @@
     <section class="settings-section" aria-labelledby="scanner-settings-title">
       <div class="settings-section__heading">
         <q-icon name="folder_open" size="22px" />
-            <div><div id="scanner-settings-title" class="text-subtitle1 text-weight-medium">文件夹扫描</div><div class="text-caption text-grey-7">设置递归深度和自动监听。</div></div>
+            <div><h2 id="scanner-settings-title">文件夹扫描</h2><div class="text-caption text-grey-7">设置递归深度和自动监听。</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
@@ -235,6 +243,7 @@
             <q-input
               v-model.number="config.scannerMaxRecursionDepth"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -273,7 +282,7 @@
     <section class="settings-section" aria-labelledby="server-settings-title">
       <div class="settings-section__heading">
         <q-icon name="dns" size="22px" />
-        <div><div id="server-settings-title" class="text-subtitle1 text-weight-medium">Web 服务器</div><div class="text-caption text-grey-7">网络与认证设置保存后需要重启程序。</div></div>
+        <div><h2 id="server-settings-title">Web 服务器</h2><div class="text-caption text-grey-7">网络与认证设置保存后需要重启程序。</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
@@ -308,6 +317,7 @@
             <q-input
               v-model.number="config.listenPort"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -342,6 +352,7 @@
             <q-input
               v-model.number="config.expiresIn"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -365,6 +376,7 @@
             <q-input
               v-model.number="config.pageSize"
               class="settings-number-field"
+              outlined hide-bottom-space
               dense
               type="number"
               input-class="settings-number-input text-center"
@@ -383,7 +395,7 @@
     <section class="settings-section" aria-labelledby="security-settings-title">
       <div class="settings-section__heading">
         <q-icon name="shield" size="22px" />
-        <div><div id="security-settings-title" class="text-subtitle1 text-weight-medium">安全</div><div class="text-caption text-grey-7">显示只能通过配置文件控制的运行模式。</div></div>
+        <div><h2 id="security-settings-title">安全</h2><div class="text-caption text-grey-7">显示只能通过配置文件控制的运行模式。</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
@@ -402,7 +414,7 @@
     <section class="settings-section" aria-labelledby="other-settings-title">
       <div class="settings-section__heading">
         <q-icon name="settings" size="22px" />
-        <div><div id="other-settings-title" class="text-subtitle1 text-weight-medium">其它设置</div><div class="text-caption text-grey-7">控制更新检查和本地数据目录策略。</div></div>
+        <div><h2 id="other-settings-title">其它设置</h2><div class="text-caption text-grey-7">控制更新检查和本地数据目录策略。</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
@@ -626,16 +638,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.settings-page { max-width: 920px; margin: 0 auto; padding: 16px 16px 112px; }
-.settings-heading { margin: 8px 0 28px; }
-.settings-heading .text-caption { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
-.settings-section { margin-bottom: 30px; }
-.settings-section__heading { display: flex; align-items: center; gap: 12px; margin: 0 4px 10px; }
-.settings-section__heading .q-icon { color: var(--q-color-primary); }
-.settings-list { overflow: hidden; border-radius: 6px; }
-.settings-list .q-item { min-height: 76px; }
-.settings-list .q-item__section--avatar,
-.settings-list .q-item__section--side { padding-left: 24px; }
 .settings-list .q-input { width: 140px; max-width: 100%; }
 .settings-list .settings-number-field { width: 156px; }
 .settings-number-field :deep(.q-field__before) { padding-right: 8px; }
@@ -647,33 +649,10 @@ export default {
 .settings-list :deep(input[type="number"]) { appearance: textfield; }
 .settings-list :deep(input[type="number"]::-webkit-inner-spin-button),
 .settings-list :deep(input[type="number"]::-webkit-outer-spin-button) { margin: 0; appearance: none; }
-.settings-actions.admin-page-actions { padding: 0; border: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
-.settings-actions.admin-page-actions .settings-save-button { width: 56px; height: 56px; min-width: 56px; min-height: 56px; color: rgba(0, 0, 0, .52); background: #fff; box-shadow: 0 6px 18px rgba(22, 32, 44, .2); transition: color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease; }
-.settings-actions.admin-page-actions .settings-save-button--active { color: #fff; background: var(--q-primary); box-shadow: 0 8px 22px rgba(var(--kikoeru-accent-rgb), .34); }
-.settings-actions.admin-page-actions .settings-save-button--active:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(var(--kikoeru-accent-rgb), .4); }
-.settings-save-button :deep(.q-icon) { font-size: 28px; }
-.body--dark .settings-actions.admin-page-actions { border: 0; background: transparent; box-shadow: none; }
-.body--dark .settings-actions.admin-page-actions .settings-save-button { color: rgba(255, 255, 255, .6); background: #2b2b2b; box-shadow: 0 6px 18px rgba(0, 0, 0, .42); }
-.body--dark .settings-actions.admin-page-actions .settings-save-button--active { color: #fff; background: var(--q-primary); box-shadow: 0 8px 22px rgba(var(--kikoeru-accent-rgb), .38); }
-.tag-language-control { display: flex; align-items: center; gap: 8px; }
-.settings-control .q-btn-toggle { gap: 4px; padding: 2px; border: 1px solid rgba(0, 0, 0, .12); border-radius: 5px; background: rgba(0, 0, 0, .045); }
-.settings-control .q-btn-toggle :deep(.q-btn) { min-height: 34px; padding: 4px 12px; border-radius: 3px !important; color: rgba(0, 0, 0, .68); font-size: 14px; line-height: 1.25; }
-.settings-control .q-btn-toggle :deep(.q-icon) { font-size: 18px; }
-.settings-control .q-btn--active { box-shadow: 0 1px 3px rgba(0, 0, 0, .22); color: #fff; }
-.body--dark .settings-control .q-btn-toggle { border-color: rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); }
-.body--dark .settings-control .q-btn-toggle :deep(.q-btn) { color: rgba(255, 255, 255, .72); }
-.body--dark .settings-control :deep(.q-btn--active) { color: #fff; }
-
+.tag-language-control { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 @media (max-width: 699px) {
-  .settings-page { padding-right: 12px; padding-left: 12px; }
-  .settings-list .q-item { height: auto !important; min-height: 72px; align-items: flex-start; flex-wrap: wrap; gap: 12px; padding-top: 14px; padding-bottom: 14px; }
-  .settings-page .q-item__section--avatar,
-  .settings-page .q-item__section--side { width: 100%; min-width: 0; align-items: flex-start; padding-left: 0; }
-  .settings-page .q-item__section--avatar .q-gutter-sm { display: flex; flex-wrap: wrap; align-items: center; width: 100%; }
-  .settings-control--wide .q-btn-toggle { width: 100%; }
-  .settings-control--wide .q-btn { min-width: 0; flex: 1 1 auto; }
-  .tag-language-control { flex-wrap: wrap; }
-  .settings-actions.admin-page-actions { left: auto; }
-  .settings-actions.admin-page-actions .settings-save-button { width: 56px; }
+  .settings-list .q-input { margin-left: auto; }
+  .tag-language-control { width: 100%; }
+  .tag-language-control > .q-btn { min-height: 44px; }
 }
 </style>

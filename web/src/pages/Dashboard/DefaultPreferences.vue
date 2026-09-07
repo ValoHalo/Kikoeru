@@ -2,15 +2,17 @@
   <q-page class="admin-page admin-page--with-fixed-actions default-preferences-page">
     <q-form @submit="onSubmit">
       <header class="settings-heading">
-        <div class="text-h5">默认设置</div>
-        <div class="text-caption text-grey-7">为尚未在浏览器中修改过选项的设备设置初始值；已有个人设置保持不变。</div>
+        <div>
+          <h1>默认设置</h1>
+          <div class="text-caption text-grey-7">为尚未在浏览器中修改过选项的设备设置初始值；已有个人设置保持不变。</div>
+        </div>
       </header>
 
       <section class="settings-section" aria-labelledby="default-appearance-title">
         <div class="settings-section__heading">
           <q-icon name="palette" size="22px" />
           <div>
-            <div id="default-appearance-title" class="text-subtitle1 text-weight-medium">外观与浏览</div>
+            <h2 id="default-appearance-title">外观与浏览</h2>
             <div class="text-caption text-grey-7">设置媒体库在新设备上的初始显示方式。</div>
           </div>
         </div>
@@ -97,7 +99,7 @@
         <div class="settings-section__heading">
           <q-icon name="headphones" size="22px" />
           <div>
-            <div id="default-playback-title" class="text-subtitle1 text-weight-medium">播放控制</div>
+            <h2 id="default-playback-title">播放控制</h2>
             <div class="text-caption text-grey-7">设置播放器按钮和睡眠定时的初始行为。</div>
           </div>
         </div>
@@ -131,7 +133,7 @@
         <div class="settings-section__heading">
           <q-icon name="graphic_eq" size="22px" />
           <div>
-            <div id="default-media-title" class="text-subtitle1 text-weight-medium">媒体兼容</div>
+            <h2 id="default-media-title">媒体兼容</h2>
             <div class="text-caption text-grey-7">设置新设备初次播放时使用的音频策略。</div>
           </div>
         </div>
@@ -286,18 +288,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.default-preferences-page { max-width: 920px; margin: 0 auto; padding: 16px 16px 112px; }
-.settings-heading { margin: 8px 0 28px; }
-.settings-heading .text-caption { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
-.settings-section { margin-bottom: 30px; }
-.settings-section__heading { display: flex; align-items: center; gap: 12px; margin: 0 4px 10px; }
-.settings-section__heading .q-icon { color: var(--q-color-primary); }
-.settings-list { overflow: hidden; border-radius: 6px; }
-.settings-list .q-item { min-height: 76px; }
-.settings-list .q-item__section--side { padding-left: 24px; }
-.settings-control--types { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px; }
-.settings-control--color { width: 246px; align-items: stretch; }
-.settings-control--select { width: 180px; align-items: stretch; }
 .accent-color-control { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: center; gap: 8px; }
 .accent-color-picker-button { width: 34px; height: 34px; min-height: 34px !important; border-radius: 5px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff !important; }
 .accent-color-picker-button :deep(.q-icon) { font-size: 18px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .46)); }
@@ -309,32 +299,4 @@ export default {
 .accent-color-control :deep(.q-field__native) { padding: 0 10px; font-family: Consolas, "SFMono-Regular", monospace; font-size: 14px; text-transform: uppercase; letter-spacing: 0; }
 .body--dark .accent-color-input-swatch { border-color: rgba(255, 255, 255, .24); }
 .body--dark .accent-color-reset-button { border-color: rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); }
-.settings-control .q-btn-toggle { gap: 4px; padding: 2px; border: 1px solid rgba(0, 0, 0, .12); border-radius: 5px; background: rgba(0, 0, 0, .045); }
-.settings-control :deep(.q-btn) { min-height: 34px; padding: 4px 12px; border-radius: 3px !important; color: rgba(0, 0, 0, .68); font-size: 14px; line-height: 1.25; }
-.settings-control :deep(.q-icon) { font-size: 18px; }
-.settings-control .q-btn--active { box-shadow: 0 1px 3px rgba(0, 0, 0, .22); color: #fff; }
-.body--dark .settings-control .q-btn-toggle { border-color: rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); }
-.body--dark .settings-control :deep(.q-btn) { color: rgba(255, 255, 255, .72); }
-.body--dark .settings-control :deep(.q-btn--active) { color: #fff; }
-.settings-actions.admin-page-actions { padding: 0; border: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
-.settings-actions.admin-page-actions .settings-save-button { width: 56px; height: 56px; min-width: 56px; min-height: 56px; color: rgba(0, 0, 0, .52); background: #fff; box-shadow: 0 6px 18px rgba(22, 32, 44, .2); transition: color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease; }
-.settings-actions.admin-page-actions .settings-save-button--active { color: #fff; background: var(--q-primary); box-shadow: 0 8px 22px rgba(var(--kikoeru-accent-rgb), .34); }
-.settings-actions.admin-page-actions .settings-save-button--active:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(var(--kikoeru-accent-rgb), .4); }
-.settings-save-button :deep(.q-icon) { font-size: 28px; }
-.body--dark .settings-actions.admin-page-actions { border: 0; background: transparent; box-shadow: none; }
-.body--dark .settings-actions.admin-page-actions .settings-save-button { color: rgba(255, 255, 255, .6); background: #2b2b2b; box-shadow: 0 6px 18px rgba(0, 0, 0, .42); }
-.body--dark .settings-actions.admin-page-actions .settings-save-button--active { color: #fff; background: var(--q-primary); box-shadow: 0 8px 22px rgba(var(--kikoeru-accent-rgb), .38); }
-
-@media (max-width: 699px) {
-  .default-preferences-page { padding-right: 12px; padding-left: 12px; }
-  .settings-list .q-item { height: auto !important; min-height: 72px; align-items: flex-start; flex-wrap: wrap; gap: 12px; padding-top: 14px; padding-bottom: 14px; }
-  .settings-list .q-item__section--side { width: 100%; min-width: 0; align-items: flex-start; padding-left: 0; }
-  .settings-list .settings-control--types { align-items: center; justify-content: flex-start; }
-  .settings-control--color { flex-basis: 100%; width: 100%; max-width: 100%; align-items: stretch; }
-  .settings-control--select { width: 100%; align-items: stretch; }
-  .settings-control--wide .q-btn-toggle { width: 100%; }
-  .settings-control--wide :deep(.q-btn) { min-width: 0; flex: 1 1 auto; }
-  .settings-actions.admin-page-actions { left: auto; }
-  .settings-actions.admin-page-actions .settings-save-button { width: 56px; }
-}
 </style>

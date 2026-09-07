@@ -1,13 +1,16 @@
 <template>
   <q-page class="admin-page admin-management-page">
     <header class="settings-heading">
-      <div class="text-h5">音声库</div>
+      <h1>音声库</h1>
     </header>
 
     <section class="settings-section" aria-labelledby="folders-title">
       <div class="settings-section__heading">
         <q-icon name="folder_open" size="22px" />
-        <div id="folders-title" class="text-subtitle1 text-weight-medium">音声文件夹</div>
+        <div>
+          <h2 id="folders-title">音声文件夹</h2>
+          <div class="text-caption text-grey-7">目录路径以运行 Kikoeru 的服务器为准。</div>
+        </div>
       </div>
       <q-form class="library-folder-form" @submit="onSubmitRootFolder">
         <q-input
