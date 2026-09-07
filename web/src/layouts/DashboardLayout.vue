@@ -74,11 +74,6 @@ export default {
           path: '/admin'
         },
         {
-          title: '扫描',
-          icon: 'youtube_searched_for',
-          path: '/admin/scanner'
-        },
-        {
           title: '用户管理',
           icon: 'person',
           path: '/admin/usermanage'
@@ -170,6 +165,8 @@ export default {
 </script>
 
 <style lang="scss">
+@use '../css/admin-management';
+
 .admin-drawer { background: #fff; }
 .body--dark .admin-drawer { background: #1d1d1d; }
 .admin-drawer-content { display: flex; flex-direction: column; height: 100%; }

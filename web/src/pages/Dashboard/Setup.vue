@@ -188,7 +188,7 @@ export default {
       try {
         const response = await this.$axios.post('/api/config/admin/complete-setup', { config: this.config })
         this.showSuccNotif(response.data.message)
-        await this.$router.replace('/admin/scanner')
+        await this.$router.replace('/admin#scanner')
       } catch (error) {
         this.showErrNotif((error.response && error.response.data.error) || error.message || error)
       } finally {

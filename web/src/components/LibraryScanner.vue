@@ -1,85 +1,34 @@
 <template>
-  <q-page class="admin-page">
-    <div class="row q-col-gutter-md q-mb-md">
-      <div v-if="state === 'running'" class="col-xs-12 col-sm-12 row q-pa-sm">
-        <q-btn
-          class="col"
-          color="negative"
-          icon="stop"
-          label="终止扫描进程"
-          :disable="state !== 'running' || !(loggedIn || socketConnected)"
-          @click="killScanProceess()"
-        />
-      </div>
-
-      <div class="col-xs-6 col-sm-4 row q-pa-sm">
-        <q-btn
-          class="col"
-          color="teal"
-          icon="folder"
-          label="扫描本地音声库"
-          :disable="state === 'running' || !(loggedIn || socketConnected)"
-          @click="performScan()"
-        />
-      </div>
-
-      <div class="col-xs-6 col-sm-4 row q-pa-sm">
-        <q-btn
-          class="col"
-          color="primary"
-          icon="refresh"
-          label="刷新音声库信息"
-          :disable="state === 'running' || !(loggedIn || socketConnected)"
-          @click="performUpdate()"
-        />
-      </div>
-
-      <div class="col-xs-12 col-sm-4 row q-pa-sm">
-        <q-btn
-          class="col"
-          color="secondary"
-          icon="find_replace"
-          label="扫描作品内文件变化"
-          :disable="state === 'running' || !(loggedIn || socketConnected)"
-          @click="performWorkFileScan()"
-        />
-      </div>
-
-      <div class="col-xs-6 col-sm-4 row q-pa-sm">
-        <q-btn
-          class="col"
-          color="warning"
-          icon="replay"
-          label="只重试失败项"
-          :disable="state === 'running' || persistedFailures.length === 0 || !(loggedIn || socketConnected)"
-          @click="retryFailed()"
-        />
-      </div>
-
-      <div class="col-xs-6 col-sm-4 row q-pa-sm">
-        <q-btn
-          class="col"
-          outline
-          color="primary"
-          icon="network_check"
-          label="测试联网"
-          :loading="networkTesting"
-          :disable="state === 'running'"
-          @click="testNetwork()"
-        />
-      </div>
+  <section id="scanner" aria-labelledby="scanner-title" class="settings-section">
+    <div class="settings-section__heading">
+      <q-icon name="youtube_searched_for" size="22px" />
+      <div id="scanner-title" class="text-subtitle1 text-weight-medium">扫描</div>
+    </div>
+    <div class="library-scan-actions">
+      <q-btn v-if="state === 'running'" unelevated no-caps class="settings-action-button" color="negative" icon="stop" label="终止扫描" aria-label="终止扫描进程"
+        :disable="!(loggedIn || socketConnected)" @click="killScanProceess()" />
+      <q-btn v-else unelevated no-caps class="settings-action-button" color="primary" icon="play_arrow" label="扫描音声库" aria-label="扫描本地音声库"
+        :disable="!(loggedIn || socketConnected)" @click="performScan()" />
+      <q-btn outline no-caps class="settings-action-button" color="primary" icon="refresh" label="刷新信息" aria-label="刷新音声库信息"
+        :disable="state === 'running' || !(loggedIn || socketConnected)" @click="performUpdate()" />
+      <q-btn outline no-caps class="settings-action-button" color="primary" icon="find_replace" label="扫描文件" aria-label="扫描作品内文件变化"
+        :disable="state === 'running' || !(loggedIn || socketConnected)" @click="performWorkFileScan()" />
+      <q-btn outline no-caps class="settings-action-button" color="primary" icon="replay" label="重试失败项" aria-label="只重试失败项"
+        :disable="state === 'running' || persistedFailures.length === 0 || !(loggedIn || socketConnected)" @click="retryFailed()" />
+      <q-btn outline no-caps class="settings-action-button settings-action-button--neutral" icon="network_check" label="测试联网" aria-label="测试联网"
+        :loading="networkTesting" :disable="state === 'running'" @click="testNetwork()" />
     </div>
 
-    <q-card v-if="persistedFailures.length" class="q-ma-md">
-      <q-card-section class="row items-center justify-between">
+    <div v-if="persistedFailures.length" class="scanner-status q-mt-md">
+      <div class="row items-center justify-between q-pa-md">
         <div>
           <div class="text-subtitle1">失败历史</div>
           <div class="text-caption text-grey-7">服务器重启后仍会保留，共 {{ persistedFailures.length }} 项</div>
         </div>
-        <q-btn flat round dense color="negative" icon="delete_sweep" aria-label="清除失败记录" :loading="failureLoading" @click="clearFailures">
+        <q-btn outline dense class="settings-icon-button" color="negative" icon="delete_sweep" aria-label="清除失败记录" :loading="failureLoading" @click="clearFailures">
           <q-tooltip>清除全部失败记录</q-tooltip>
         </q-btn>
-      </q-card-section>
+      </div>
       <q-separator />
       <q-list separator>
         <q-expansion-item v-for="failure in persistedFailures" :key="failure.id" icon="error_outline" :label="failure.code" :caption="failure.message">
@@ -92,9 +41,9 @@
           </q-item>
         </q-expansion-item>
       </q-list>
-    </q-card>
+    </div>
 
-    <q-card v-show="state" class="q-ma-md">
+    <div v-show="state" class="scanner-status q-mt-md">
       <q-expansion-item expand-separator>
         <template v-slot:header>
           <q-item-section avatar>
@@ -109,23 +58,22 @@
           </q-item-section>
         </template>
         
-        <q-scroll-area style="height: 256px;" class="bg-dark text-white q-pa-md">
+        <q-scroll-area style="height: 256px;" class="scanner-logs bg-dark text-white q-pa-md">
           <div v-for="(log, index) in allLogs" :key="index" >
             <span :class="textColorOnLevel(log.level)">➜ {{log.message}}</span>
           </div>
         </q-scroll-area>
       </q-expansion-item>
-    </q-card>
+    </div>
 
-    <q-card v-show="(tasks.length > 0) || (failedTasks.length > 0)" class="q-ma-md">
+    <div v-show="(tasks.length > 0) || (failedTasks.length > 0)" class="scanner-status q-mt-md">
       <q-tabs
         v-model="tab"
         dense
         inline-label
         class="text-grey"
-        active-color="white"
-        active-bg-color="brown"
-        indicator-color="yellow"
+        active-color="primary"
+        indicator-color="primary"
         align="justify"
         narrow-indicator
       >
@@ -139,7 +87,7 @@
 
       <q-separator />
 
-      <q-tab-panels v-model="tab" animated>
+      <q-tab-panels v-model="tab" animated class="bg-transparent">
         <q-tab-panel name="tasks" class="q-pa-none">
           <q-virtual-scroll
             separator
@@ -160,13 +108,11 @@
                   </q-item-section>
                 </template>
                 
-                <q-card>
-                  <q-card-section class="bg-dark text-white">
+                <div class="scanner-logs bg-dark text-white q-pa-md">
                     <div v-for="(log, index) in item.logs" :key="index">
                       <span :class="textColorOnLevel(log.level)">➜ {{log.message}}</span>
                     </div>
-                  </q-card-section>
-                </q-card>
+                </div>
               </q-expansion-item>
             </template>
           </q-virtual-scroll>
@@ -202,28 +148,26 @@
                   </q-item-section>
                 </template>
                 
-                <q-card>
-                  <q-card-section class="bg-dark text-white">
+                <div class="scanner-logs bg-dark text-white q-pa-md">
                     <div v-for="(log, index) in item.logs" :key="index">
                       <span :class="textColorOnLevel(log.level)">➜ {{log.message}}</span>
                     </div>
-                  </q-card-section>
-                </q-card>
+                </div>
               </q-expansion-item>
               
             </template>
           </q-virtual-scroll>
         </q-tab-panel>
       </q-tab-panels>
-    </q-card>
-  </q-page>
+    </div>
+  </section>
 </template>
 
 <script>
-import NotifyMixin from '../../mixins/Notification.js'
+import NotifyMixin from '../mixins/Notification.js'
 
 export default {
-  name: 'Scanner',
+  name: 'LibraryScanner',
 
   mixins: [NotifyMixin],
 

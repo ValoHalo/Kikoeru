@@ -441,13 +441,22 @@
         <q-item>
           <q-item-section>
             <q-item-label>封面使用默认路径</q-item-label>
-            <q-item-label caption>使用程序所在位置下的covers文件夹，并忽略封面文件夹路径设置</q-item-label>
+            <q-item-label caption>使用程序数据目录下的 covers 文件夹</q-item-label>
           </q-item-section>
-
-          <q-item-section avatar>
-            <q-toggle v-model="config.coverUseDefaultPath" dense />
+          <q-item-section side>
+            <q-toggle v-model="config.coverUseDefaultPath" dense aria-label="封面使用默认路径" />
           </q-item-section>
         </q-item>
+
+        <q-item v-if="!config.coverUseDefaultPath">
+          <q-item-section>
+            <q-item-label>封面文件夹路径</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-input v-model="config.coverFolderDir" outlined dense hide-bottom-space required style="width: 360px; max-width: 100%;" aria-label="封面文件夹路径" />
+          </q-item-section>
+        </q-item>
+
       </q-list>
     </section>
 

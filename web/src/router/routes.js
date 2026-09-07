@@ -11,7 +11,6 @@ import Preferences from 'pages/Preferences.vue'
 import About from 'pages/About.vue'
 
 import Folders from 'pages/Dashboard/Folders.vue'
-import Scanner from 'pages/Dashboard/Scanner.vue'
 import Advanced from 'pages/Dashboard/Advanced.vue'
 import DefaultPreferences from 'pages/Dashboard/DefaultPreferences.vue'
 import UserManage from 'pages/Dashboard/UserManage.vue'
@@ -43,7 +42,7 @@ const routes = [
       },
       {
         path: 'scanner',
-        component: Scanner
+        redirect: { path: '/admin', hash: '#scanner' }
       },
       {
         path: 'defaults',

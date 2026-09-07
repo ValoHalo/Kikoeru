@@ -1,0 +1,64 @@
+.admin-page.admin-management-page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+
+  .settings-heading { margin: 8px 0 28px; }
+  .settings-section { margin-bottom: 30px; }
+  .settings-section__heading { display: flex; align-items: center; gap: 12px; margin: 0 4px 10px; }
+  .settings-section__heading .q-icon { color: var(--q-color-primary); }
+  .settings-list, .settings-table { overflow: hidden; border-radius: 6px; background: transparent; }
+  .settings-list > .settings-row { min-height: 76px; }
+  .settings-row > .q-item__section--main { min-width: 0; }
+  .settings-row .q-item__label { overflow-wrap: anywhere; }
+  .settings-control { padding-left: 24px; }
+  .settings-control--input { width: 360px; max-width: 60%; align-items: stretch; }
+  .settings-control .q-btn { flex-shrink: 0; }
+  .settings-form-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+  .settings-form-actions .q-btn, .settings-action-button { min-width: 140px; min-height: 40px; padding: 8px 16px; border-radius: 6px; font-weight: 500; }
+  .settings-form-actions .q-btn .q-icon, .settings-action-button .q-icon { font-size: 20px; }
+  .settings-action-button--neutral { color: rgba(0, 0, 0, .7); }
+  .settings-icon-button { width: 36px; height: 36px; min-height: 36px; border-radius: 6px; }
+  .settings-table tbody td { height: 64px; white-space: normal; overflow-wrap: anywhere; }
+  .settings-table table { table-layout: fixed; width: 100%; }
+  .settings-table th:first-child, .settings-table td:first-child { width: 56px; }
+  .settings-table .q-table__bottom { min-height: 56px; }
+
+  .library-folder-form { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(220px, 2fr) auto; align-items: start; gap: 12px; margin-bottom: 16px; }
+  .library-folder-form > * { min-width: 0; }
+  .library-scan-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .library-scan-actions .settings-action-button { flex: 1 1 140px; }
+
+  .scanner-status { overflow: hidden; border: 1px solid rgba(0, 0, 0, .12); border-radius: 6px; }
+  .scanner-logs { overflow-wrap: anywhere; }
+}
+
+.body--dark .admin-management-page {
+  .settings-action-button--neutral { color: rgba(255, 255, 255, .8); }
+  .q-btn.text-negative { color: #ff7b86 !important; }
+  .scanner-status { border-color: rgba(255, 255, 255, .28); }
+}
+
+@media (max-width: 699px) {
+  .admin-page.admin-management-page {
+    padding-right: 12px;
+    padding-left: 12px;
+    .settings-list > .settings-row { min-height: 72px; flex-wrap: wrap; gap: 12px; padding-top: 14px; padding-bottom: 14px; }
+    .settings-control--input { width: 100%; max-width: 100%; padding-left: 0; }
+    .settings-form-actions .q-btn, .settings-action-button { min-height: 44px; }
+    .settings-icon-button { width: 44px; height: 44px; }
+    .library-folder-form { grid-template-columns: minmax(0, 1fr); }
+    .library-folder-form > .q-btn { justify-self: end; }
+    .library-scan-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .library-scan-actions .settings-action-button { min-width: 0; padding-right: 8px; padding-left: 8px; }
+    .settings-list > .settings-row--action { flex-wrap: nowrap; }
+    .settings-row--action .settings-control { padding-left: 0; }
+  }
+}
+
+@media (max-width: 399px) {
+  .admin-page.admin-management-page {
+    .settings-list > .settings-row--action { gap: 8px; padding-right: 12px; padding-left: 12px; }
+    .settings-action-button { min-width: 124px; padding-right: 10px; padding-left: 10px; }
+  }
+}

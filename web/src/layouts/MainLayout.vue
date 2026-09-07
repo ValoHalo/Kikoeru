@@ -271,7 +271,7 @@ export default {
     checkUpdate () {
       this.$axios.get('/api/version').then((res) => {
         if (res.data.update_available && res.data.notifyUser) this.$q.notify({ message: 'GitHub上有新版本', color: 'primary', textColor: 'white', icon: 'cloud_download', timeout: 5000, actions: [{ label: '好', color: 'white' }, { label: '查看', color: 'white', handler: () => { Object.assign(document.createElement('a'), { target: '_blank', href: 'https://github.com/ValoHalo/Kikoeru/releases' }).click() } }] })
-        if (res.data.lockFileExists) this.$q.notify({ message: res.data.lockReason, type: 'warning', timeout: 60000, actions: [{ label: '以后提醒我', color: 'black' }, { label: '前往扫描页', color: 'black', handler: () => this.$router.push('/admin/scanner') }] })
+        if (res.data.lockFileExists) this.$q.notify({ message: res.data.lockReason, type: 'warning', timeout: 60000, actions: [{ label: '以后提醒我', color: 'black' }, { label: '前往音声库', color: 'black', handler: () => this.$router.push('/admin#scanner') }] })
       }).catch(() => {})
     },
     readSharedConfig () {
