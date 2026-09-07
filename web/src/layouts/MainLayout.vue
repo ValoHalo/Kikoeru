@@ -104,7 +104,7 @@
       </router-view>
       <q-page-scroller v-if="!isFullScreenPage" position="bottom-right" :scroll-offset="150" :offset="[18, 90]" class="scroller" :class="{'scroller-hide': !showScroller, 'scroller-show': showScroller}"><q-btn dense fab icon="keyboard_arrow_up" color="primary" padding="sm" /></q-page-scroller>
     </q-page-container>
-    <div style="position: fixed; bottom: 0; z-index: 3001;"><PlayerBar /><AudioPlayer /><LyricsBar v-if="!enablePIPLyrics" /><PIPLyrics /></div>
+    <div style="position: fixed; bottom: 0; z-index: 3001;"><PlayerBar /><AudioPlayer v-if="preferencesLoaded" /><LyricsBar v-if="!enablePIPLyrics" /><PIPLyrics /></div>
     <q-footer class="q-pa-none" />
   </q-layout>
 </template>
@@ -119,6 +119,7 @@ import SleepMode from 'components/SleepMode.vue'
 import CountDownSleepMode from 'components/CountDownSleepMode.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { mapState } from 'vuex'
+import { CLEARED_LAST_QUEUE_KEY_PREFIX } from '../store/module-AudioPlayer/state'
 import { applyColorScheme, COLOR_SCHEMES, COLOR_SCHEME_EVENT, hasSavedColorScheme, readColorScheme } from '../colorScheme'
 import { applyAccentColor, hasSavedAccentColor, normalizeAccentColor } from '../themeColor'
 
@@ -133,6 +134,7 @@ export default {
       drawerOpen: false, drawerMini: true, confirm: false, randId: null, showTimer: false, showScroller: true,
       loginDialog: false, loginName: '', loginPassword: '', loginSubmitting: false, loginPromptDismiss: null,
       restoredQueueUser: '',
+      preferencesLoaded: false,
       colorScheme: readColorScheme(),
       links: [
         { title: '媒体库', icon: 'widgets', path: '/' }, { title: '聚合搜索', icon: 'manage_search', path: '/search' }, { title: '大图模式', icon: 'play_circle', path: '/fullScreenPlayer' }, { title: '我的收藏', icon: 'favorite', path: '/favourites' }, { title: '播放列表', icon: 'queue_music', path: '/playlist' }, { title: '社团', icon: 'group', path: '/circles' }, { title: '标签', icon: 'label', path: '/tags' }, { title: '声优', icon: 'mic', path: '/vas' }
@@ -143,13 +145,17 @@ export default {
     randId () { if (this.randId) this.$router.push(`/work/${this.randId}`) },
     '$route.query.login' (value) { if (value === '1') this.openLoginDialog() }
   },
-  mounted () {
+  async mounted () {
     applyColorScheme(this.colorScheme, { persist: false })
     this.colorSchemeMediaQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)')
     if (this.colorSchemeMediaQuery) this.colorSchemeMediaQuery.addListener(this.onSystemColorSchemeChange)
     window.addEventListener(COLOR_SCHEME_EVENT, this.onColorSchemeEvent)
     if (this.$route.query.login === '1') this.openLoginDialog()
-    this.initUser(); this.checkUpdate(); this.readSharedConfig()
+    this.checkUpdate()
+    await this.readSharedConfig()
+    this.preferencesLoaded = true
+    await this.$nextTick()
+    this.initUser()
   },
   computed: {
     isWorkPage () { return this.$route.path.startsWith('/work/') },
@@ -218,11 +224,14 @@ export default {
     },
     async restoreLatestQueue (userName) {
       if (!userName || !this.$store.state.AudioPlayer.restoreLastQueue) return
+      const clearedQueueKey = `${CLEARED_LAST_QUEUE_KEY_PREFIX}${userName}`
+      if (this.$q.localStorage.getItem(clearedQueueKey) === true) return
       if (this.restoredQueueUser === userName || this.$store.state.AudioPlayer.queue.length > 0) return
       this.restoredQueueUser = userName
       try {
         const response = await this.$axios.get('/api/histroy', { params: { page: 1, sort: 'desc' } })
         if (this.$store.state.User.name !== userName || this.$store.state.AudioPlayer.queue.length > 0) return
+        if (!this.$store.state.AudioPlayer.restoreLastQueue || this.$q.localStorage.getItem(clearedQueueKey) === true) return
         const work = response.data && Array.isArray(response.data.works) ? response.data.works[0] : null
         const historyState = work && work.state
         if (!historyState || !Array.isArray(historyState.queue) || historyState.queue.length === 0) return
@@ -249,7 +258,11 @@ export default {
           message: `已恢复上次播放${track && track.title ? `：${track.title}` : ''}`,
           icon: 'restore',
           timeout: 3500,
-          actions: [{ label: '清除', handler: () => this.$store.commit('AudioPlayer/EMPTY_QUEUE') }],
+          actions: [{ label: '清除', handler: () => {
+            if (this.$store.state.User.name !== userName) return
+            this.$q.localStorage.set(clearedQueueKey, true)
+            this.$store.commit('AudioPlayer/EMPTY_QUEUE')
+          } }],
         })
       } catch (error) {
         console.warn('Failed to restore latest queue:', error)
@@ -262,7 +275,7 @@ export default {
       }).catch(() => {})
     },
     readSharedConfig () {
-      this.$axios.get('/api/config/shared').then((response) => {
+      return this.$axios.get('/api/config/shared').then((response) => {
         const defaults = response.data.sharedConfig || {}
         this.$store.commit('AudioPlayer/APPLY_DEFAULT_PREFERENCES', defaults)
         if (!hasSavedColorScheme() && Object.values(COLOR_SCHEMES).includes(defaults.colorScheme)) {

@@ -340,7 +340,7 @@ import TranscodingStatus from 'components/TranscodingStatus.vue'
 import { mapState, mapGetters, mapMutations } from 'vuex'
 import { formatSeconds } from '../utils'
 import { debounce } from 'quasar'
-import { PLAYBACK_RATES } from '../store/module-AudioPlayer/state'
+import { CLEARED_LAST_QUEUE_KEY_PREFIX, PLAYBACK_RATES } from '../store/module-AudioPlayer/state'
 
 export default {
   name: 'AudioPlayer',
@@ -425,7 +425,10 @@ export default {
       }
     },
 
-    playing() {
+    playing(value) {
+      if (value && this.$store.state.User.name) {
+        this.$q.localStorage.remove(`${CLEARED_LAST_QUEUE_KEY_PREFIX}${this.$store.state.User.name}`)
+      }
       this.onUpdatePlayingStatus()
     },
 
@@ -841,6 +844,7 @@ export default {
     suggestRefreshPage() {
       this.$q.notify({
         message: "配置已更改，建议刷新页面",
+        timeout: 5000,
         actions: [
           { label: "立即刷新",
             handler: () => {
@@ -848,7 +852,8 @@ export default {
               // this.$router.push(`/fullScreenPlayer`)
               this.$router.go(0);
             }
-          }
+          },
+          { icon: 'close', 'aria-label': '关闭' }
         ],
       });
     },

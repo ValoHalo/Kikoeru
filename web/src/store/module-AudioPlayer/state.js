@@ -19,6 +19,7 @@ export const SMART_PATH_AUDIO_TYPES_KEY = 'smart_path_audio_types_key'
 export const VOLUME_KEY = 'volume'
 export const PLAYBACK_RATE_KEY = 'playback_rate'
 export const RESTORE_LAST_QUEUE_KEY = 'restore_last_queue'
+export const CLEARED_LAST_QUEUE_KEY_PREFIX = 'cleared_last_queue:'
 export const DEFAULT_SUBTITLE_LANGUAGE_KEY = 'default_subtitle_language'
 
 export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2]
