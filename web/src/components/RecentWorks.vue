@@ -209,6 +209,8 @@ export default {
 
 .card :deep(.bg-brown) {
   background: rgba(25, 25, 25, 0.8) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   box-shadow: none;
 }
 

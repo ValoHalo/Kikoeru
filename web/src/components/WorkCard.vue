@@ -231,6 +231,11 @@ export default {
   background: rgba(25, 25, 25, 0.8) !important;
 }
 
+.work-card-cover :deep(.bg-brown) {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
 .work-card-cover :deep(.q-chip) {
   font-size: 12px;
   box-shadow: none;
