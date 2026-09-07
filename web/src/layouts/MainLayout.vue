@@ -1,16 +1,6 @@
 <template>
   <q-layout view="hHh Lpr lFf">
-    <q-header reveal :reveal-offset="100" @reveal="onHeaderRevealChange" class="shadow-4">
-      <q-toolbar class="row justify-between">
-        <q-btn flat dense round @click="drawerOpen = !drawerOpen" icon="menu" aria-label="菜单" />
-        <q-btn flat size="md" icon="arrow_back_ios" @click="back()" v-if="isNotAtHomePage" aria-label="返回" />
-        <q-toolbar-title class="gt-xs"><router-link :to="'/'" class="header-brand">Kikoeru</router-link></q-toolbar-title>
-        <q-input v-if="$route.name !== 'advance search'" dense rounded borderless v-model="keyword" debounce="500" input-class="text-right" class="header-search q-mr-sm">
-          <template v-slot:before><q-btn round dense flat icon="manage_search" to="/search"><q-tooltip>点此进入聚合搜索，支持多关键字搜索</q-tooltip></q-btn></template>
-          <template v-slot:append><q-icon v-if="keyword === ''" name="search" /><q-icon v-else name="clear" class="cursor-pointer" @click="keyword = ''" /></template>
-        </q-input>
-      </q-toolbar>
-    </q-header>
+    <AppHeader :title="headerTitle" :parent="isWorkPage ? '媒体库' : ''" :immersive="isFullScreenPage" @toggle-drawer="drawerOpen = !drawerOpen" />
 
     <q-drawer
       v-model="drawerOpen"
@@ -121,6 +111,7 @@
 
 <script>
 import PlayerBar from 'components/PlayerBar.vue'
+import AppHeader from 'components/AppHeader.vue'
 import AudioPlayer from 'components/AudioPlayer.vue'
 import LyricsBar from 'components/LyricsBar.vue'
 import PIPLyrics from 'src/components/PIPLyrics.vue'
@@ -136,10 +127,10 @@ const LOGIN_PROMPT_DISMISSED_KEY = 'anonymous-login-prompt-dismissed'
 export default {
   name: 'MainLayout',
   mixins: [NotifyMixin],
-  components: { PlayerBar, AudioPlayer, LyricsBar, SleepMode, CountDownSleepMode, PIPLyrics },
+  components: { AppHeader, PlayerBar, AudioPlayer, LyricsBar, SleepMode, CountDownSleepMode, PIPLyrics },
   data () {
     return {
-      keyword: typeof this.$route.query.keyword === 'string' ? this.$route.query.keyword : '', drawerOpen: false, drawerMini: true, confirm: false, randId: null, showTimer: false, showScroller: false,
+      drawerOpen: false, drawerMini: true, confirm: false, randId: null, showTimer: false, showScroller: true,
       loginDialog: false, loginName: '', loginPassword: '', loginSubmitting: false, loginPromptDismiss: null,
       restoredQueueUser: '',
       colorScheme: readColorScheme(),
@@ -149,16 +140,7 @@ export default {
     }
   },
   watch: {
-    keyword () {
-      const routeKeyword = typeof this.$route.query.keyword === 'string' ? this.$route.query.keyword : ''
-      if (this.$route.path === '/works' && this.keyword === routeKeyword) return
-      this.$router.push(this.keyword ? { path: '/works', query: { keyword: this.keyword } } : { path: '/works' })
-    },
     randId () { if (this.randId) this.$router.push(`/work/${this.randId}`) },
-    '$route.query.keyword' (value) {
-      const keyword = typeof value === 'string' ? value : ''
-      if (this.keyword !== keyword) this.keyword = keyword
-    },
     '$route.query.login' (value) { if (value === '1') this.openLoginDialog() }
   },
   mounted () {
@@ -170,7 +152,14 @@ export default {
     this.initUser(); this.checkUpdate(); this.readSharedConfig()
   },
   computed: {
-    isNotAtHomePage () { const path = this.$route.path; return path && path !== '/' && path !== '/works' && path !== '/favourites' },
+    isWorkPage () { return this.$route.path.startsWith('/work/') },
+    headerTitle () {
+      if (this.isWorkPage) return '作品详情'
+      if (this.$route.path.startsWith('/favourites')) return '我的收藏'
+      if (this.isFullScreenPage) return '正在播放'
+      const titles = { '/works': '媒体库', '/search': '聚合搜索', '/playlist': '播放列表', '/circles': '社团', '/tags': '标签', '/vas': '声优', '/preferences': '设置', '/about': '关于' }
+      return titles[this.$route.path] || '媒体库'
+    },
     isFullScreenPage () { return this.$route.path && this.$route.path.startsWith('/fullScreenPlayer') },
     colorSchemeCaption () {
       return this.colorScheme === COLOR_SCHEMES.SYSTEM ? '跟随系统' : this.colorScheme === COLOR_SCHEMES.DARK ? '已启用' : '已禁用'
@@ -360,7 +349,6 @@ export default {
       await this.clearAuthentication()
       await this.initUser()
     },
-    back () { this.$router.go(-1) },
     setColorScheme (scheme) {
       this.colorScheme = applyColorScheme(scheme)
     },
@@ -378,7 +366,6 @@ export default {
       if (this.colorScheme === COLOR_SCHEMES.SYSTEM) applyColorScheme(COLOR_SCHEMES.SYSTEM)
     },
     getLinks () { return this.links.filter(link => link.path !== '/fullScreenPlayer' || this.playWorkId !== 0).map(link => link.path === '/fullScreenPlayer' ? { ...link, path: `${link.path}/${this.playWorkId}` } : link) },
-    onHeaderRevealChange (isReveal) { this.showScroller = isReveal }
   },
   beforeUnmount () {
     this.dismissAnonymousLoginPrompt()

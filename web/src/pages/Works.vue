@@ -3,27 +3,6 @@
     <!--没有搜索的情况下，显示最近播放作品-->
     <RecentWorks v-if="enableShowRecent && !isAdvanceSearch && searchMetas.length == 0 && !collectionId" />
 
-    <!--
-      TODO: 当前版本的quasar的input在iOSsafari中输入中文时有bug，
-      拼音也会被更新到data中，看了一下quasar官网的demo是没有这个问题的（版本不明），
-      用原生的input组件也没有问题，应该是这个项目里quasar版本太老，有些bug，
-      以后升级quasar版本试试能不能解决这个问题
-    -->
-    <div v-if="isAdvanceSearch" class="q-pa-md q-full-width">
-      <q-input
-        outlined
-        autofocus
-        label="关键字搜索"
-        :hint="advanceSearchBarHint"
-        v-model="editKeyword"
-        @keyup.enter="onAddAdvanceSearchKeyword"
-      >
-        <template v-slot:append>
-          <q-btn round dense flat icon="add" @click="onAddAdvanceSearchKeyword"/>
-        </template>
-      </q-input>
-    </div>
-    
     <div class="q-mt-lg q-ml-md row items-center">
       <span class="text-h5 text-weight-regular q-pa-xs relative-position">
         {{pageTitle}}
@@ -39,6 +18,7 @@
             flat 
             size="xs"
             icon="close"
+            :aria-label="`移除关键词 ${meta.d}`"
             @click="removeAdvanceSearchKeyword(index)"
           />
         </q-badge>
@@ -318,7 +298,6 @@ export default {
           {t: 4, d: "Delivery Voice"}, // 社团匹配，实际搜索字段在前端就要变成id
         ]
       */
-      editKeyword: "",
       advanceSearchKeywords: [],
       isAdvanceSearch: false,
     }
@@ -359,6 +338,7 @@ export default {
     }
 
     this.checkAdvanceSearchMode()
+    this.consumeSearchKeyword()
     this.activeWorkListMode = this.workListMode
     if (this.workListMode === WORK_LIST_MODES.PAGINATION && !this.polishPageQuery()) {
       this.reset(this.requestedPage)
@@ -389,11 +369,6 @@ export default {
       } else {
         return '/api/works'
       }
-    },
-
-    advanceSearchBarHint() {
-      if (this.editKeyword === "") return "模糊关键字，可搜索作品名、声优名、标签名、社团名"
-      else return "按回车或者右侧加号添加"
     },
 
     requestedPage () {
@@ -507,8 +482,13 @@ export default {
       immediate: true
     },
 
+    '$route.fullPath' () {
+      this.checkAdvanceSearchMode()
+      this.consumeSearchKeyword()
+    },
+
     '$route.query.keyword'() {
-      this.reset()
+      if (!this.isAdvanceSearch) this.reset()
     },
 
     '$route.query.collectionId'() {
@@ -649,12 +629,12 @@ export default {
               this.showErrNotif(error.message || error)
             }
           })
+      } else if (this.isAdvanceSearch) {
+        this.pageTitle = '聚合搜索'
+        this.searchMetas = []
       } else if (this.$route.query.keyword) {
         this.pageTitle = '搜索关键字：';
         this.searchMetas = [this.$route.query.keyword];
-      } else if (this.isAdvanceSearch) {
-        this.pageTitle = '聚合搜索：'
-
       } else {
         this.pageTitle = '所有作品'
         this.searchMetas = [];
@@ -723,8 +703,17 @@ export default {
       this.isAdvanceSearch = this.$route.name == "advance search";
     },
 
-    onAddAdvanceSearchKeyword() {
-      const keyword = this.editKeyword.trim()
+    consumeSearchKeyword () {
+      if (!this.isAdvanceSearch || typeof this.$route.query.keyword !== 'string') return
+      this.onAddAdvanceSearchKeyword(this.$route.query.keyword)
+      const query = { ...this.$route.query }
+      delete query.keyword
+      delete query.page
+      this.$router.replace({ query })
+    },
+
+    onAddAdvanceSearchKeyword(value) {
+      const keyword = value.trim()
       if (keyword === "") {
         this.showErrNotif("无法添加空白的关键字");
         return;
@@ -742,7 +731,6 @@ export default {
         t: AdvanceSearchCondType.FUZZY,
         d: keyword,
       });
-      this.editKeyword = "";
     },
 
     removeAdvanceSearchKeyword(index) {

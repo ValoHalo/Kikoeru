@@ -1,16 +1,6 @@
 <template>
   <q-layout view="hHh Lpr lFf">
-    <q-header class="shadow-4">
-      <q-toolbar>
-        <q-btn flat round dense icon="menu" aria-label="菜单" @click="drawerOpen = !drawerOpen" />
-        <q-toolbar-title class="admin-toolbar-title">
-          <router-link to="/" class="header-brand">Kikoeru</router-link>
-          <span class="admin-toolbar-divider" aria-hidden="true" />
-          <span class="admin-toolbar-section gt-xs">{{ currentSectionTitle }}</span>
-          <span class="admin-toolbar-section xs">{{ compactSectionTitle }}</span>
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-header>
+    <AppHeader :title="compactSectionTitle" parent="管理设置" parent-to="/admin" @toggle-drawer="drawerOpen = !drawerOpen" />
 
     <q-drawer
       v-model="drawerOpen"
@@ -63,11 +53,13 @@
 
 <script>
 import NotifyMixin from '../mixins/Notification.js'
+import AppHeader from 'components/AppHeader.vue'
 import { applyColorScheme, COLOR_SCHEMES, hasSavedColorScheme, readColorScheme } from '../colorScheme'
 import { applyAccentColor, hasSavedAccentColor, normalizeAccentColor } from '../themeColor'
 
 export default {
   name: 'DashboardLayout',
+  components: { AppHeader },
 
   mixins: [NotifyMixin],
 
@@ -111,11 +103,8 @@ export default {
   },
 
   computed: {
-    currentSectionTitle () {
-      const current = this.links.find(link => link.path === this.$route.path)
-      return current ? `管理设置 / ${current.title}` : '管理设置'
-    },
     compactSectionTitle () {
+      if (this.$route.path === '/admin/setup') return '初始设置'
       const current = this.links.find(link => link.path === this.$route.path)
       return current ? current.title : '管理设置'
     }
@@ -181,9 +170,6 @@ export default {
 </script>
 
 <style lang="scss">
-.admin-toolbar-title { display: flex; align-items: baseline; min-width: 0; }
-.admin-toolbar-divider { align-self: center; width: 1px; height: 20px; margin: 0 14px; background: rgba(255, 255, 255, .42); }
-.admin-toolbar-section { flex: 1 1 auto; min-width: 0; overflow: hidden; font-size: 15px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
 .admin-drawer { background: #fff; }
 .body--dark .admin-drawer { background: #1d1d1d; }
 .admin-drawer-content { display: flex; flex-direction: column; height: 100%; }
@@ -220,8 +206,6 @@ export default {
 .body--dark .admin-page-actions { border-color: rgba(255, 255, 255, .14); background: rgba(29, 29, 29, .92); box-shadow: 0 6px 18px rgba(0, 0, 0, .36); }
 
 @media (max-width: 599px) {
-  .admin-toolbar-divider { margin: 0 10px; }
-  .admin-toolbar-section { font-size: 14px; }
   .admin-page { padding: 12px; }
   .admin-page--with-fixed-actions { padding-bottom: 92px; }
   .admin-page .q-toolbar__title { padding: 10px 0; line-height: 1.35; white-space: normal; }

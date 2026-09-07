@@ -1,6 +1,7 @@
 import { defineConfig } from '#q-app/wrappers'
 
 export default defineConfig(function () {
+  const apiTarget = process.env.KIKOERU_DEV_API || 'http://127.0.0.1:8888'
   return {
     boot: [
       'store',
@@ -27,14 +28,14 @@ export default defineConfig(function () {
       open: false,
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:8888'
+          target: apiTarget
         },
         '/socket.io': {
-          target: 'http://127.0.0.1:8888',
+          target: apiTarget,
           ws: true
         },
         '/workbox': {
-          target: 'http://127.0.0.1:8888'
+          target: apiTarget
         }
       }
     },

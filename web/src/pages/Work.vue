@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div class="q-px-md q-pt-sm">
+      <q-btn flat dense no-caps icon="arrow_back" label="返回" color="primary" @click="backToWorks" />
+    </div>
     <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy" />
     <RelatedWorks :metadata="metadata" />
     <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
@@ -72,6 +75,11 @@ export default {
   },
 
   methods: {
+    backToWorks () {
+      const previous = this.$router.options.history.state.back
+      if (typeof previous === 'string' && previous.startsWith('/') && !previous.startsWith('//')) this.$router.back()
+      else this.$router.push('/works')
+    },
     async requestMetaData() {
       try {
         const response = await this.$axios.get(`/api/work/${this.workid}`);
