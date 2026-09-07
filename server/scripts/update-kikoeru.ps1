@@ -9,6 +9,10 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Node can pass PowerShell 7 module paths to Windows PowerShell 5.1.
+Import-Module (Join-Path $PSHOME "Modules\Microsoft.PowerShell.Utility\Microsoft.PowerShell.Utility.psd1")
+Import-Module (Join-Path $PSHOME "Modules\Microsoft.PowerShell.Archive\Microsoft.PowerShell.Archive.psd1")
+
 $appRoot = [IO.Path]::GetFullPath($AppDir).TrimEnd([IO.Path]::DirectorySeparatorChar)
 $dataRoot = [IO.Path]::GetFullPath($DataDir).TrimEnd([IO.Path]::DirectorySeparatorChar)
 $updatesRoot = Join-Path $dataRoot "updates"
