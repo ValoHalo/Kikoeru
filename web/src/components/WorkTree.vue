@@ -95,7 +95,7 @@
 
           <q-item-section>
             <q-item-label>{{ item.title }}</q-item-label>
-            <q-item-label v-if="item.children" caption lines="1">{{ `${item.children.length} 项目` }}</q-item-label>
+            <q-item-label v-if="item.children" caption lines="1">{{ `${visibleFiles(item.children).length} 项目` }}</q-item-label>
 
             <!--音频文件时长-->
             <q-item-label
@@ -217,7 +217,7 @@ export default {
         fatherFolder = fatherFolder.find(item => item.type === 'folder' && item.title === folderName).children
       })
 
-      return fatherFolder
+      return this.visibleFiles(fatherFolder)
     },
 
     queue () {
@@ -257,6 +257,12 @@ export default {
 
   methods: {
     formatSeconds,
+
+    visibleFiles (items) {
+      return this.$store.state.AudioPlayer.hideSubtitleFiles
+        ? items.filter(item => item.type === 'folder' || !/\.(lrc|srt|ass|ssa|vtt)$/i.test(item.title || ''))
+        : items
+    },
 
     collectAudioTracks (items, result = []) {
       for (const item of items || []) {
@@ -327,10 +333,7 @@ export default {
     initPath () {
       const initialPath = []
       let fatherFolder = this.internalTree.concat()
-      while (fatherFolder.length === 1) {
-        if (fatherFolder[0].type === 'audio') {
-          break
-        }
+      while (fatherFolder.length === 1 && fatherFolder[0].type === 'folder') {
         initialPath.push(fatherFolder[0].title)
         fatherFolder = fatherFolder[0].children
       }

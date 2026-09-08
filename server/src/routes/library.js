@@ -7,6 +7,7 @@ const db = require("../database/db");
 const { getRequestUsername, requireAuthenticatedWrite } = require("../auth/accessControl");
 const normalize = require("./utils/normalize").default;
 const { isValidRequest } = require("./utils/validate");
+const { prepareWorks } = require('./utils/workVisibility');
 
 const router = express.Router();
 const PAGE_SIZE = config.pageSize || 12;
@@ -23,8 +24,10 @@ router.get('/archived', query('page').optional().isInt({ min: 1 }), async (req, 
         const { works, totalCount } = await db.getArchivedWorks(username(req), {
             limit: PAGE_SIZE,
             offset: (currentPage - 1) * PAGE_SIZE,
+            nsfw: req.query.nsfw === '1' ? 1 : 0,
         });
         normalize(works, { dateOnly: true });
+        await prepareWorks(works, req.query.nsfw === '1');
         res.send({ works, pagination: { currentPage, pageSize: PAGE_SIZE, totalCount } });
     }
     catch (error) {
@@ -62,7 +65,7 @@ router.delete('/works/:workId/archive', requireAuthenticatedWrite, param('workId
 
 router.get('/collections', async (req, res, next) => {
     try {
-        const collections = await db.getWorkCollections(username(req));
+        const collections = await db.getWorkCollections(username(req), req.query.nsfw === '1');
         res.send({ collections: collections.map(item => ({ ...item, item_count: Number(item.item_count) })) });
     }
     catch (error) {
@@ -93,6 +96,8 @@ router.get('/collections/:id', param('id').isInt({ min: 1 }), async (req, res, n
             return;
         }
         normalize(result.items, { dateOnly: true });
+        if (req.query.nsfw === '1') result.items = result.items.filter(work => work.nsfw === false);
+        await prepareWorks(result.items, req.query.nsfw === '1');
         res.send(result);
     }
     catch (error) {
@@ -170,7 +175,7 @@ router.put('/collections/:id/items/order', requireAuthenticatedWrite, param('id'
     if (!isValidRequest(req, res))
         return;
     try {
-        const reordered = await db.reorderWorkCollectionItems(username(req), Number(req.params.id), req.body.workIds.map(Number));
+        const reordered = await db.reorderWorkCollectionItems(username(req), Number(req.params.id), req.body.workIds.map(Number), req.query.nsfw === '1');
         if (!reordered) {
             res.status(400).send({ error: '作品分组不存在，或作品顺序与服务器不一致' });
             return;

@@ -203,7 +203,6 @@ export default {
       'resumeHistroySeconds',
       'playWorkId',
       'visualPlayerCoverUrl',
-      'hideNsfwCovers',
       'duration',
       'currentTime',
       'newCurrentTime',
@@ -217,6 +216,7 @@ export default {
     ]),
 
     ...mapGetters('AudioPlayer', [
+      'hideNsfwCovers',
       'currentPlayingFile',
       'resumeHistroyDone',
       'transcodeBitRate',
@@ -248,8 +248,8 @@ export default {
       if (url) {
         // 加载新音频/视频文件
         this.player.media.load();
-        this.updateMediaSessionMetadata();
       }
+      this.updateMediaSessionMetadata();
     },
 
     muted (flag) {
@@ -625,7 +625,7 @@ export default {
             artist: "",
             album: this.currentPlayingFile.workTitle,
             // artwork: this.visualPlayerCoverUrl,
-            artwork: [
+            artwork: this.$store.getters['AudioPlayer/shouldBlurCover'](this.playWorkId) ? [] : [
               // {
               //   src: this.genCoverUrl(this.playWorkId, "visualPlayerCover"), // 图像太大，safari上有时会出现加载失败的问题
               //   sizes: "600x600", // 随便写的尺寸

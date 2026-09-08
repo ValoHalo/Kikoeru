@@ -1,15 +1,19 @@
 const getters = {
-  coverUrl: (state) => (workId, type = 'main', customUrl = '') => {
+  hideNsfwCovers: (state) => state.contentDisplayMode === 'blur',
+  sfwOnly: (state) => state.contentDisplayMode === 'sfw',
+  shouldBlurCover: (state) => (workId) => state.contentDisplayMode === 'blur' && state.workNsfw[workId] !== false,
+  coverUrl: (state, getters) => (workId, type = 'main', customUrl = '') => {
     if (!workId) return ''
     const coverPath = `/api/cover/${workId}?${new URLSearchParams({ type })}`
-    if (!state.hideNsfwCovers) return customUrl || coverPath
+    if (!getters.shouldBlurCover(workId)) return customUrl || coverPath
     const url = new URL(customUrl || coverPath, window.location.origin)
     const localCover = url.pathname === `/api/cover/${workId}`
       || new RegExp(`^/api/media/(download|stream)/${Number(workId)}/[0-9]+$`).test(url.pathname)
     if (url.origin !== window.location.origin || !localCover) {
-      return `${coverPath}&hideNsfw=1`
+      return `${coverPath}&blurNsfw=1`
     }
-    url.searchParams.set('hideNsfw', '1')
+    url.searchParams.delete('hideNsfw')
+    url.searchParams.set('blurNsfw', '1')
     return `${url.pathname}${url.search}`
   },
 

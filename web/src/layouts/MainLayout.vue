@@ -98,7 +98,7 @@
 
     <q-page-container :class="{'page-container-style': isFullScreenPage, 'padding-bottom-play-bar': !isFullScreenPage, 'works-page-container': $route.name === 'works' || $route.name === 'advance search'}">
       <router-view v-slot="{ Component }">
-        <keep-alive include="Works">
+        <keep-alive :key="$store.getters['AudioPlayer/sfwOnly']" include="Works">
           <component :is="Component" />
         </keep-alive>
       </router-view>
@@ -233,6 +233,7 @@ export default {
         if (this.$store.state.User.name !== userName || this.$store.state.AudioPlayer.queue.length > 0) return
         if (!this.$store.state.AudioPlayer.restoreLastQueue || this.$q.localStorage.getItem(clearedQueueKey) === true) return
         const work = response.data && Array.isArray(response.data.works) ? response.data.works[0] : null
+        if (this.$store.getters['AudioPlayer/sfwOnly'] && work?.nsfw !== false) return
         const historyState = work && work.state
         if (!historyState || !Array.isArray(historyState.queue) || historyState.queue.length === 0) return
         const indexValue = Number(historyState.index)
@@ -253,7 +254,8 @@ export default {
         if (Object.prototype.hasOwnProperty.call(historyState, 'playbackRate')) {
           this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', historyState.playbackRate)
         }
-        const track = historyState.queue[index]
+        const track = this.$store.getters['AudioPlayer/currentPlayingFile']
+        if (!track.hash) return
         this.$q.notify({
           message: `已恢复上次播放${track && track.title ? `：${track.title}` : ''}`,
           icon: 'restore',

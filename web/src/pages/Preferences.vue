@@ -93,11 +93,18 @@
           </q-item-section>
         </q-item>
 
-        <q-item tag="label" class="preference-row cover-visibility-row">
+        <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>隐藏NSFW封面</q-item-label>
+            <q-item-label>内容显示</q-item-label>
           </q-item-section>
-          <q-item-section side class="preference-control"><q-toggle v-model="hideNsfwCovers" color="primary" aria-label="隐藏NSFW封面" /></q-item-section>
+          <q-item-section side class="preference-control preference-control--select preference-control--content">
+            <q-select v-model="contentDisplayMode" :options="contentDisplayOptions" emit-value map-options dense outlined options-dense aria-label="内容显示" />
+          </q-item-section>
+        </q-item>
+
+        <q-item tag="label" class="preference-row">
+          <q-item-section><q-item-label>隐藏字幕文件</q-item-label></q-item-section>
+          <q-item-section side class="preference-control"><q-toggle v-model="hideSubtitleFiles" color="primary" aria-label="隐藏字幕文件" /></q-item-section>
         </q-item>
 
         <q-item tag="label" class="preference-row">
@@ -262,6 +269,11 @@ export default {
       appliedAccentColor: readAccentColor(),
       defaultAccentColor: DEFAULT_ACCENT_COLOR,
       colorSchemeOptions,
+      contentDisplayOptions: [
+        { label: '不限制', value: 'all' },
+        { label: '仅遮罩 NSFW 封面', value: 'blur' },
+        { label: '仅显示全年龄内容', value: 'sfw' },
+      ],
       workListModeOptions,
       seekOptions,
       playbackRateOptions,
@@ -293,9 +305,13 @@ export default {
       get () { return this.$store.state.AudioPlayer.enableShowRecent },
       set (value) { this.SET_ENABLE_SHOW_RECENT(value) },
     },
-    hideNsfwCovers: {
-      get () { return this.$store.state.AudioPlayer.hideNsfwCovers },
-      set (value) { this.SET_HIDE_NSFW_COVERS(value) },
+    contentDisplayMode: {
+      get () { return this.$store.state.AudioPlayer.contentDisplayMode },
+      set (value) { this.SET_CONTENT_DISPLAY_MODE(value) },
+    },
+    hideSubtitleFiles: {
+      get () { return this.$store.state.AudioPlayer.hideSubtitleFiles },
+      set (value) { this.SET_HIDE_SUBTITLE_FILES(value) },
     },
     oldWorkCardUIStyle: {
       get () { return this.$store.state.AudioPlayer.oldWorkCardUIStyle },
@@ -367,7 +383,8 @@ export default {
     ...mapMutations('AudioPlayer', [
       'CLEAR_SLEEP_MODE',
       'SET_ENABLE_SHOW_RECENT',
-      'SET_HIDE_NSFW_COVERS',
+      'SET_CONTENT_DISPLAY_MODE',
+      'SET_HIDE_SUBTITLE_FILES',
       'SET_ENABLE_VIDEO_SOURCE',
       'SET_ENABLE_VISUALIZER',
       'SET_FORWARD_SEEK_TIME',
@@ -448,9 +465,8 @@ export default {
 .preference-control { padding-left: 24px; }
 .preference-control--types { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px; }
 .preference-control--color { width: 246px; align-items: stretch; }
-.cover-visibility-row { align-items: center; flex-wrap: nowrap; }
-.cover-visibility-row .preference-control { width: auto; flex: 0 0 auto; padding-left: 16px; }
 .preference-control--select { width: 180px; align-items: stretch; }
+.preference-control--content { width: 230px; }
 .accent-color-control { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: center; gap: 8px; }
 .accent-color-picker-button { width: 34px; height: 34px; min-height: 34px !important; border-radius: 5px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff !important; }
 .accent-color-picker-button :deep(.q-btn__wrapper) { min-height: 34px; padding: 0; }

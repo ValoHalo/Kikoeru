@@ -50,6 +50,7 @@ const idConverter_1 = require("../filesystem/idConverter");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
 const { sendHiddenCover } = require("./utils/coverVisibility");
+const { prepareWorks } = require('./utils/workVisibility');
 router.get(['/works', '/search', '/:field(circle|tag|va)s/:id/works'],
     (0, express_validator_1.query)('collectionId').optional().isInt({ min: 1 }),
     (req, res, next) => {
@@ -86,8 +87,13 @@ router.get('/work/:id', (0, express_validator_1.param)('id').isInt(), (req, res,
         return;
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
     db.getWorkMetadata(Number(req.params.id), username)
-        .then(work => {
+        .then(async work => {
         (0, normalize_1.default)(work);
+        if (req.query.nsfw === '1' && work[0]?.nsfw !== false) {
+            res.status(404).send({ error: '当前内容显示设置下无可用作品' });
+            return;
+        }
+        await prepareWorks(work, req.query.nsfw === '1');
         res.send(work[0]);
     })
         .catch(err => next(err));
@@ -99,8 +105,13 @@ router.get('/workInfo/:code', (0, express_validator_1.param)('code').isString(),
     const id = (0, idConverter_1.codeToIdNumber)(code);
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
     db.getWorkMetadata(id, username)
-        .then(work => {
+        .then(async work => {
         (0, normalize_1.default)(work);
+        if (req.query.nsfw === '1' && work[0]?.nsfw !== false) {
+            res.status(404).send({ error: '当前内容显示设置下无可用作品' });
+            return;
+        }
+        await prepareWorks(work, req.query.nsfw === '1');
         res.send(work[0]);
     })
         .catch(err => next(err));
@@ -111,9 +122,13 @@ router.get('/tracks/:id', (0, express_validator_1.param)('id').isInt(), async (r
     const work_id = req.params.id;
     try {
         const work = await db.knex('t_work')
-            .select('title', 'root_folder', 'dir', 'memo')
+            .select('title', 'root_folder', 'dir', 'memo', 'nsfw')
             .where('id', '=', work_id)
             .first();
+        if (req.query.nsfw === '1' && work?.nsfw !== false && work?.nsfw !== 0) {
+            res.status(404).send({ error: '当前内容显示设置下无可用作品' });
+            return;
+        }
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (rootFolder) {
             try {
@@ -159,6 +174,7 @@ router.get('/works', (0, express_validator_1.query)('page').optional({ nullable:
         const query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksBy(username, undefined, undefined, true)));
         const result = await db.getWorksPage(db.collectionFilter(req.query.collectionId, username, query), { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
         const works = (0, normalize_1.default)(result.works);
+        await prepareWorks(works, nsfw === 1);
         const totalCount = result.totalCount;
         res.send({
             works,
@@ -215,6 +231,7 @@ router.get('/search', async (req, res) => {
         }
         const result = await db.getWorksPage(db.collectionFilter(req.query.collectionId, username, query), { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
         const works = (0, normalize_1.default)(result.works);
+        await prepareWorks(works, nsfw === 1);
         const totalCount = result.totalCount;
         res.send({
             works,
@@ -245,6 +262,7 @@ router.get('/:field(circle|tag|va)s/:id/works', (0, express_validator_1.param)('
         const query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksBy(username, req.params.field, req.params.id, true)));
         const result = await db.getWorksPage(db.collectionFilter(req.query.collectionId, username, query), { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
         const works = (0, normalize_1.default)(result.works);
+        await prepareWorks(works, nsfw === 1);
         const totalCount = result.totalCount;
         res.send({
             works,
@@ -264,7 +282,7 @@ router.get('/:field(circle|tag|va)s/', (0, express_validator_1.param)('field').i
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const field = req.params.field;
-    db.getLabels(field)
+    db.getLabels(field, req.query.nsfw === '1')
         .orderBy(`name`, 'asc')
         .then(list => res.send(list))
         .catch(err => next(err));

@@ -9,6 +9,9 @@ import {
   OLD_SLEEP_TIMER_UI_STYLE_KEY,
   ENABLE_SHOW_RECENT_KEY,
   HIDE_NSFW_COVERS_KEY,
+  CONTENT_DISPLAY_MODE_KEY,
+  CONTENT_DISPLAY_MODES,
+  HIDE_SUBTITLE_FILES_KEY,
   WORK_LIST_MODE_KEY,
   REWIND_SEEK_TIME_KEY,
   FORWARD_SEEK_TIME_KEY,
@@ -147,6 +150,7 @@ const mutations = {
     if (Object.prototype.hasOwnProperty.call(payload, "resumeHistroySeconds")) {
       state.resumeHistroySeconds = payload.resumeHistroySeconds
     }
+    mutations.FILTER_CURRENT_QUEUE(state)
   },
   EMPTY_QUEUE: (state) => {
     state.playing = false
@@ -159,6 +163,7 @@ const mutations = {
     state.resumeHistroySeconds = -1
   },
   ADD_TO_QUEUE: (state, file) => {
+    if (state.contentDisplayMode === 'sfw' && state.workNsfw[trackWorkId(file)] !== false) return
     state.queue.push(file)
     syncCurrentTrackContext(state)
   },
@@ -191,6 +196,7 @@ const mutations = {
 
   // Add a file after the current playing item in the queue.
   PLAY_NEXT: (state, file) => {
+    if (state.contentDisplayMode === 'sfw' && state.workNsfw[trackWorkId(file)] !== false) return
     state.queue.splice(state.queueIndex + 1, 0, file);
     syncCurrentTrackContext(state)
   },
@@ -344,9 +350,47 @@ const mutations = {
     LocalStorage.set(ENABLE_SHOW_RECENT_KEY, state.enableShowRecent)
   },
 
-  SET_HIDE_NSFW_COVERS: (state, value) => {
-    state.hideNsfwCovers = Boolean(value)
-    LocalStorage.set(HIDE_NSFW_COVERS_KEY, state.hideNsfwCovers)
+  SET_WORK_RATINGS: (state, works) => {
+    for (const work of works) {
+      const id = work.workId || work.id
+      if (id && Object.prototype.hasOwnProperty.call(work, 'nsfw')) {
+        state.workNsfw[id] = work.nsfw === false || work.nsfw === 0 ? false : work.nsfw == null ? null : true
+      }
+    }
+  },
+
+  FILTER_CURRENT_QUEUE: (state) => {
+    if (state.contentDisplayMode !== 'sfw') return
+    const current = state.queue[state.queueIndex]
+    const queue = state.queue.filter(track => state.workNsfw[trackWorkId(track, state.playWorkId)] === false)
+    if (queue.length === state.queue.length) return
+    if (queue.length === 0) {
+      mutations.EMPTY_QUEUE(state)
+      return
+    }
+    const index = queue.indexOf(current)
+    state.queue = queue
+    state.queueIndex = Math.max(0, index)
+    if (index < 0) {
+      state.playing = false
+      state.currentTime = 0
+      state.duration = 0
+      state.resumeHistroySeconds = 0
+    }
+    syncCurrentTrackContext(state)
+  },
+
+  SET_CONTENT_DISPLAY_MODE: (state, value) => {
+    if (!CONTENT_DISPLAY_MODES.includes(value)) return
+    state.contentDisplayMode = value
+    LocalStorage.set(CONTENT_DISPLAY_MODE_KEY, value)
+    LocalStorage.set(HIDE_NSFW_COVERS_KEY, value === 'blur')
+    mutations.FILTER_CURRENT_QUEUE(state)
+  },
+
+  SET_HIDE_SUBTITLE_FILES: (state, value) => {
+    state.hideSubtitleFiles = Boolean(value)
+    LocalStorage.set(HIDE_SUBTITLE_FILES_KEY, state.hideSubtitleFiles)
   },
 
   SET_WORK_LIST_MODE: (state, value) => {

@@ -1,5 +1,10 @@
 // app global css in SCSS form
 
+.q-img__image[src*="blurNsfw=1"] {
+  filter: blur(28px);
+  transform: scale(1.18);
+}
+
 // a {
 //   &:link { text-decoration:none; } // 未访问链接
 //   &:visited { text-decoration:none; } // 已访问链接

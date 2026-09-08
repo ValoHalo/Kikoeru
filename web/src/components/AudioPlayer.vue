@@ -32,7 +32,7 @@
             }"
             :img-style="{
               transition: 'opacity 1s, filter 1s',
-              filter: isFlipCover ? 'brightness(0.1) grayscale(80%)' : 'brightness(1) grayscale(0%)',
+              filter: coverFilter,
               'backface-visibility': 'hidden',
             }"
             transition="fade"
@@ -480,6 +480,10 @@ export default {
   },
 
   computed: {
+    coverFilter () {
+      const blur = this.$store.getters['AudioPlayer/shouldBlurCover'](this.playWorkId) ? 'blur(28px) ' : ''
+      return blur + (this.isFlipCover ? 'brightness(0.1) grayscale(80%)' : 'brightness(1) grayscale(0%)')
+    },
     showAudioPlayer () {
       return this.currentPlayingFile.hash && !this.hide;
     },
@@ -776,6 +780,8 @@ export default {
     onUpdatePlayingStatus() {
       // 匿名播放不创建个人历史记录。
       if (!this.$store.state.User.name) return;
+      // Filtering a paused queue must not replace the saved playback history.
+      if (this.$store.getters['AudioPlayer/sfwOnly'] && !this.playing) return;
 
       // 当前播放列表为空，禁止记录播放历史
       if (this.queueCopy.length <= 0) return;

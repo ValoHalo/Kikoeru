@@ -8,6 +8,9 @@ export const OLD_WORK_CARD_UI_STYLE_KEY = 'old_work_card_ui_style_key'
 export const OLD_SLEEP_TIMER_UI_STYLE_KEY = 'old_sleep_timer_ui_style_key'
 export const ENABLE_SHOW_RECENT_KEY = 'enable_show_recent_key'
 export const HIDE_NSFW_COVERS_KEY = 'hide_nsfw_covers'
+export const CONTENT_DISPLAY_MODE_KEY = 'content_display_mode'
+export const HIDE_SUBTITLE_FILES_KEY = 'hide_subtitle_files'
+export const CONTENT_DISPLAY_MODES = ['all', 'blur', 'sfw']
 export const WORK_LIST_MODE_KEY = 'work_list_mode_key'
 export const REWIND_SEEK_TIME_KEY = 'rewind_seek_time_key'
 export const FORWARD_SEEK_TIME_KEY = 'forward_seek_time_key'
@@ -164,7 +167,11 @@ export default function () {
     // false 使用分钟倒计时，true 使用指定停止时刻
     oldSleepTimerUIStyle: LocalStorage.has(OLD_SLEEP_TIMER_UI_STYLE_KEY) && LocalStorage.getItem(OLD_SLEEP_TIMER_UI_STYLE_KEY),
     enableShowRecent: !LocalStorage.has(ENABLE_SHOW_RECENT_KEY) || LocalStorage.getItem(ENABLE_SHOW_RECENT_KEY),
-    hideNsfwCovers: LocalStorage.getItem(HIDE_NSFW_COVERS_KEY) === true,
+    contentDisplayMode: CONTENT_DISPLAY_MODES.includes(LocalStorage.getItem(CONTENT_DISPLAY_MODE_KEY))
+      ? LocalStorage.getItem(CONTENT_DISPLAY_MODE_KEY)
+      : LocalStorage.getItem(HIDE_NSFW_COVERS_KEY) === true ? 'blur' : 'all',
+    workNsfw: {},
+    hideSubtitleFiles: LocalStorage.getItem(HIDE_SUBTITLE_FILES_KEY) === true,
     workListMode: loadWorkListMode(),
 
     transcodeOption: loadTranscodeOption(),

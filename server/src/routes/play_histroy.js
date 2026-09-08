@@ -45,6 +45,7 @@ const normalize_1 = __importDefault(require("./utils/normalize"));
 const validate_1 = require("./utils/validate");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
+const { prepareWorks } = require('./utils/workVisibility');
 router.get('/', (0, express_validator_1.query)('page').optional({ nullable: true }).isInt(), (0, express_validator_1.query)('sort').optional({ nullable: true }).isIn(['desc', 'asc']), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
@@ -58,8 +59,10 @@ router.get('/', (0, express_validator_1.query)('page').optional({ nullable: true
             limit: PAGE_SIZE,
             offset: offset,
             sortOption: sort,
+            nsfw: req.query.nsfw === '1' ? 1 : 0,
         });
         (0, normalize_1.default)(works, { dateOnly: true });
+        await prepareWorks(works, req.query.nsfw === '1');
         res.send({
             works,
             pagination: {

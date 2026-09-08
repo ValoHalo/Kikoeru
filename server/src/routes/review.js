@@ -45,6 +45,7 @@ const normalize_1 = __importDefault(require("./utils/normalize"));
 const validate_1 = require("./utils/validate");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
+const { prepareWorks } = require('./utils/workVisibility');
 router.get('/', (0, express_validator_1.query)('page').optional({ nullable: true }).isInt(), (0, express_validator_1.query)('sort').optional({ nullable: true }).isIn(['desc', 'asc']), (0, express_validator_1.query)('seed').optional({ nullable: true }).isInt(), (0, express_validator_1.query)('filter').optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
@@ -55,8 +56,9 @@ router.get('/', (0, express_validator_1.query)('page').optional({ nullable: true
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
     const filter = req.query.filter;
     try {
-        const { works, totalCount } = await db.getWorksWithReviews({ username: username, limit: PAGE_SIZE, offset: offset, orderBy: order, sortOption: sort, filter });
+        const { works, totalCount } = await db.getWorksWithReviews({ username: username, limit: PAGE_SIZE, offset: offset, orderBy: order, sortOption: sort, filter, nsfw: req.query.nsfw === '1' ? 1 : 0 });
         (0, normalize_1.default)(works, { dateOnly: true });
+        await prepareWorks(works, req.query.nsfw === '1');
         res.send({
             works,
             pagination: {

@@ -653,10 +653,11 @@ async function getWorksPage(query, { order, sort, seed, offset, limit }) {
     };
 }
 exports.getWorksPage = getWorksPage;
-const getLabels = (field) => {
+const getLabels = (field, sfwOnly = false) => {
     if (field === 'circle') {
         return knex('t_work')
             .join(`t_${field}`, `${field}_id`, '=', `t_${field}.id`)
+            .modify(query => { if (sfwOnly) query.where('t_work.nsfw', false); })
             .select(`t_${field}.id`, 'name')
             .groupBy(`${field}_id`)
             .count(`${field}_id as count`);
@@ -664,6 +665,7 @@ const getLabels = (field) => {
     else if (field === 'tag' || field === 'va') {
         return knex(`r_${field}_work`)
             .join(`t_${field}`, `${field}_id`, '=', 'id')
+            .modify(query => { if (sfwOnly) query.whereIn('work_id', knex('t_work').select('id').where('nsfw', false)); })
             .select('id', 'name')
             .groupBy(`${field}_id`)
             .count(`${field}_id as count`);
@@ -719,7 +721,7 @@ const deleteUserReview = (username, workid) => knex.transaction(trx => trx('t_re
     .andWhere('work_id', '=', workid)
     .del());
 exports.deleteUserReview = deleteUserReview;
-const getWorksWithReviews = async ({ username = '', limit = 1000, offset = 0, orderBy = 'release', sortOption = 'desc', filter } = {}) => {
+const getWorksWithReviews = async ({ username = '', limit = 1000, offset = 0, orderBy = 'release', sortOption = 'desc', filter, nsfw = 0 } = {}) => {
     let works;
     let totalCount;
     const ratingSubQuery = knex('t_review')
@@ -729,10 +731,10 @@ const getWorksWithReviews = async ({ username = '', limit = 1000, offset = 0, or
     if (orderBy == "updated_at") {
         orderBy = "review_updated_at";
     }
-    let query = () => archiveFilter(knex('staticMetadata')
+    let query = () => nsfwFilter(nsfw, archiveFilter(knex('staticMetadata')
         .select(['staticMetadata.*', 'userrate.userRating', 'userrate.review_text', 'userrate.progress', 'review_updated_at', 'userrate.user_name'])
         .join(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-        .orderBy(orderBy, sortOption).orderBy([{ column: 'release', order: 'desc' }, { column: 'id', order: 'desc' }]), username);
+        .orderBy(orderBy, sortOption).orderBy([{ column: 'release', order: 'desc' }, { column: 'id', order: 'desc' }]), username));
     if (filter) {
         totalCount = await countQuery(query().where('progress', '=', filter), 'id');
         works = await query().where('progress', '=', filter).limit(limit).offset(offset);
@@ -744,7 +746,7 @@ const getWorksWithReviews = async ({ username = '', limit = 1000, offset = 0, or
     return { works, totalCount };
 };
 exports.getWorksWithReviews = getWorksWithReviews;
-const getPlayHistroy = async ({ username = '', sortOption = 'desc', limit = 1000, offset = 0 }) => {
+const getPlayHistroy = async ({ username = '', sortOption = 'desc', limit = 1000, offset = 0, nsfw = 0 }) => {
     let works;
     let totalCount;
     const histroyQuery = knex('t_play_histroy')
@@ -755,10 +757,10 @@ const getPlayHistroy = async ({ username = '', sortOption = 'desc', limit = 1000
     ])
         .join('t_work', 't_work.id', 't_play_histroy.work_id')
         .where('t_play_histroy.user_name', "=", username).as('histroy');
-    const query = () => archiveFilter(knex('staticMetadata')
+    const query = () => nsfwFilter(nsfw, archiveFilter(knex('staticMetadata')
         .select(['staticMetadata.*', 'histroy.state', 'histroy.play_updated_at'])
         .join(histroyQuery, 'histroy.work_id', 'staticMetadata.id')
-        .orderBy('play_updated_at', sortOption), username);
+        .orderBy('play_updated_at', sortOption), username));
     totalCount = await countQuery(query(), 'id');
     works = await query().limit(limit).offset(offset);
     return { works, totalCount };
@@ -772,9 +774,11 @@ exports.updatePlayHistroy = updatePlayHistroy;
 async function deletePlayHistroy(username, work_id) {
     await knex('t_play_histroy').select('*').where('work_id', '=', work_id).where('user_name', '=', username).first().del();
 }
-async function getPlaylists(username) {
+async function getPlaylists(username, sfwOnly = false) {
+    const items = knex('t_playlist_item');
+    if (sfwOnly) items.whereIn('work_id', knex('t_work').select('id').where('nsfw', false));
     return knex('t_playlist')
-        .leftJoin('t_playlist_item', 't_playlist.id', 't_playlist_item.playlist_id')
+        .leftJoin(items.as('t_playlist_item'), 't_playlist.id', 't_playlist_item.playlist_id')
         .where('t_playlist.user_name', username)
         .groupBy('t_playlist.id', 't_playlist.user_name', 't_playlist.name', 't_playlist.created_at', 't_playlist.updated_at')
         .select('t_playlist.id', 't_playlist.name', 't_playlist.created_at', 't_playlist.updated_at')
@@ -857,18 +861,21 @@ async function deletePlaylistItem(username, playlistId, itemId) {
     });
 }
 exports.deletePlaylistItem = deletePlaylistItem;
-async function reorderPlaylistItems(username, playlistId, itemIds) {
+async function reorderPlaylistItems(username, playlistId, itemIds, sfwOnly = false) {
     return knex.transaction(async (trx) => {
         const playlist = await trx('t_playlist').select('id').where({ id: playlistId, user_name: username }).first();
         if (!playlist)
             return false;
-        const rows = await trx('t_playlist_item').select('id').where('playlist_id', playlistId);
+        const query = trx('t_playlist_item').select('id', 'position').where('playlist_id', playlistId).orderBy('position').orderBy('id');
+        if (sfwOnly) query.whereIn('work_id', trx('t_work').select('id').where('nsfw', false));
+        const rows = await query;
         const existingIds = rows.map(row => Number(row.id)).sort((a, b) => a - b);
         const requestedIds = itemIds.map(Number).sort((a, b) => a - b);
         if (existingIds.length !== requestedIds.length || existingIds.some((id, index) => id !== requestedIds[index]))
             return false;
-        for (let position = 0; position < itemIds.length; position++) {
-            await trx('t_playlist_item').where({ id: itemIds[position], playlist_id: playlistId }).update({ position });
+        for (let index = 0; index < itemIds.length; index++) {
+            const position = sfwOnly ? rows[index].position : index;
+            await trx('t_playlist_item').where({ id: itemIds[index], playlist_id: playlistId }).update({ position });
         }
         await trx('t_playlist').where('id', playlistId).update({ updated_at: trx.fn.now() });
         return true;
@@ -942,25 +949,27 @@ async function unarchiveWork(username, workId) {
 }
 exports.unarchiveWork = unarchiveWork;
 
-async function getArchivedWorks(username, { limit = 1000, offset = 0 } = {}) {
+async function getArchivedWorks(username, { limit = 1000, offset = 0, nsfw = 0 } = {}) {
     const ratingSubQuery = knex('t_review')
         .select(['work_id', 'rating AS userRating'])
         .where('user_name', username).as('userrate');
-    const query = () => knex('staticMetadata')
+    const query = () => nsfwFilter(nsfw, knex('staticMetadata')
         .select(['staticMetadata.*', 'userrate.userRating', 'archive_state.archived_at'])
         .join('t_work_user_state as archive_state', 'archive_state.work_id', 'staticMetadata.id')
         .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
         .where('archive_state.user_name', username)
-        .orderBy('archive_state.archived_at', 'desc');
+        .orderBy('archive_state.archived_at', 'desc'));
     const totalCount = await countQuery(query(), 'id');
     const works = await query().limit(limit).offset(offset);
     return { works, totalCount };
 }
 exports.getArchivedWorks = getArchivedWorks;
 
-async function getWorkCollections(username) {
+async function getWorkCollections(username, sfwOnly = false) {
+    const items = knex('t_work_collection_item');
+    if (sfwOnly) items.whereIn('work_id', knex('t_work').select('id').where('nsfw', false));
     return knex('t_work_collection')
-        .leftJoin('t_work_collection_item', 't_work_collection.id', 't_work_collection_item.collection_id')
+        .leftJoin(items.as('t_work_collection_item'), 't_work_collection.id', 't_work_collection_item.collection_id')
         .where('t_work_collection.user_name', username)
         .groupBy('t_work_collection.id', 't_work_collection.user_name', 't_work_collection.name', 't_work_collection.created_at', 't_work_collection.updated_at')
         .select('t_work_collection.id', 't_work_collection.name', 't_work_collection.created_at', 't_work_collection.updated_at')
@@ -1049,18 +1058,21 @@ async function removeWorkCollectionItem(username, collectionId, workId) {
 }
 exports.removeWorkCollectionItem = removeWorkCollectionItem;
 
-async function reorderWorkCollectionItems(username, collectionId, workIds) {
+async function reorderWorkCollectionItems(username, collectionId, workIds, sfwOnly = false) {
     return knex.transaction(async (trx) => {
         const collection = await trx('t_work_collection').select('id').where({ id: collectionId, user_name: username }).first();
         if (!collection)
             return false;
-        const rows = await trx('t_work_collection_item').select('work_id').where('collection_id', collectionId);
+        const query = trx('t_work_collection_item').select('work_id', 'position').where('collection_id', collectionId).orderBy('position').orderBy('id');
+        if (sfwOnly) query.whereIn('work_id', trx('t_work').select('id').where('nsfw', false));
+        const rows = await query;
         const existingIds = rows.map(row => Number(row.work_id)).sort((a, b) => a - b);
         const requestedIds = workIds.map(Number).sort((a, b) => a - b);
         if (existingIds.length !== requestedIds.length || existingIds.some((id, index) => id !== requestedIds[index]))
             return false;
-        for (let position = 0; position < workIds.length; position++) {
-            await trx('t_work_collection_item').where({ collection_id: collectionId, work_id: workIds[position] }).update({ position });
+        for (let index = 0; index < workIds.length; index++) {
+            const position = sfwOnly ? rows[index].position : index;
+            await trx('t_work_collection_item').where({ collection_id: collectionId, work_id: workIds[index] }).update({ position });
         }
         await trx('t_work_collection').where('id', collectionId).update({ updated_at: trx.fn.now() });
         return true;

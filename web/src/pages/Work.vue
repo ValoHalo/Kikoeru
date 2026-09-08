@@ -3,16 +3,19 @@
     <div class="q-px-md q-pt-sm">
       <q-btn flat dense no-caps icon="arrow_back" label="返回" color="primary" @click="backToWorks" />
     </div>
-    <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy" />
-    <RelatedWorks :metadata="metadata" />
-    <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
-    <WorkTree
-      ref="workTree"
-      :tree="tree"
-      :metadata="metadata"
-      :importantTreePathArr="importantTreePathArr"
-      :editable="false"
-    />
+    <div v-if="workUnavailable" class="q-pa-xl text-center text-grey">当前内容显示设置下无可用作品</div>
+    <template v-if="metadataLoaded">
+      <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy" />
+      <RelatedWorks :metadata="metadata" />
+      <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
+      <WorkTree
+        ref="workTree"
+        :tree="tree"
+        :metadata="metadata"
+        :importantTreePathArr="importantTreePathArr"
+        :editable="false"
+      />
+    </template>
   </div>
 </template>
 
@@ -45,6 +48,8 @@ export default {
         circle: {}
       },
       tree: [],
+      metadataLoaded: false,
+      workUnavailable: false,
       importantTreePathArr: []
     }
   },
@@ -61,6 +66,7 @@ export default {
 
   watch: {
     $route (to) {
+      if (!to.path.startsWith('/work/')) return
       this.workid = to.params.id;
       this.metadata.state = null;
       this.requestData();
@@ -84,18 +90,25 @@ export default {
       try {
         const response = await this.$axios.get(`/api/work/${this.workid}`);
         this.metadata = response.data
+        this.metadataLoaded = true
         // 如果有播放状态记录
         // 同时当前尚未播放，则设置历史播放进度
         if (this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length > 0 && this.playWorkId == 0) {
           this.resumeMetadataPlayHistroy()
         }
+        return true
       } catch (error ) {
+        if (error.response && error.response.status === 404 && this.$store.getters['AudioPlayer/sfwOnly']) {
+          this.workUnavailable = true
+          return false
+        }
         if (error.response) {
           // 请求已发出，但服务器响应的状态码不在 2xx 范围内
           this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
         } else {
           this.showErrNotif(error.message || error)
         }
+        return false
       }
     },
 
@@ -120,9 +133,11 @@ export default {
       }
     },
 
-    requestData () {
-      this.requestMetaData();
-      this.requestTracks();
+    async requestData () {
+      this.metadataLoaded = false
+      this.workUnavailable = false
+      this.tree = []
+      if (await this.requestMetaData()) await this.requestTracks()
     },
 
     resumeMetadataPlayHistroy() {

@@ -37,14 +37,19 @@ function normalizeInputItem(item) {
     };
 }
 
-async function resolveItems(items) {
+async function resolveItems(items, sfwOnly = false) {
     const workIds = [...new Set(items.map(item => Number(item.work_id)).filter(Number.isInteger))];
     const works = workIds.length > 0
-        ? await db.knex('t_work').select('id', 'title', 'root_folder', 'dir', 'memo').whereIn('id', workIds)
+        ? await db.knex('t_work').select('id', 'title', 'root_folder', 'dir', 'memo', 'nsfw').whereIn('id', workIds)
         : [];
     const workMap = new Map(works.map(work => [Number(work.id), work]));
+    if (sfwOnly) items = items.filter(item => {
+        const work = workMap.get(Number(item.work_id));
+        return work && (work.nsfw === false || work.nsfw === 0);
+    });
     const trackMaps = new Map();
     for (const work of works) {
+        if (sfwOnly && work.nsfw !== false && work.nsfw !== 0) continue;
         const rootFolder = config.rootFolders.find(folder => folder.name === work.root_folder);
         const trackMap = new Map();
         if (rootFolder) {
@@ -65,19 +70,22 @@ async function resolveItems(items) {
     return items.map(item => {
         const workId = Number(item.work_id);
         const relativePath = normalizeRelativePath(item.relative_path);
+        const work = workMap.get(workId);
+        const nsfw = work?.nsfw == null ? null : Boolean(work.nsfw);
         const track = trackMaps.get(workId) && trackMaps.get(workId).get(relativePath);
         if (track) {
             return {
                 ...track,
+                nsfw,
                 itemId: Number(item.id),
                 position: Number(item.position),
                 available: true,
             };
         }
-        const work = workMap.get(workId);
         return {
             itemId: Number(item.id),
             workId,
+            nsfw,
             relativePath,
             title: item.title,
             workTitle: item.work_title || (work && work.title) || '',
@@ -105,7 +113,7 @@ router.get('/', async (req, res, next) => {
             res.send({ playlists: [] });
             return;
         }
-        const playlists = await db.getPlaylists(username);
+        const playlists = await db.getPlaylists(username, req.query.nsfw === '1');
         res.send({ playlists: playlists.map(item => ({ ...item, item_count: Number(item.item_count) })) });
     }
     catch (error) {
@@ -142,7 +150,7 @@ router.get('/:id', param('id').isInt({ min: 1 }), async (req, res, next) => {
             res.status(404).send({ error: '播放列表不存在' });
             return;
         }
-        res.send({ playlist: result.playlist, items: await resolveItems(result.items) });
+        res.send({ playlist: result.playlist, items: await resolveItems(result.items, req.query.nsfw === '1') });
     }
     catch (error) {
         next(error);
@@ -218,7 +226,7 @@ router.put('/:id/items/order', requireAuthenticatedWrite, param('id').isInt({ mi
     if (!isValidRequest(req, res))
         return;
     try {
-        const reordered = await db.reorderPlaylistItems(getRequestUsername(req, config), Number(req.params.id), req.body.itemIds);
+        const reordered = await db.reorderPlaylistItems(getRequestUsername(req, config), Number(req.params.id), req.body.itemIds, req.query.nsfw === '1');
         if (!reordered) {
             res.status(400).send({ error: '播放列表不存在，或曲目顺序与服务器不一致' });
             return;
