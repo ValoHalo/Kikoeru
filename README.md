@@ -7,6 +7,8 @@ Kikoeru 是用于管理和播放本地 DLsite 音声作品的自托管媒体应�
 - 扫描本地 RJ、BJ、VJ 和 CC 开头的音声作品，并从 DLsite 获取作品对应的元数据与封面。
 - 识别本地字幕的语言，并根据偏好设置自动选择。
 - 便携版可以在 WebUI 中检查、下载并安装更新。
+- 简繁体中文、日语和英语 i18n 支持。
+- 全年龄模式。
 
 ## 快速开始
 
@@ -21,23 +23,25 @@ Kikoeru 是用于管理和播放本地 DLsite 音声作品的自托管媒体应�
 
 建议选择一个固定的媒体目录来保存音声文件。每个音声作品占据单独的文件夹，文件夹名中应包含该作品的 DLsite 作品编号。
 
-例如下面的整理方式都是合法的（目录内部的文件名和文件结构无关紧要）：
+例如下面的整理方式都是合法的（目录内部的音频文件名和目录结构无关紧要，只要你觉得没问题就可以）：
 
 ```text
 E:\media\
 ├─ RJ01610397\
 ├─ RJ01355336 作品标题\
-└─ XX社团\
-   └─ RJ01355336\
+└─ 社团名\
+   ├─ RJ01355336\
+   └─ RJ01610397\
 ```
 
-音频文件可以放在作品文件夹内的任意子目录中，常见的 `mp3`、`flac`、`wav`、`m4a`、`aac`、`opus`、  `ogg` 格式均可识别。部分作品提供的 `mp4` 视频也可以在大图模式下播放画面。
+常见的 `mp3`、`flac`、`wav`、`m4a`、`aac`、`opus`、`ogg` 格式音频均可识别。部分作品提供的 `mp4` 视频也可以在大图模式下播放画面。字幕也支持常见的 `lrc`、`vtt`、`srt` 等格式。
 
 ## 更新
 
 Windows 和 Linux 便携版可以在`管理设置 / 更新`中检查并下载最新的 GitHub Release。安装操作需要由管理员进行。
 
 ## 容器运行
+
 容器镜像发布在 [ghcr.io](https://ghcr.io/valohalo/kikoeru)。Podman 示例：
 
 ```bash
@@ -116,15 +120,12 @@ npm run build
 * [kikoeru-express](https://github.com/Number178/kikoeru-express) 及其 [Docker 镜像](https://hub.docker.com/r/number17/kikoeru)
 
   上游后端，基于 Docker 镜像代码进行修改
-
 * [kikoeru-quasar](https://github.com/Number178/kikoeru-quasar)
 
   上游前端，适配到新版本后端后进行改动
-
 * ASMR ONE
 
   参考了一些交互和设置项
-
 * ChatGPT/Codex
 
 ## 声明
