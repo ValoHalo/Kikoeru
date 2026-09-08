@@ -110,7 +110,7 @@
 </template>
 
 <script>
-import { t } from '../i18n'
+import { applyDefaultLocale, t } from '../i18n'
 import PlayerBar from 'components/PlayerBar.vue'
 import AppHeader from 'components/AppHeader.vue'
 import AudioPlayer from 'components/AudioPlayer.vue'
@@ -282,6 +282,7 @@ export default {
     readSharedConfig () {
       return this.$axios.get('/api/config/shared').then((response) => {
         const defaults = response.data.sharedConfig || {}
+        applyDefaultLocale(defaults.interfaceLanguage)
         this.$store.commit('AudioPlayer/APPLY_DEFAULT_PREFERENCES', defaults)
         if (!hasSavedColorScheme() && Object.values(COLOR_SCHEMES).includes(defaults.colorScheme)) {
           this.colorScheme = applyColorScheme(defaults.colorScheme, { persist: false })

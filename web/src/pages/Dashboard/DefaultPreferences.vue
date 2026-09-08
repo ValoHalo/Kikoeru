@@ -12,11 +12,17 @@
         <div class="settings-section__heading">
           <q-icon name="palette" size="22px" />
           <div>
-            <h2 id="default-appearance-title">{{ $t('defaultPreferences.appearance') }}</h2>
+            <h2 id="default-appearance-title">{{ $t('preferences.general') }}</h2>
             <div class="text-caption text-grey-7">{{ $t('defaultPreferences.appearanceHint') }}</div>
           </div>
         </div>
         <q-list bordered separator class="settings-list">
+          <q-item class="settings-row">
+            <q-item-section><q-item-label>{{ $t('common.interfaceLanguage') }}</q-item-label></q-item-section>
+            <q-item-section side class="settings-control settings-control--select">
+              <q-select v-model="config.interfaceLanguage" :options="interfaceLanguageOptions" emit-value map-options dense outlined options-dense :aria-label="$t('common.interfaceLanguage')" />
+            </q-item-section>
+          </q-item>
           <q-item class="settings-row">
             <q-item-section><q-item-label>{{ $t('defaultPreferences.colorScheme') }}</q-item-label><q-item-label caption>{{ $t('defaultPreferences.colorSchemeHint') }}</q-item-label></q-item-section>
             <q-item-section side class="settings-control settings-control--wide"><q-btn-toggle v-model="config.colorScheme" dense unelevated no-caps toggle-color="primary" :options="colorSchemeOptions" /></q-item-section>
@@ -79,6 +85,16 @@
             <q-item-section><q-item-label>{{ $t('defaultPreferences.workListMode') }}</q-item-label><q-item-label caption>{{ $t('defaultPreferences.workListModeHint') }}</q-item-label></q-item-section>
             <q-item-section side class="settings-control"><q-btn-toggle v-model="config.workListMode" dense unelevated no-caps toggle-color="primary" :options="workListModeOptions" /></q-item-section>
           </q-item>
+          <q-item class="settings-row">
+            <q-item-section><q-item-label>{{ $t('preferences.contentDisplay') }}</q-item-label></q-item-section>
+            <q-item-section side class="settings-control settings-control--select settings-control--content">
+              <q-select v-model="config.contentDisplayMode" :options="contentDisplayOptions" emit-value map-options dense outlined options-dense :aria-label="$t('preferences.contentDisplay')" />
+            </q-item-section>
+          </q-item>
+          <q-item tag="label" class="settings-row">
+            <q-item-section><q-item-label>{{ $t('preferences.hideSubtitleFiles') }}</q-item-label></q-item-section>
+            <q-item-section side class="settings-control"><q-toggle v-model="config.hideSubtitleFiles" color="primary" :aria-label="$t('preferences.hideSubtitleFiles')" /></q-item-section>
+          </q-item>
           <q-item tag="label" class="settings-row">
             <q-item-section><q-item-label>{{ $t('defaultPreferences.showRecent') }}</q-item-label><q-item-label caption>{{ $t('defaultPreferences.showRecentHint') }}</q-item-label></q-item-section>
             <q-item-section side class="settings-control"><q-toggle v-model="config.enableShowRecent" color="primary" /></q-item-section>
@@ -117,10 +133,18 @@
             <q-item-section side class="settings-control settings-control--wide"><q-btn-toggle v-model="config.oldSleepTimerUIStyle" dense unelevated no-caps toggle-color="primary" :options="sleepTimerOptions" /></q-item-section>
           </q-item>
           <q-item class="settings-row">
+            <q-item-section><q-item-label>{{ $t('preferences.playbackRate') }}</q-item-label></q-item-section>
+            <q-item-section side class="settings-control settings-control--wide"><q-btn-toggle v-model="config.playbackRate" dense unelevated no-caps toggle-color="primary" :options="playbackRateOptions" /></q-item-section>
+          </q-item>
+          <q-item class="settings-row">
             <q-item-section><q-item-label>{{ $t('defaultPreferences.subtitleLanguage') }}</q-item-label><q-item-label caption>{{ $t('defaultPreferences.subtitleLanguageHint') }}</q-item-label></q-item-section>
             <q-item-section side class="settings-control settings-control--select">
               <q-select v-model="config.defaultSubtitleLanguage" :options="subtitleLanguageOptions" emit-value map-options dense outlined options-dense />
             </q-item-section>
+          </q-item>
+          <q-item tag="label" class="settings-row">
+            <q-item-section><q-item-label>{{ $t('preferences.restoreQueue') }}</q-item-label><q-item-label caption>{{ $t('preferences.restoreQueueHint') }}</q-item-label></q-item-section>
+            <q-item-section side class="settings-control"><q-toggle v-model="config.restoreLastQueue" color="primary" /></q-item-section>
           </q-item>
           <q-item tag="label" class="settings-row">
             <q-item-section><q-item-label>{{ $t('defaultPreferences.seekButtons') }}</q-item-label><q-item-label caption>{{ $t('defaultPreferences.seekButtonsHint') }}</q-item-label></q-item-section>
@@ -180,7 +204,7 @@
 
 <script>
 import NotifyMixin from '../../mixins/Notification.js'
-import { colorSchemeOptions, seekOptions, sleepTimerOptions, subtitleLanguageOptions, transcodeOptions, workListModeOptions } from '../../preferenceOptions'
+import { colorSchemeOptions, contentDisplayOptions, interfaceLanguageOptions, playbackRateOptions, seekOptions, sleepTimerOptions, subtitleLanguageOptions, transcodeOptions, workListModeOptions } from '../../preferenceOptions'
 import { TRANSCODE_FILE_TYPES } from '../../store/module-AudioPlayer/state'
 import { DEFAULT_ACCENT_COLOR, normalizeAccentColor } from '../../themeColor'
 import SmartPathSettings from '../../components/SmartPathSettings.vue'
@@ -200,10 +224,13 @@ export default {
       defaultAccentColor: DEFAULT_ACCENT_COLOR,
 
       transcodeFileTypes: TRANSCODE_FILE_TYPES,
+      playbackRateOptions,
     }
   },
 
   computed: {
+    interfaceLanguageOptions () { return interfaceLanguageOptions() },
+    contentDisplayOptions () { return contentDisplayOptions() },
     colorSchemeOptions () { return colorSchemeOptions() },
     workListModeOptions () { return workListModeOptions() },
     seekOptions () { return seekOptions() },
@@ -289,6 +316,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.settings-control--content { width: 230px; }
+@media (max-width: 699px) {
+  .settings-control--content { width: 100%; }
+}
 .accent-color-control { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: center; gap: 8px; }
 .accent-color-picker-button { width: 34px; height: 34px; min-height: 34px !important; border-radius: 5px !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff !important; }
 .accent-color-picker-button :deep(.q-icon) { font-size: 18px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .46)); }

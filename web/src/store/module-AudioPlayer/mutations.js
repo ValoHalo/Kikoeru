@@ -67,6 +67,12 @@ const mutations = {
     assignWhenUnset(REWIND_SEEK_TIME_KEY, 'rewindSeekTime', value => [5, 10, 30].includes(Number(value)) ? Number(value) : 5)
     assignWhenUnset(FORWARD_SEEK_TIME_KEY, 'forwardSeekTime', value => [5, 10, 30].includes(Number(value)) ? Number(value) : 30)
     assignWhenUnset(PLAYBACK_RATE_KEY, 'playbackRate', normalizePlaybackRate)
+    assignWhenUnset(RESTORE_LAST_QUEUE_KEY, 'restoreLastQueue', booleanValue)
+    // Older browsers may have a saved cover preference without the newer display key.
+    if (!LocalStorage.has(HIDE_NSFW_COVERS_KEY)) {
+      assignWhenUnset(CONTENT_DISPLAY_MODE_KEY, 'contentDisplayMode', value => CONTENT_DISPLAY_MODES.includes(value) ? value : 'all')
+    }
+    assignWhenUnset(HIDE_SUBTITLE_FILES_KEY, 'hideSubtitleFiles', booleanValue)
     assignWhenUnset(DEFAULT_SUBTITLE_LANGUAGE_KEY, 'defaultSubtitleLanguage', normalizeSubtitleLanguage)
     assignWhenUnset(SWAP_SEEK_BUTTON_KEY, 'swapSeekButton', booleanValue)
     assignWhenUnset(ENABLE_VISUALIZER_KEY, 'enableVisualizer', booleanValue)

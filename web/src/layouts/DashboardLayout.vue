@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { t } from '../i18n'
+import { applyDefaultLocale, t } from '../i18n'
 import NotifyMixin from '../mixins/Notification.js'
 import AppHeader from 'components/AppHeader.vue'
 import { applyColorScheme, COLOR_SCHEMES, hasSavedColorScheme, readColorScheme } from '../colorScheme'
@@ -126,6 +126,7 @@ export default {
     readSharedConfig () {
       this.$axios.get('/api/config/shared').then((response) => {
         const defaults = response.data.sharedConfig || {}
+        applyDefaultLocale(defaults.interfaceLanguage)
         if (!hasSavedColorScheme() && Object.values(COLOR_SCHEMES).includes(defaults.colorScheme)) {
           applyColorScheme(defaults.colorScheme, { persist: false })
         }

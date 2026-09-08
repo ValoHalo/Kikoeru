@@ -85,10 +85,15 @@ const defaultConfig = {
     enableGzip: true,
     rewindSeekTime: 5,
     forwardSeekTime: 30,
+    playbackRate: 1,
+    restoreLastQueue: true,
     defaultSubtitleLanguage: 'auto',
+    interfaceLanguage: 'auto',
     colorScheme: 'system',
     accentColor: '#1976D2',
     workListMode: 'waterfall',
+    contentDisplayMode: 'all',
+    hideSubtitleFiles: false,
     enableShowRecent: true,
     oldWorkCardUIStyle: false,
     oldSleepTimerUIStyle: false,
@@ -198,6 +203,11 @@ function migrateConfigVersion() {
 }
 function getSharedConfig() {
     return {
+        interfaceLanguage: exports.config.interfaceLanguage,
+        contentDisplayMode: exports.config.contentDisplayMode,
+        hideSubtitleFiles: exports.config.hideSubtitleFiles,
+        playbackRate: exports.config.playbackRate,
+        restoreLastQueue: exports.config.restoreLastQueue,
         colorScheme: exports.config.colorScheme,
         accentColor: exports.config.accentColor,
         workListMode: exports.config.workListMode,

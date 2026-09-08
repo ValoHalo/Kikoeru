@@ -11,11 +11,11 @@ export default defineConfig(function () {
     ],
 
     css: [
+      'noto-sans-cjk.css',
       'app.scss'
     ],
 
     extras: [
-      'roboto-font',
       'material-icons'
     ],
 

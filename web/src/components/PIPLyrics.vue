@@ -79,7 +79,7 @@ export default {
       // draw()
     },
 
-    drawLyric(str) {
+    async drawLyric(str) {
       console.log('draw lyric: ', str)
       // str += " 强制增加歌词长度测试，强制增加歌词长度测试，强制增加歌词长度测试，"
       const fontScale = 0.7 
@@ -88,6 +88,14 @@ export default {
       const ctx = this.ctx
 
       const fontSize = fontScale * Math.round(Math.sqrt((cvs.width * cvs.height) / expectCharCount))
+      const font = `bold ${fontSize}px ${getComputedStyle(cvs).fontFamily}`
+      // Canvas does not redraw automatically when a web font finishes loading.
+      try {
+        await document.fonts.load(font, str)
+      } catch (error) {
+        console.error('Failed to load lyric font', error)
+      }
+      if (this.stopRafObject.stopped || str !== this.currentLyric) return
 
       const isDarkMode = this.$q.dark.isActive;
 
@@ -96,7 +104,7 @@ export default {
       ctx.fillStyle = isDarkMode ? 'rgba(50, 50, 50, 1.0)' : "rgba(255, 255, 255, 1.0)"
       ctx.fillRect(0, 0, cvs.width, cvs.height)
 
-      ctx.font = `bold ${fontSize}px "-apple-system", "BlinkMacSystemFont", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", "Helvetica", "Arial", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`
+      ctx.font = font
       ctx.fillStyle = readAccentColor()
 
       // 可绘制参数
@@ -337,6 +345,9 @@ export default {
     "$q.dark.isActive"() {
       // 监听黑夜模式，立即重新绘制
       this.drawLyric(this.currentLyric);
+    },
+    "$i18n.locale"() {
+      this.$nextTick(() => this.drawLyric(this.currentLyric))
     }
   },
 

@@ -1,7 +1,7 @@
 <template>
   <q-select
-    :model-value="$i18n.locale"
-    :options="availableLocales"
+    :model-value="localePreference"
+    :options="languageOptions"
     :aria-label="$t('common.interfaceLanguage')"
     emit-value
     map-options
@@ -14,12 +14,16 @@
 </template>
 
 <script>
-import { availableLocales, setLocale } from '../i18n'
+import { localePreference, setLocale } from '../i18n'
+import { interfaceLanguageOptions } from '../preferenceOptions'
 
 export default {
   name: 'InterfaceLanguage',
+  computed: {
+    languageOptions () { return interfaceLanguageOptions() }
+  },
   setup () {
-    return { availableLocales, setLocale }
+    return { localePreference, setLocale }
   }
 }
 </script>

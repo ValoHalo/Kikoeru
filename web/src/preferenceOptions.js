@@ -1,4 +1,4 @@
-import { t } from './i18n'
+import { availableLocales, t } from './i18n'
 import { COLOR_SCHEMES } from './colorScheme'
 import { PLAYBACK_RATES, SUBTITLE_LANGUAGES, TRANSCODE_OPTIONS, WORK_LIST_MODES } from './store/module-AudioPlayer/state'
 
@@ -19,6 +19,17 @@ export const subtitleLanguageOptions = () => SUBTITLE_LANGUAGES.map(value => ({
   label: subtitleLanguageLabel(value),
   value,
 }))
+
+export const interfaceLanguageOptions = () => [
+  { label: t('preferenceOptions.system'), value: 'auto' },
+  ...availableLocales,
+]
+
+export const contentDisplayOptions = () => [
+  { label: t('preferences.unrestricted'), value: 'all' },
+  { label: t('preferences.blurNsfw'), value: 'blur' },
+  { label: t('preferences.sfwOnly'), value: 'sfw' },
+]
 
 export const colorSchemeOptions = () => [
   { label: t('preferenceOptions.light'), icon: 'light_mode', value: COLOR_SCHEMES.LIGHT },

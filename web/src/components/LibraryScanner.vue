@@ -53,14 +53,14 @@
           </q-item-section>
 
           <q-item-section>
-            <q-item-label v-if="allLogs.length > 1" class="ellipsis">{{allLogs[allLogs.length - 2].message}}</q-item-label>
-            <q-item-label v-if="allLogs.length > 0" class="ellipsis">{{allLogs[allLogs.length - 1].message}}</q-item-label>
+            <q-item-label v-if="allLogs.length > 1" class="ellipsis">{{logMessage(allLogs[allLogs.length - 2])}}</q-item-label>
+            <q-item-label v-if="allLogs.length > 0" class="ellipsis">{{logMessage(allLogs[allLogs.length - 1])}}</q-item-label>
           </q-item-section>
         </template>
         
         <q-scroll-area style="height: 256px;" class="scanner-logs bg-dark text-white q-pa-md">
           <div v-for="(log, index) in allLogs" :key="index" >
-            <span :class="textColorOnLevel(log.level)">➜ {{log.message}}</span>
+            <span :class="textColorOnLevel(log.level)">➜ {{logMessage(log)}}</span>
           </div>
         </q-scroll-area>
       </q-expansion-item>
@@ -103,14 +103,14 @@
                   </q-item-section>
 
                   <q-item-section>
-                    <q-item-label v-if="item.logs.length > 0" class="ellipsis">{{item.logs[item.logs.length - 1].message}}</q-item-label>
+                    <q-item-label v-if="item.logs.length > 0" class="ellipsis">{{logMessage(item.logs[item.logs.length - 1])}}</q-item-label>
                     <q-item-label caption>{{ item.rjcode }}</q-item-label>
                   </q-item-section>
                 </template>
                 
                 <div class="scanner-logs bg-dark text-white q-pa-md">
                     <div v-for="(log, index) in item.logs" :key="index">
-                      <span :class="textColorOnLevel(log.level)">➜ {{log.message}}</span>
+                      <span :class="textColorOnLevel(log.level)">➜ {{logMessage(log)}}</span>
                     </div>
                 </div>
               </q-expansion-item>
@@ -139,7 +139,7 @@
 
                   <q-item-section>
                     <q-item-label class="text-white ellipsis" >
-                      {{item.logs[item.logs.length - 1].message}}
+                      {{logMessage(item.logs[item.logs.length - 1])}}
                     </q-item-label>
 
                     <q-item-label caption class="text-white">
@@ -150,7 +150,7 @@
                 
                 <div class="scanner-logs bg-dark text-white q-pa-md">
                     <div v-for="(log, index) in item.logs" :key="index">
-                      <span :class="textColorOnLevel(log.level)">➜ {{log.message}}</span>
+                      <span :class="textColorOnLevel(log.level)">➜ {{logMessage(log)}}</span>
                     </div>
                 </div>
               </q-expansion-item>
@@ -182,6 +182,7 @@ export default {
       failedTasks: [], // 处理失败的任务
       mainLogs: [],
       results: [],
+      finishedLog: null,
       persistedFailures: [],
       failureLoading: false,
       networkTesting: false
@@ -189,6 +190,12 @@ export default {
   },
 
   methods: {
+    logMessage (log) {
+      const params = Object.fromEntries(Object.entries(log.params || {}).map(([key, value]) => [
+        key, value && typeof value === 'object' && value.messageKey ? t(value.messageKey) : value
+      ]))
+      return log.messageKey ? t(log.messageKey, params) : log.message
+    },
     onScanTasks (payload) {
       this.tasks = payload.tasks
     },
@@ -203,6 +210,7 @@ export default {
     },
     onScanInitState (payload) {
       this.state = 'running'
+      this.finishedLog = null
       this.tasks = payload.tasks
       this.failedTasks = payload.failedTasks
       this.mainLogs = payload.mainLogs
@@ -211,10 +219,10 @@ export default {
 
     onScanFinished (payload) {
       this.state = 'finished'
-      this.allLogs.push({
+      this.finishedLog = {
+        ...payload,
         level: 'info',
-        message: payload.message
-      })
+      }
       this.loadFailures()
     },
     onScanError () {
@@ -239,6 +247,7 @@ export default {
       this.failedTasks = []
       this.mainLogs = []
       this.results = []
+      this.finishedLog = null
       this.state = 'running'
     },
 
@@ -330,7 +339,7 @@ export default {
           return { level: 'error', message: t('libraryScanner.failedLog', { rjcode: res.rjcode, count: res.count }) }
         }
       })
-      return this.mainLogs.concat(resultLogs)
+      return this.mainLogs.concat(resultLogs, this.finishedLog ? [this.finishedLog] : [])
     }
   },
 

@@ -433,7 +433,7 @@ async function* getFolderList(rootFolder, current = '', depth = 0, logger = cons
         catch (err) {
             if (err.code === 'EPERM') {
                 if (err.path && !err.path.endsWith('System Volume Information')) {
-                    logger.error(` ! 无法访问 ${err.path}`);
+                    logger.error(` ! 无法访问 ${err.path}`, 'scanner.pathInaccessible', { value0: String(err.path) });
                 }
             }
             else {

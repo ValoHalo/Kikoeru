@@ -1,0 +1,170 @@
+{
+  "validation": {
+    "invalidValue": "フィールド {field} の値が無効です"
+  },
+  "auth": {
+    "usernameLength": "ユーザー名は5文字以上で入力してください",
+    "passwordLength": "パスワードは5文字以上で入力してください",
+    "invalidCredentials": "ユーザー名またはパスワードが正しくありません。",
+    "serverError": "サーバーエラー"
+  },
+  "config": {
+    "githubReleases": "GitHub Releases",
+    "dlsiteMetadata": "DLsite メタデータ",
+    "dlsiteImages": "DLsite 画像 CDN",
+    "metadataService": "Kikoeru メタデータサービス",
+    "proxyPortInvalid": "手動プロキシのポートは1から65535までの整数で指定してください",
+    "folderAbsolute": "メディアフォルダーは絶対パスで指定してください",
+    "folderNotDirectory": "指定されたメディアパスはフォルダーではありません",
+    "folderNameRequired": "メディアフォルダー名を入力してください",
+    "folderCheckFailed": "メディアフォルダーの確認に失敗しました：{value}",
+    "folderRequired": "メディアフォルダーを1つ以上追加してください",
+    "folderNameDuplicate": "メディアフォルダー名は空欄にできません。また、重複する名前は使えません",
+    "setupSaved": "初期設定を保存しました",
+    "setupFailed": "初期設定の保存に失敗しました：{value}",
+    "savedWithTags": "保存しました。tagLanguage={newTagLanguage} に従って {count} 件のタグ名を更新しました。",
+    "saved": "保存しました。",
+    "adminWriteRequired": "設定ファイルを変更できるのは admin アカウントのみです。",
+    "tagsRefreshed": "tagLanguage={tagLanguage} に従って {count} 件のタグ名を更新しました。",
+    "adminReadRequired": "管理設定ファイルを閲覧できるのは admin アカウントのみです。"
+  },
+  "credentials": {
+    "usernameLength": "ユーザー名は5文字以上で入力してください",
+    "passwordLength": "パスワードは5文字以上で入力してください",
+    "groupInvalid": "ユーザーグループには user または guest を指定してください。",
+    "userCreated": "ユーザー {name} を作成しました。",
+    "userExists": "ユーザー {name} は既に存在します。",
+    "adminCreateRequired": "ユーザーを作成できるのは admin アカウントのみです。",
+    "passwordChanged": "パスワードを変更しました。",
+    "usernameInvalid": "ユーザー名が正しくありません。",
+    "ownPasswordOnly": "変更できるのは自分のパスワードのみです。",
+    "deleted": "削除しました。",
+    "adminCannotDelete": "組み込みの管理者アカウントは削除できません。",
+    "adminDeleteRequired": "ユーザーを削除できるのは admin アカウントのみです。",
+    "adminReadRequired": "ユーザー一覧を閲覧できるのは admin アカウントのみです。"
+  },
+  "edit": {
+    "coverMissing": "元のカバー画像が存在しません",
+    "metadataFailed": "作品情報の変更に失敗しました：{message}",
+    "jpegRequired": "JPEG形式ではないため、カスタムカバーを保存できません。現在対応しているのはJPEG形式のみです"
+  },
+  "library": {
+    "workMissing": "作品が存在しません",
+    "archived": "作品をアーカイブしました",
+    "duplicateName": "同じ名前のコレクションが既に存在します",
+    "createFailed": "コレクションの作成に失敗しました",
+    "collectionMissing": "コレクションが存在しません",
+    "renamed": "コレクション名を変更しました",
+    "renameFailed": "コレクション名の変更に失敗しました",
+    "added": "{count} 件の作品を追加しました",
+    "alreadyAdded": "選択した作品は既にコレクションに含まれています",
+    "orderMismatch": "コレクションが存在しないか、作品の順序がサーバーと一致しません",
+    "orderSaved": "作品の順序を保存しました"
+  },
+  "media": {
+    "unsupportedType": "未対応のメディア形式です",
+    "pretranscodeReady": "事前変換が完了しています",
+    "pretranscodeStarted": "事前変換を開始しました",
+    "pretranscodeRunning": "事前変換を実行中です",
+    "folderMissing": "フォルダーが見つかりません：\"{root_folder}\"。サーバーの再起動または再スキャンをお試しください。",
+    "lyricsFound": "歌詞ファイルが見つかりました",
+    "invalidLyricsPath": "歌詞はVTT形式でのみ保存できます。保存先のパスが無効です：{writePath}",
+    "lyricsArrayRequired": "歌詞の内容は配列で指定してください。",
+    "workMissing": "作品が見つかりません：{work_id}",
+    "noLyrics": "歌詞ファイルが存在しません",
+    "bitrateInvalid": "変換ビットレートは128または320 kbpsのみ対応しています。",
+    "unknownError": "不明なエラー",
+    "sourceUnreadable": "元の音声ファイルが存在しないか、読み取れません：{filePath}",
+    "sourceNotFile": "元の音声パスはファイルではありません：{filePath}",
+    "sourceChanged": "メディア処理中に元の音声ファイルが変更されました：{filePath}",
+    "missingWork": "作品が見つかりません：{workId}",
+    "missingTrack": "トラックが見つかりません：{hashIndex}",
+    "transcodeOutputMissing": "変換は完了しましたが、一時出力ファイルが生成されませんでした。",
+    "finalOutputMissing": "変換は完了しましたが、出力ファイルが存在しません。",
+    "queueFull": "メディア処理キューがいっぱいです。しばらくしてから再試行してください。"
+  },
+  "metadata": {
+    "unavailable": "現在のコンテンツ表示設定で表示できる作品はありません",
+    "filesFailed": "ファイル一覧を取得できませんでした。ファイルの存在を確認するか、再スキャンしてライブラリを整理してください",
+    "folderMissing": "フォルダーが見つかりません：\"{root_folder}\"。サーバーの再起動または再スキャンをお試しください。",
+    "serverError": "サーバーエラー",
+    "circleMissing": "サークル {id} が存在しません",
+    "tagMissing": "タグ {id} が存在しません",
+    "voiceActorMissing": "声優 {id} が存在しません",
+    "queryFailed": "検索中にエラーが発生しました",
+    "scanFolderMissing": "作品ファイルのスキャンに失敗しました。ルートフォルダーが見つかりません：{root_folder}",
+    "scanFailed": "作品のローカルファイルの更新に失敗しました：{message}",
+    "renameFolderFailed": "フォルダー名の文字化け修正中にエラーが発生しました：{message}",
+    "encodingFailed": "文字化けの修正に失敗しました：{message}",
+    "workMissing": "作品 id={work_id} が存在しません",
+    "workDeleted": "作品「{title}」を削除しました",
+    "deleteFailed": "作品の削除に失敗しました：{message}",
+    "fileInfoFailed": "ファイル情報の取得に失敗しました：{message}"
+  },
+  "playlist": {
+    "duplicateName": "同じ名前のプレイリストが既に存在します",
+    "saveFailed": "プレイリストの保存に失敗しました",
+    "missing": "プレイリストが存在しません",
+    "renamed": "プレイリスト名を変更しました",
+    "renameFailed": "プレイリスト名の変更に失敗しました",
+    "tracksAdded": "トラックをプレイリストに追加しました",
+    "trackMissing": "プレイリストまたはトラックが存在しません",
+    "orderMismatch": "プレイリストが存在しないか、トラックの順序がサーバーと一致しません",
+    "orderSaved": "トラックの順序を保存しました"
+  },
+  "play_histroy": {
+    "queryFailed": "検索中にエラーが発生しました",
+    "saved": "再生履歴を更新しました",
+    "saveFailed": "サーバーエラーのため、再生履歴を更新できませんでした",
+    "deleted": "再生履歴を削除しました"
+  },
+  "review": {
+    "queryFailed": "検索中にエラーが発生しました",
+    "progressSaved": "視聴状況を更新しました",
+    "saved": "評価を保存しました",
+    "saveFailed": "サーバーエラーのため、評価を保存できませんでした",
+    "deleted": "マークを削除しました"
+  },
+  "scanFailures": {
+    "cleared": "{count} 件の失敗履歴を削除しました"
+  },
+  "update": {
+    "noDownload": "ダウンロード中の更新はありません"
+  },
+  "version": {
+    "scanRecommended": "新しいバージョンでは、スキャン時に「かの仔」と「こっこ」を同一人物として扱う問題を修正しました。スキャンを実行すると、この問題を自動的に修正できます"
+  },
+  "accessControl": {
+    "adminRequired": "この操作には管理者権限が必要です。",
+    "writeDisabled": "危険な書き込み操作は無効です。認証を有効にするか、未認証の書き込み操作を明示的に許可してください。",
+    "loginRequired": "この書き込み操作には、ログインするか、管理者が未認証の書き込みを明示的に許可する必要があります。"
+  },
+  "app": {
+    "schemaMissing": "データベースがまだ作成されていません。先にスキャンを実行してください。",
+    "databaseError": "データベースエラー。",
+    "serverError": "サーバーエラー"
+  },
+  "socket": {
+    "loginRequired": "管理画面を利用するにはログインが必要です。",
+    "loginExpired": "管理画面のログインが期限切れです。",
+    "adminRequired": "管理画面を利用するには管理者権限が必要です。",
+    "connected": "管理画面にログインしました。"
+  },
+  "updateManager": {
+    "versionInvalid": "GitHub Release のバージョン番号の形式が無効です",
+    "updateContainer": "コンテナ版は Docker または Podman でイメージを更新してください",
+    "updateSource": "ソースコードから実行している場合は、Gitで更新するか、新しいリリースパッケージをダウンロードしてください",
+    "useLauncher": "リリースパッケージに含まれる起動スクリプトから Kikoeru を実行してください",
+    "externalDatabase": "外部データベースを使用している場合は、手動でアプリを更新してください",
+    "downloadContainer": "コンテナ版は Docker または Podman で新しいイメージを取得してください",
+    "releaseMissing": "GitHub Release から有効なバージョンを取得できませんでした",
+    "alreadyLatest": "現在のバージョンは最新です",
+    "assetMissing": "このシステムで利用できる更新パッケージがありません",
+    "checksumMissing": "GitHub Release に検証用のSHA-256がありません",
+    "checksumMismatch": "更新パッケージのSHA-256検証に失敗しました",
+    "sizeMismatch": "更新パッケージのサイズが GitHub Release の情報と一致しません",
+    "cancelled": "ダウンロードをキャンセルしました",
+    "scannerRunning": "スキャン中です。スキャンが完了してから更新をインストールしてください",
+    "downloadIncomplete": "更新パッケージのダウンロードが完了していません"
+  }
+}

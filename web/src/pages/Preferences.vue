@@ -257,7 +257,7 @@
 import { t } from '../i18n'
 import { mapState, mapMutations } from 'vuex'
 import { applyColorScheme, COLOR_SCHEMES, COLOR_SCHEME_EVENT, readColorScheme } from '../colorScheme'
-import { colorSchemeOptions, playbackRateOptions, seekOptions, sleepTimerOptions, subtitleLanguageOptions, transcodeOptions, workListModeOptions } from '../preferenceOptions'
+import { colorSchemeOptions, contentDisplayOptions, playbackRateOptions, seekOptions, sleepTimerOptions, subtitleLanguageOptions, transcodeOptions, workListModeOptions } from '../preferenceOptions'
 import { TRANSCODE_FILE_TYPES } from '../store/module-AudioPlayer/state'
 import { ACCENT_COLOR_EVENT, applyAccentColor, DEFAULT_ACCENT_COLOR, normalizeAccentColor, readAccentColor } from '../themeColor'
 import SmartPathSettings from '../components/SmartPathSettings.vue'
@@ -283,13 +283,7 @@ export default {
 
   computed: {
     colorSchemeOptions () { return colorSchemeOptions() },
-    contentDisplayOptions () {
-      return [
-        { label: t('preferences.unrestricted'), value: 'all' },
-        { label: t('preferences.blurNsfw'), value: 'blur' },
-        { label: t('preferences.sfwOnly'), value: 'sfw' },
-      ]
-    },
+    contentDisplayOptions () { return contentDisplayOptions() },
     workListModeOptions () { return workListModeOptions() },
     seekOptions () { return seekOptions() },
     sleepTimerOptions () { return sleepTimerOptions() },

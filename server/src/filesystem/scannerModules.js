@@ -64,33 +64,33 @@ const failedTasks = [];
 const mainLogs = [];
 const results = [];
 const LOG = {
-    finish(message) {
+    finish(message, messageKey, params) {
         console.log(` * ${message}`);
         process.send?.({
             event: 'SCAN_FINISHED',
-            payload: { message }
+            payload: { message, messageKey, params }
         });
     },
     main: {
-        __internal__(level, message) {
+        __internal__(level, message, messageKey, params) {
             console[level]("main log", message);
-            mainLogs.push({ level, message });
+            mainLogs.push({ level, message, messageKey, params });
             process.send?.({ event: 'SCAN_MAIN_LOGS', payload: { mainLogs } });
         },
-        log(msg) {
-            this.__internal__("info", msg);
+        log(...args) {
+            this.__internal__("info", ...args);
         },
-        debug(msg) {
-            this.__internal__("debug", msg);
+        debug(...args) {
+            this.__internal__("debug", ...args);
         },
-        info(msg) {
-            this.__internal__("info", msg);
+        info(...args) {
+            this.__internal__("info", ...args);
         },
-        error(msg) {
-            this.__internal__("error", msg);
+        error(...args) {
+            this.__internal__("error", ...args);
         },
-        warn(msg) {
-            this.__internal__("warn", msg);
+        warn(...args) {
+            this.__internal__("warn", ...args);
         }
     },
     result: {
@@ -131,29 +131,29 @@ const LOG = {
                 process.send?.({ event: 'SCAN_FAILED_TASKS', payload: { failedTasks } });
             }
         },
-        __internal_task__(taskId, level, msg) {
+        __internal_task__(taskId, level, msg, messageKey, params) {
             console.assert(typeof (taskId) === "string" && (taskId.length === 8 || taskId.length === 10));
             console[level](`task[${taskId}] log`, msg);
             const task = tasks.find(task => task.rjcode === taskId);
             if (task) {
-                task.logs.push({ level, message: msg, });
+                task.logs.push({ level, message: msg, messageKey, params });
                 process.send?.({ event: 'SCAN_TASKS', payload: { tasks } });
             }
         },
-        log(taskId, msg) {
-            this.__internal_task__(taskId, "info", msg);
+        log(taskId, ...args) {
+            this.__internal_task__(taskId, "info", ...args);
         },
-        debug(taskId, msg) {
-            this.__internal_task__(taskId, "debug", msg);
+        debug(taskId, ...args) {
+            this.__internal_task__(taskId, "debug", ...args);
         },
-        info(taskId, msg) {
-            this.__internal_task__(taskId, "info", msg);
+        info(taskId, ...args) {
+            this.__internal_task__(taskId, "info", ...args);
         },
-        error(taskId, msg) {
-            this.__internal_task__(taskId, "error", msg);
+        error(taskId, ...args) {
+            this.__internal_task__(taskId, "error", ...args);
         },
-        warn(taskId, msg) {
-            this.__internal_task__(taskId, "warn", msg);
+        warn(taskId, ...args) {
+            this.__internal_task__(taskId, "warn", ...args);
         }
     },
 };
@@ -205,7 +205,7 @@ process.on('message', (m) => {
         });
     }
     else if (m.exit) {
-        LOG.main.error(' ! 终止扫描进程.');
+        LOG.main.error(' ! 终止扫描进程.', 'scanner.stopped');
         process.exit(1);
     }
 });
@@ -237,7 +237,7 @@ async function retryScrapeWorkMetadata(id) {
         return data;
     }
     catch (error) {
-        LOG.task.warn(rjcode, `DLSite 获取元数据失败: ${error.message}`);
+        LOG.task.warn(rjcode, `DLSite 获取元数据失败: ${error.message}`, 'scanner.dlsiteFailed', { value0: String(error.message) });
     }
     try {
         console.log(`[${rjcode}] 从 ASMR ONE 数据源抓取元数据...`);
@@ -246,20 +246,20 @@ async function retryScrapeWorkMetadata(id) {
         return data;
     }
     catch (error) {
-        LOG.task.warn(rjcode, `ASMR ONE获取元数据失败: ${error.message}`);
+        LOG.task.warn(rjcode, `ASMR ONE获取元数据失败: ${error.message}`, 'scanner.asmrOneFailed', { value0: String(error.message) });
     }
-    LOG.task.warn(rjcode, `所有尝试获取元数据的方法均失败，无法添加该作品`);
+    LOG.task.warn(rjcode, `所有尝试获取元数据的方法均失败，无法添加该作品`, 'scanner.allSourcesFailed');
     return null;
 }
 async function getMetadata(id, rootFolderName, dir, hasLyric, createdAt) {
     const rjcode = idConverter.idNumberToCode(id);
-    LOG.task.info(rjcode, '从 DLSite 抓取元数据...');
+    LOG.task.info(rjcode, '从 DLSite 抓取元数据...', 'scanner.fetchMetadata');
     const metadata = await retryScrapeWorkMetadata(id);
     if (metadata === null) {
-        LOG.task.error(rjcode, `元数据获取失败`);
+        LOG.task.error(rjcode, `元数据获取失败`, 'scanner.metadataFailed');
         return 'failed';
     }
-    LOG.task.info(rjcode, '元数据抓取成功，准备添加到数据库...');
+    LOG.task.info(rjcode, '元数据抓取成功，准备添加到数据库...', 'scanner.insertMetadata');
     metadata.rootFolderName = rootFolderName;
     metadata.dir = dir;
     metadata.lyric_status = hasLyric ? "local" : "";
@@ -268,10 +268,10 @@ async function getMetadata(id, rootFolderName, dir, hasLyric, createdAt) {
         await db.insertWorkMetadata(metadata);
     }
     catch (error) {
-        LOG.task.error(rjcode, `元数据添加失败: ${error.message}`);
+        LOG.task.error(rjcode, `元数据添加失败: ${error.message}`, 'scanner.insertFailed', { value0: String(error.message) });
         return 'failed';
     }
-    LOG.task.info(rjcode, '元数据成功添加到数据库.');
+    LOG.task.info(rjcode, '元数据成功添加到数据库.', 'scanner.metadataAdded');
     return 'added';
 }
 ;
@@ -310,7 +310,7 @@ async function insertCustomMetadata(code, productAbsoluteFolder, rootFolderName,
     const rjcode = idConverter.idNumberToCode(initMeta.id);
     initMeta.code = rjcode;
     LOG.task.add(rjcode);
-    LOG.task.info(rjcode, `新增自定义作品，配置code为：${rjcode}`);
+    LOG.task.info(rjcode, `新增自定义作品，配置code为：${rjcode}`, 'scanner.customWork', { value0: String(rjcode) });
     const dirname = path_1.default.dirname(productAbsoluteFolder);
     const basename = path_1.default.basename(productAbsoluteFolder);
     const newBasename = basename.replace(initCustomCodeRegex, rjcode);
@@ -318,12 +318,12 @@ async function insertCustomMetadata(code, productAbsoluteFolder, rootFolderName,
     const newDirInRootFolder = dir.replace(basename, newBasename);
     fs_1.default.renameSync(productAbsoluteFolder, newAbsolutePath);
     initMeta.dir = newDirInRootFolder;
-    LOG.task.info(rjcode, `修改原文件夹名称，从'${basename}'变成'${newBasename}'`);
+    LOG.task.info(rjcode, `修改原文件夹名称，从'${basename}'变成'${newBasename}'`, 'scanner.renameFolder', { value0: String(basename), value1: String(newBasename) });
     try {
         await db.insertWorkMetadata(initMeta);
     }
     catch (error) {
-        LOG.task.error(rjcode, `元数据添加失败: ${error.message}`);
+        LOG.task.error(rjcode, `元数据添加失败: ${error.message}`, 'scanner.insertFailed', { value0: String(error.message) });
         return null;
     }
     return initMeta;
@@ -332,33 +332,34 @@ async function getCoverImageForTranslated(code, types, skipFailed = false) {
     const rjcode = code;
     const result = await getCoverImage(rjcode, types);
     if (result === 'failed' && skipFailed) {
-        LOG.main.warn(`${rjcode} 作品本身在DlSite上缺失部分图片，忽略这些问题`);
+        LOG.main.warn(`${rjcode} 作品本身在DlSite上缺失部分图片，忽略这些问题`, 'scanner.missingSourceImages', { value0: String(rjcode) });
         return 'skipped';
     }
     return result;
 }
 async function getCoverImage(coverForCode, types) {
-    LOG.task.info(coverForCode, '从 DLsite 下载封面...');
+    LOG.task.info(coverForCode, '从 DLsite 下载封面...', 'scanner.fetchCover');
     const id = idConverter.codeToIdNumber(coverForCode);
     const coverUrls = await (0, dlsite_new_1.getCoverUrlsFromDLsite)(id);
     const results = await Promise.all(types.map(async (type) => {
         const url = coverUrls?.[type];
         if (!url) {
-            LOG.task.warn(coverForCode, `封面 ${type} 无 URL，跳过`);
+            LOG.task.warn(coverForCode, `封面 ${type} 无 URL，跳过`, 'scanner.coverNoUrl', { value0: String(type) });
             return null;
         }
-        LOG.task.info(coverForCode, `从 DLsite 下载封面 ${type}, url: ${url}`);
+        LOG.task.info(coverForCode, `从 DLsite 下载封面 ${type}, url: ${url}`, 'scanner.downloadCover', { value0: String(type), value1: String(url) });
         try {
             const imageRes = await (0, axios_1.retryGet)(url, { retry: {}, responseType: 'arraybuffer' });
-            LOG.task.info(coverForCode, `封面 ${coverForCode}_img_${type}.jpg network response got`);
+            LOG.task.info(coverForCode, `封面 ${coverForCode}_img_${type}.jpg network response got`, 'scanner.coverResponse', { value0: String(coverForCode), value1: String(type) });
             await (0, utils_1.saveCoverImageToDisk)(imageRes.data, coverForCode, type);
-            LOG.task.info(coverForCode, `封面 ${coverForCode}_img_${type}.jpg 下载成功.`);
+            LOG.task.info(coverForCode, `封面 ${coverForCode}_img_${type}.jpg 下载成功.`, 'scanner.coverDownloaded', { value0: String(coverForCode), value1: String(type) });
             return type;
         }
         catch (err) {
             const msg = type === "main" ? "主图失败" : "非主图或缩略图下载失败请忽略";
-            LOG.task.warn(coverForCode, `在下载封面 ${coverForCode}_img_${type}.jpg 过程中出错: ${err.message}, url = ${url}, msg = ${msg}`);
-            LOG.main.warn(`[${coverForCode}] 在下载封面 ${coverForCode}_img_${type}.jpg 过程中出错: ${err.message}, url = ${url}, msg = ${msg}`);
+            const note = { messageKey: type === 'main' ? 'scanner.mainCoverFailed' : 'scanner.optionalCoverFailed' };
+            LOG.task.warn(coverForCode, `在下载封面 ${coverForCode}_img_${type}.jpg 过程中出错: ${err.message}, url = ${url}, msg = ${msg}`, 'scanner.coverDownloadFailed', { value0: String(coverForCode), value1: String(type), value2: String(err.message), value3: String(url), value4: note });
+            LOG.main.warn(`[${coverForCode}] 在下载封面 ${coverForCode}_img_${type}.jpg 过程中出错: ${err.message}, url = ${url}, msg = ${msg}`, 'scanner.workCoverDownloadFailed', { value0: String(coverForCode), value1: String(coverForCode), value2: String(type), value3: String(err.message), value4: String(url), value5: note });
             return null;
         }
     }));
@@ -393,10 +394,10 @@ async function processFolder(folder) {
             coverResult = "skipped";
         }
         else {
-            LOG.task.info(rjcode, `扫描音频文件时长`);
+            LOG.task.info(rjcode, `扫描音频文件时长`, 'scanner.scanDuration');
             const memo = await (0, utils_1.scrapeWorkMemo)(folder.absolutePath, {});
             const hasLyric = memo.isContainLyric;
-            LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`);
+            LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`, 'scanner.hasSubtitles', { value0: String(hasLyric) });
             const insertedMetaOrNull = await insertCustomMetadata(folder.code, folder.absolutePath, folder.rootFolderName, folder.relativePath, hasLyric, folder.initialCreatedAt);
             if (!insertedMetaOrNull) {
                 return 'failed';
@@ -416,7 +417,7 @@ async function processFolder(folder) {
         });
         if (lostCoverTypes.length) {
             LOG.task.add(rjcode);
-            LOG.task.info(rjcode, '封面图片缺失，重新下载封面图片...');
+            LOG.task.info(rjcode, '封面图片缺失，重新下载封面图片...', 'scanner.redownloadCover');
             coverResult = await getCoverImageForTranslated(folder.code, lostCoverTypes, true);
         }
         else {
@@ -425,11 +426,11 @@ async function processFolder(folder) {
     }
     else {
         LOG.task.add(rjcode);
-        LOG.task.info(rjcode, `发现新文件夹: "${folder.absolutePath}"`);
-        LOG.task.info(rjcode, `扫描音频文件时长`);
+        LOG.task.info(rjcode, `发现新文件夹: "${folder.absolutePath}"`, 'scanner.newFolder', { value0: String(folder.absolutePath) });
+        LOG.task.info(rjcode, `扫描音频文件时长`, 'scanner.scanDuration');
         const memo = await (0, utils_1.scrapeWorkMemo)(folder.absolutePath, {});
         const hasLyric = memo.isContainLyric;
-        LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`);
+        LOG.task.info(rjcode, `作品中是否有字幕：${hasLyric}`, 'scanner.hasSubtitles', { value0: String(hasLyric) });
         const work_id = idConverter.codeToIdNumber(folder.code);
         const result = await getMetadata(work_id, folder.rootFolderName, folder.relativePath, hasLyric, folder.initialCreatedAt);
         if (result === 'failed') {
@@ -464,7 +465,7 @@ async function performCleanup() {
             }
             catch (err) {
                 if (err && err.code !== 'ENOENT') {
-                    LOG.main.error(`[${rjcode}] 在删除封面过程中出错: ${err.message}`);
+                    LOG.main.error(`[${rjcode}] 在删除封面过程中出错: ${err.message}`, 'scanner.deleteCoverFailed', { value0: String(rjcode), value1: String(err.message) });
                 }
             }
         }
@@ -479,16 +480,16 @@ async function performCleanup() {
 async function fixVADatabase() {
     let success = true;
     if (upgrade_1.updateLock.isLockFilePresent && upgrade_1.updateLock.lockFileConfig.fixVA) {
-        LOG.main.log('开始进行声优元数据修复，需要联网');
+        LOG.main.log('开始进行声优元数据修复，需要联网', 'scanner.repairVoiceActors');
         try {
             const updateResult = await fixVoiceActorBug();
             if (updateResult.failed) {
-                LOG.main.error(`声优元数据修复失败 ${updateResult.failed} 个，保留修复任务以便下次重试`);
+                LOG.main.error(`声优元数据修复失败 ${updateResult.failed} 个，保留修复任务以便下次重试`, 'scanner.repairVoiceActorsFailed', { value0: String(updateResult.failed) });
                 success = false;
             }
             else {
                 upgrade_1.updateLock.removeLockFile();
-                LOG.main.log('完成元数据修复');
+                LOG.main.log('完成元数据修复', 'scanner.repairComplete');
             }
         }
         catch (err) {
@@ -500,16 +501,16 @@ async function fixVADatabase() {
 }
 async function tryCleanupStage() {
     if (config_1.config.skipCleanup) {
-        LOG.main.info('跳过清理“不存在的音声数据”');
+        LOG.main.info('跳过清理“不存在的音声数据”', 'scanner.skipCleanup');
     }
     else {
         try {
-            LOG.main.info('清理本地不再存在的音声的数据与封面图片...');
+            LOG.main.info('清理本地不再存在的音声的数据与封面图片...', 'scanner.cleanupStarted');
             await performCleanup();
-            LOG.main.info('清理完成. 现在开始扫描...');
+            LOG.main.info('清理完成. 现在开始扫描...', 'scanner.cleanupComplete');
         }
         catch (err) {
-            LOG.main.error(`在执行清理过程中出错: ${err.message}`);
+            LOG.main.error(`在执行清理过程中出错: ${err.message}`, 'scanner.cleanupFailed', { value0: String(err.message) });
             process.exit(1);
         }
     }
@@ -522,10 +523,10 @@ async function tryScanRootFolders() {
                 folderList.push(folder);
             }
         }
-        LOG.main.info(`共找到 ${folderList.length} 个音声文件夹.`);
+        LOG.main.info(`共找到 ${folderList.length} 个音声文件夹.`, 'scanner.foldersFound', { value0: String(folderList.length) });
     }
     catch (err) {
-        LOG.main.error(`在扫描根文件夹的过程中出错: ${err.message}`);
+        LOG.main.error(`在扫描根文件夹的过程中出错: ${err.message}`, 'scanner.scanRootFailed', { value0: String(err.message) });
         process.exit(1);
     }
     return folderList;
@@ -543,11 +544,11 @@ async function tryProcessFolderListParallel(folderList) {
         const { uniqueList: uniqueFolderList, duplicateSet } = uniqueFolderListSeparate(dlsitCodeFolder);
         const duplicateNum = dlsitCodeFolder.length - uniqueFolderList.length;
         if (duplicateNum) {
-            LOG.main.info(`发现 ${duplicateNum} 个重复的音声文件夹.`);
+            LOG.main.info(`发现 ${duplicateNum} 个重复的音声文件夹.`, 'scanner.duplicateFolders', { value0: String(duplicateNum) });
             for (const key in duplicateSet) {
                 const addedFolder = uniqueFolderList.find(folder => folder.code === key);
                 duplicateSet[key].push(addedFolder);
-                LOG.main.info(`[${key}] 存在多个文件夹:`);
+                LOG.main.info(`[${key}] 存在多个文件夹:`, 'scanner.multipleFolders', { value0: String(key) });
                 duplicateSet[key].forEach((folder) => {
                     const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === folder.rootFolderName);
                     const absolutePath = path_1.default.join(rootFolder.path, folder.relativePath);
@@ -565,19 +566,19 @@ async function tryProcessFolderListParallel(folderList) {
             catch (error) {
                 if (!tasks.some(task => task.rjcode === folder.code))
                     LOG.task.add(folder.code);
-                LOG.task.error(folder.code, `处理目录时出错: ${error.message || error}`);
+                LOG.task.error(folder.code, `处理目录时出错: ${error.message || error}`, 'scanner.processFolderFailed', { value0: String(error.message || error) });
                 result = 'failed';
             }
             counts[result] += 1;
             switch (result) {
                 case 'added':
-                    LOG.task.info(folder.code, `添加成功! Added: ${counts.added}`);
+                    LOG.task.info(folder.code, `添加成功! Added: ${counts.added}`, 'scanner.added', { value0: String(counts.added) });
                     break;
                 case 'updated':
-                    LOG.task.info(folder.code, `更新成功! Updated: ${counts.updated}`);
+                    LOG.task.info(folder.code, `更新成功! Updated: ${counts.updated}`, 'scanner.updated', { value0: String(counts.updated) });
                     break;
                 case 'failed':
-                    LOG.task.error(folder.code, `添加失败! Failed: ${counts.failed}`);
+                    LOG.task.error(folder.code, `添加失败! Failed: ${counts.failed}`, 'scanner.failed', { value0: String(counts.failed) });
                     break;
                 default: break;
             }
@@ -588,7 +589,7 @@ async function tryProcessFolderListParallel(folderList) {
         }));
     }
     catch (err) {
-        LOG.main.error(`在并行处理音声文件夹过程中出错: ${err.message}`);
+        LOG.main.error(`在并行处理音声文件夹过程中出错: ${err.message}`, 'scanner.parallelFailed', { value0: String(err.message) });
         console.error(err.stack);
         process.exit(1);
     }
@@ -600,7 +601,7 @@ async function performScan() {
             fs_1.default.mkdirSync(config_1.config.coverFolderDir, { recursive: true });
         }
         catch (err) {
-            LOG.main.error(`在创建存放音声封面图片的文件夹时出错: ${err.message}`);
+            LOG.main.error(`在创建存放音声封面图片的文件夹时出错: ${err.message}`, 'scanner.createCoverFolderFailed', { value0: String(err.message) });
             process.exit(1);
         }
     }
@@ -614,11 +615,11 @@ async function performScan() {
             if (Number.isFinite(folder.createdAtMs))
                 folder.initialCreatedAt = new Date(folder.createdAtMs);
         });
-        LOG.main.info('首次建立媒体库，按文件夹创建时间从旧到新加入作品.');
+        LOG.main.info('首次建立媒体库，按文件夹创建时间从旧到新加入作品.', 'scanner.initialLibrary');
     }
     const folderResult = await tryProcessFolderListParallel(folderList);
     const message = folderResult.updated ? `扫描完成: 更新 ${folderResult.updated} 个，新增 ${folderResult.added} 个，跳过 ${folderResult.skipped} 个，失败 ${folderResult.failed} 个.` : `扫描完成: 新增 ${folderResult.added} 个，跳过 ${folderResult.skipped} 个，失败 ${folderResult.failed} 个.`;
-    LOG.finish(message);
+    LOG.finish(message, 'scanner.scanFinished', folderResult);
     db.knex.destroy();
     if (!fixVADatabaseSuccess || folderResult.failed) {
         process.exit(1);
@@ -636,7 +637,7 @@ async function performRetryFailed() {
     for (const failure of failures) {
         const rootFolder = config_1.config.rootFolders.find(item => item.name === failure.root_folder);
         if (!rootFolder) {
-            LOG.main.warn(`[${failure.code}] 找不到媒体根目录 ${failure.root_folder}，保留失败记录`);
+            LOG.main.warn(`[${failure.code}] 找不到媒体根目录 ${failure.root_folder}，保留失败记录`, 'scanner.retryRootMissing', { value0: String(failure.code), value1: String(failure.root_folder) });
             counts.failed += 1;
             continue;
         }
@@ -674,10 +675,10 @@ async function performRetryFailed() {
             absolutePath: path_1.default.join(rootFolder.path, failure.relative_dir),
         });
     }
-    LOG.main.info(`准备重试 ${folderList.length} 个失败项.`);
+    LOG.main.info(`准备重试 ${folderList.length} 个失败项.`, 'scanner.retryStarted', { value0: String(folderList.length) });
     const folderCounts = await tryProcessFolderListParallel(folderList);
     Object.keys(counts).forEach(key => { counts[key] += folderCounts[key]; });
-    LOG.finish(`重试完成: 更新 ${counts.updated} 个，新增 ${counts.added} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`);
+    LOG.finish(`重试完成: 更新 ${counts.updated} 个，新增 ${counts.added} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`, 'scanner.retryFinished', counts);
     db.knex.destroy();
     process.exit(counts.failed ? 1 : 0);
 }
@@ -687,7 +688,7 @@ async function updateMetadata(id, options = {}) {
             return (0, dlsite_new_1.newDLSiteDynamicExtended)(id);
         }
         catch (error) {
-            LOG.task.warn(rjcode, `获取动态元数据失败: ${error.message}`);
+            LOG.task.warn(rjcode, `获取动态元数据失败: ${error.message}`, 'scanner.dynamicMetadataFailed', { value0: String(error.message) });
         }
     };
     if (options.includeVA || options.includeTags || options.includeNSFW || options.refreshAll) {
@@ -698,22 +699,22 @@ async function updateMetadata(id, options = {}) {
     try {
         const work = await db.knex('t_work').select(["id", "is_custom_meta"]).where('id', '=', id).first();
         if (work && work.is_custom_meta >= 1) {
-            LOG.task.log(rjcode, `存在自定义元数据，为避免覆盖掉自定义内容，跳过当前作品的更新流程`);
+            LOG.task.log(rjcode, `存在自定义元数据，为避免覆盖掉自定义内容，跳过当前作品的更新流程`, 'scanner.skipCustomMetadata');
             return 'skipped';
         }
         const metadata = await scrapeProcessor();
         if (!metadata) {
-            LOG.task.warn(rjcode, `获取元数据失败，无法更新`);
+            LOG.task.warn(rjcode, `获取元数据失败，无法更新`, 'scanner.cannotUpdate');
             return 'failed';
         }
-        LOG.task.log(rjcode, `元数据抓取成功，准备更新元数据...`);
+        LOG.task.log(rjcode, `元数据抓取成功，准备更新元数据...`, 'scanner.updateMetadata');
         metadata.id = id;
         await db.updateWorkMetadata(metadata, options);
-        LOG.task.log(rjcode, `元数据更新成功`);
+        LOG.task.log(rjcode, `元数据更新成功`, 'scanner.metadataUpdated');
         return 'updated';
     }
     catch (err) {
-        LOG.task.error(rjcode, `在抓取元数据过程中出错: ${err}`);
+        LOG.task.error(rjcode, `在抓取元数据过程中出错: ${err}`, 'scanner.scrapeFailed', { value0: String(err) });
         console.error(err.stack);
         return 'failed';
     }
@@ -730,7 +731,7 @@ async function performUpdate(options) {
     const processor = (id) => updateMetadataLimited(id, options);
     const counts = await refreshWorks(baseQuery, 'id', processor);
     const message = `扫描完成: 更新 ${counts.updated} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`;
-    LOG.finish(message);
+    LOG.finish(message, 'scanner.updateFinished', counts);
     db.knex.destroy();
     if (counts.failed)
         process.exit(1);
@@ -745,7 +746,7 @@ async function fixVoiceActorBug() {
 ;
 async function refreshWorks(query, idColumnName, processor) {
     const works = await query;
-    LOG.main.info(`共 ${works.length} 个作品. 开始刷新`);
+    LOG.main.info(`共 ${works.length} 个作品. 开始刷新`, 'scanner.refreshStarted', { value0: String(works.length) });
     const counts = {
         updated: 0,
         skipped: 0,
@@ -773,13 +774,13 @@ async function refreshWorks(query, idColumnName, processor) {
         if (result !== 'skipped')
             LOG.result.add(rjcode, result, counts[result]);
     }));
-    LOG.main.log(`完成元数据更新 ${counts.updated} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`);
+    LOG.main.log(`完成元数据更新 ${counts.updated} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`, 'scanner.refreshComplete', { value0: String(counts.updated), value1: String(counts.skipped), value2: String(counts.failed) });
     return counts;
 }
 ;
 async function scanWorkFile(work, index, total) {
     const rjcode = idConverter.idNumberToCode(work.id);
-    LOG.main.info(`扫描进度：${index + 1}/${total}`);
+    LOG.main.info(`扫描进度：${index + 1}/${total}`, 'scanner.progress', { value0: String(index + 1), value1: String(total) });
     try {
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (!rootFolder)
@@ -789,14 +790,14 @@ async function scanWorkFile(work, index, total) {
             ? (0, utils_1.ensureIsJsonObject)(work.memo)
             : {}));
         if (await db.updateWorkLocalLyricStatus(memo.isContainLyric, work.lyric_status, work.id)) {
-            LOG.main.info(`[${rjcode}] 歌词状态发生改变`);
+            LOG.main.info(`[${rjcode}] 歌词状态发生改变`, 'scanner.lyricsChanged', { value0: String(rjcode) });
         }
         await db.setWorkMemo(work.id, memo);
         await db.clearScanFailure({ code: rjcode, rootFolder: work.root_folder, relativeDir: work.dir });
         return "updated";
     }
     catch (error) {
-        LOG.main.error(`[${rjcode}] 扫描歌词过程中发生错误：${error}`);
+        LOG.main.error(`[${rjcode}] 扫描歌词过程中发生错误：${error}`, 'scanner.lyricsFailed', { value0: String(rjcode), value1: String(error) });
         console.error(error.stack);
         await db.recordScanFailure({
             code: rjcode,
@@ -812,9 +813,9 @@ async function scanWorkFileLimited(work, index, total) {
     return limitP.call(scanWorkFile, work, index, total);
 }
 async function performWorkFileScan() {
-    LOG.main.info(`扫描本地文件开始`);
+    LOG.main.info(`扫描本地文件开始`, 'scanner.filesStarted');
     const works = await db.knex('t_work').select('id', "root_folder", "dir", "lyric_status", "memo");
-    LOG.main.info(`总计 ${works.length} 个作品`);
+    LOG.main.info(`总计 ${works.length} 个作品`, 'scanner.totalWorks', { value0: String(works.length) });
     const results = await Promise.all(works.map((work, index) => scanWorkFileLimited(work, index, works.length)));
     const counts = results.reduce((acc, x) => (acc[x]++, acc), {
         updated: 0,
@@ -822,7 +823,7 @@ async function performWorkFileScan() {
         failed: 0,
     });
     const message = `扫描完成: 更新 ${counts.updated} 个，失败 ${counts.failed} 个，跳过 ${counts.skipped} 个.`;
-    LOG.finish(message);
+    LOG.finish(message, 'scanner.filesFinished', counts);
     db.knex.destroy();
     if (counts.failed)
         process.exit(1);

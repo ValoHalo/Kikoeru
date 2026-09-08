@@ -1,0 +1,170 @@
+{
+  "validation": {
+    "invalidValue": "欄位 {field} 的值無效"
+  },
+  "auth": {
+    "usernameLength": "使用者名稱長度至少為 5",
+    "passwordLength": "密碼長度至少為 5",
+    "invalidCredentials": "使用者名稱或密碼錯誤.",
+    "serverError": "伺服器錯誤"
+  },
+  "config": {
+    "githubReleases": "GitHub Releases",
+    "dlsiteMetadata": "DLsite 中繼資料",
+    "dlsiteImages": "DLsite 圖片 CDN",
+    "metadataService": "Kikoeru 中繼資料服務",
+    "proxyPortInvalid": "手動代理埠必須是 1 到 65535 之間的整數",
+    "folderAbsolute": "媒體目錄必須使用絕對路徑",
+    "folderNotDirectory": "媒體目錄路徑不是資料夾",
+    "folderNameRequired": "請填寫媒體目錄名稱",
+    "folderCheckFailed": "媒體目錄檢查失敗：{value}",
+    "folderRequired": "請至少新增一個媒體目錄",
+    "folderNameDuplicate": "媒體目錄名稱不能為空或重複",
+    "setupSaved": "初始化設定已儲存",
+    "setupFailed": "儲存初始化設定失敗：{value}",
+    "savedWithTags": "儲存成功，已根據 tagLanguage={newTagLanguage} 更新 {count} 個標籤名稱.",
+    "saved": "儲存成功.",
+    "adminWriteRequired": "只有 admin 帳號能修改設定檔.",
+    "tagsRefreshed": "已根據 tagLanguage={tagLanguage} 重新整理 {count} 個標籤名稱.",
+    "adminReadRequired": "只有 admin 帳號能讀取管理設定檔."
+  },
+  "credentials": {
+    "usernameLength": "使用者名稱長度至少為 5",
+    "passwordLength": "密碼長度至少為 5",
+    "groupInvalid": "使用者組名稱必須為 ['user', 'guest'] 的一個.",
+    "userCreated": "使用者 {name} 建立成功.",
+    "userExists": "使用者 {name} 已存在.",
+    "adminCreateRequired": "只有 admin 帳號能建立新使用者.",
+    "passwordChanged": "密碼修改成功.",
+    "usernameInvalid": "使用者名稱錯誤.",
+    "ownPasswordOnly": "只能修改自己帳號的密碼.",
+    "deleted": "刪除成功.",
+    "adminCannotDelete": "不能刪除內建的管理員帳號.",
+    "adminDeleteRequired": "只有 admin 帳號能刪除使用者.",
+    "adminReadRequired": "只有 admin 帳號能瀏覽使用者."
+  },
+  "edit": {
+    "coverMissing": "原始封面不存在",
+    "metadataFailed": "修改作品中繼資料失敗：{message}",
+    "jpegRequired": "圖片格式不是 JPEG，無法儲存自訂封面。目前僅支援 JPEG 格式。"
+  },
+  "library": {
+    "workMissing": "作品不存在",
+    "archived": "作品已歸檔",
+    "duplicateName": "分組名稱已存在",
+    "createFailed": "建立作品分組失敗",
+    "collectionMissing": "作品分組不存在",
+    "renamed": "作品分組已重新命名",
+    "renameFailed": "重新命名作品分組失敗",
+    "added": "已加入 {count} 個作品",
+    "alreadyAdded": "所選作品已在分組中",
+    "orderMismatch": "作品分組不存在，或作品順序與伺服器不一致",
+    "orderSaved": "作品順序已儲存"
+  },
+  "media": {
+    "unsupportedType": "不支援的媒體類型",
+    "pretranscodeReady": "預轉碼已就緒",
+    "pretranscodeStarted": "預轉碼已開始",
+    "pretranscodeRunning": "預轉碼正在進行",
+    "folderMissing": "找不到資料夾: \"{root_folder}\"，請嘗試重新啟動伺服器或重新掃描.",
+    "lyricsFound": "找到歌詞檔案",
+    "invalidLyricsPath": "只能儲存vtt格式的歌詞檔案，目前儲存路徑格式無效{writePath}",
+    "lyricsArrayRequired": "歌詞內容必須是陣列.",
+    "workMissing": "找不到作品: {work_id}",
+    "noLyrics": "不存在歌詞檔案",
+    "bitrateInvalid": "僅支援 128 或 320 kbps 的轉碼位元速率.",
+    "unknownError": "未知錯誤",
+    "sourceUnreadable": "來源音訊檔案不存在或不可讀: {filePath}",
+    "sourceNotFile": "來源音訊路徑不是檔案: {filePath}",
+    "sourceChanged": "來源音訊檔案在媒體處理期間發生了變化: {filePath}",
+    "missingWork": "找不到作品: {workId}",
+    "missingTrack": "找不到音軌: {hashIndex}",
+    "transcodeOutputMissing": "轉碼完成，但未生成暫存輸出檔案.",
+    "finalOutputMissing": "轉碼完成，但最終輸出檔案不存在.",
+    "queueFull": "媒體處理佇列已滿，請稍後重試."
+  },
+  "metadata": {
+    "unavailable": "目前內容顯示設定下無可用作品",
+    "filesFailed": "獲取檔案列表失敗，請檢查檔案是否存在或重新掃描清理",
+    "folderMissing": "找不到資料夾: \"{root_folder}\"，請嘗試重新啟動伺服器或重新掃描.",
+    "serverError": "伺服器錯誤",
+    "circleMissing": "社團{id}不存在",
+    "tagMissing": "標籤{id}不存在",
+    "voiceActorMissing": "聲優{id}不存在",
+    "queryFailed": "查詢過程中出錯",
+    "scanFolderMissing": "掃描作品檔案失敗，沒有找到rootFolder: {root_folder}",
+    "scanFailed": "重新整理作品本地檔案失敗：{message}",
+    "renameFolderFailed": "修復亂碼資料夾出現錯誤{message}",
+    "encodingFailed": "修復亂碼問題失敗：{message}",
+    "workMissing": "作品 id={work_id} 不存在",
+    "workDeleted": "作品 \"{title}\" 已刪除",
+    "deleteFailed": "刪除作品失敗：{message}",
+    "fileInfoFailed": "獲取檔案資訊失敗：{message}"
+  },
+  "playlist": {
+    "duplicateName": "播放清單名稱已存在",
+    "saveFailed": "儲存播放清單失敗",
+    "missing": "播放清單不存在",
+    "renamed": "播放清單已重新命名",
+    "renameFailed": "重新命名播放清單失敗",
+    "tracksAdded": "曲目已加入播放清單",
+    "trackMissing": "播放清單或曲目不存在",
+    "orderMismatch": "播放清單不存在，或曲目順序與伺服器不一致",
+    "orderSaved": "曲目順序已儲存"
+  },
+  "play_histroy": {
+    "queryFailed": "查詢過程中出錯",
+    "saved": "更新歷史成功",
+    "saveFailed": "更新播放歷史失敗，伺服器錯誤",
+    "deleted": "刪除歷史記錄成功"
+  },
+  "review": {
+    "queryFailed": "查詢過程中出錯",
+    "progressSaved": "更新進度成功",
+    "saved": "評價成功",
+    "saveFailed": "評價失敗，伺服器錯誤",
+    "deleted": "刪除標記成功"
+  },
+  "scanFailures": {
+    "cleared": "已清除 {count} 條失敗記錄"
+  },
+  "update": {
+    "noDownload": "目前沒有正在進行的更新下載"
+  },
+  "version": {
+    "scanRecommended": "新版解決了舊版掃描時將かの仔和こっこ識別為同一個人的問題，建議進行掃描以自動修復這一問題"
+  },
+  "accessControl": {
+    "adminRequired": "只有管理員可以執行該操作.",
+    "writeDisabled": "危險寫操作已停用；請啟用鑑權，或顯式允許未鑑權寫操作.",
+    "loginRequired": "該寫操作要求登入，或由管理員顯式允許未鑑權寫入."
+  },
+  "app": {
+    "schemaMissing": "資料庫結構尚未建立，請先執行掃描.",
+    "databaseError": "資料庫錯誤.",
+    "serverError": "伺服器錯誤"
+  },
+  "socket": {
+    "loginRequired": "管理後臺需要登入.",
+    "loginExpired": "管理後臺登入已失效.",
+    "adminRequired": "管理後臺需要管理員權限.",
+    "connected": "成功登入管理後臺."
+  },
+  "updateManager": {
+    "versionInvalid": "GitHub Release 的版本號格式無效",
+    "updateContainer": "容器版本需要通過 Docker 或 Podman 更新映象",
+    "updateSource": "原始碼執行模式請通過 Git 更新或下載新的發行包",
+    "useLauncher": "請通過發行包中的啟動指令碼執行 Kikoeru",
+    "externalDatabase": "使用外部資料庫時需要手動完成應用更新",
+    "downloadContainer": "容器版本通過 Docker 或 Podman 拉取新映象",
+    "releaseMissing": "GitHub Release 沒有返回有效版本",
+    "alreadyLatest": "目前已經是最新版本",
+    "assetMissing": "目前系統沒有可用的更新包",
+    "checksumMissing": "GitHub Release 沒有提供可校驗的 SHA-256",
+    "checksumMismatch": "更新包 SHA-256 校驗失敗",
+    "sizeMismatch": "更新包大小與 GitHub Release 不一致",
+    "cancelled": "下載已取消",
+    "scannerRunning": "掃描任務執行中，請等待掃描完成後再安裝更新",
+    "downloadIncomplete": "更新包尚未下載完成"
+  }
+}
