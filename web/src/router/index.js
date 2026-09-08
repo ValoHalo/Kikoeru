@@ -8,6 +8,7 @@ import axios from 'axios'
 
 import routes from './routes'
 import store from '../store'
+import { cancelCoverTransition, checkCoverTransitionRoute } from '../coverTransition'
 
 export default defineRouter(function () {
   const createHistory = process.env.SERVER ? createMemoryHistory : createWebHistory
@@ -44,6 +45,9 @@ export default defineRouter(function () {
       return '/'
     }
   })
+
+  router.afterEach(checkCoverTransitionRoute)
+  router.onError(cancelCoverTransition)
 
   return router
 })

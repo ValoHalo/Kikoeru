@@ -258,7 +258,9 @@
     "failed": "桌面歌词打开失败，请播放音频5秒后再次尝试打开"
   },
   "recentWorks": {
-    "title": "最近播放"
+    "title": "最近播放",
+    "expand": "展开最近播放",
+    "collapse": "收起最近播放"
   },
   "relatedWorks": {
     "title": "关联作品"

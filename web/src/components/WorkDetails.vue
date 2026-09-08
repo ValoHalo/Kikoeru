@@ -1,6 +1,7 @@
 <template>
   <div class="work-details">
     <CoverSFW
+      v-cover-transition="metadata.id"
       class="work-cover"
       :workid="metadata.id"
       :nsfw="false"
@@ -210,9 +211,11 @@ import LibraryActions from './LibraryActions.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { mapState } from 'vuex'
 import { idNumberToCode } from 'src/utils'
+import { coverTransition } from '../coverTransition'
 
 export default {
   name: 'WorkDetails',
+  directives: { coverTransition },
 
   mixins: [NotifyMixin],
 

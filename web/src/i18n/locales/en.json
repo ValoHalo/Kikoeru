@@ -258,7 +258,9 @@
     "failed": "Failed to open floating lyrics. Play audio for 5 seconds, then try again."
   },
   "recentWorks": {
-    "title": "Recently played"
+    "title": "Recently played",
+    "expand": "Expand recently played",
+    "collapse": "Collapse recently played"
   },
   "relatedWorks": {
     "title": "Related works"

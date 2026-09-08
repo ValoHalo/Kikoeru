@@ -258,7 +258,9 @@
     "failed": "桌面歌詞開啟失敗，請播放音訊5秒後再次嘗試開啟"
   },
   "recentWorks": {
-    "title": "最近播放"
+    "title": "最近播放",
+    "expand": "展開最近播放",
+    "collapse": "收起最近播放"
   },
   "relatedWorks": {
     "title": "關聯作品"

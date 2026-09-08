@@ -1,9 +1,33 @@
 <template>
   <div>
-    <div class="row justify-between q-mt-lg q-ml-md">
-      <div class="col text-h5 text-weight-regular">{{ $t('recentWorks.title') }}</div>
+    <div class="row items-center justify-between q-mt-lg q-ml-md">
+      <div class="col row items-center no-wrap">
+        <span class="text-h5 text-weight-regular">{{ $t('recentWorks.title') }}</span>
+        <q-btn
+          flat
+          round
+          dense
+          class="q-ml-xs"
+          :aria-label="$t(expanded ? 'recentWorks.collapse' : 'recentWorks.expand')"
+          :aria-expanded="expanded"
+          aria-controls="recent-works-list"
+          @click="toggleExpanded"
+        >
+          <q-icon name="expand_more" class="recent-works-chevron" :class="{ 'is-expanded': expanded }" />
+          <q-tooltip>{{ $t(expanded ? 'recentWorks.collapse' : 'recentWorks.expand') }}</q-tooltip>
+        </q-btn>
+      </div>
       <q-btn flat icon="navigate_next" @click="$router.push('/favourites/histroy')"></q-btn>
     </div>
+    <div
+      id="recent-works-list"
+      class="recent-works-collapse"
+      :class="{ 'is-expanded': expanded }"
+      :inert="!expanded"
+      :aria-hidden="!expanded"
+      @transitionend.self="onCollapseTransitionEnd"
+    >
+      <div class="recent-works-collapse-inner">
     <q-virtual-scroll
       class="q-px-sm recent-works-scroll"
       :class="{'scroll-style-change': !$q.platform.has.touch, 'is-dragging': mouseDrag && mouseDrag.active}"
@@ -48,6 +72,8 @@
         </div>
       </template>
     </q-virtual-scroll>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -64,6 +90,7 @@ export default {
 
   data () {
     return {
+      expanded: true,
       currentPage: 0,
       pagination: { currentPage:0, pageSize:12, totalCount:0 },
       works: [],
@@ -75,6 +102,18 @@ export default {
   },
 
   methods: {
+    onCollapseTransitionEnd() {
+      if (this.expanded) this.$refs.scroll?.refresh();
+    },
+
+    async toggleExpanded() {
+      this.expanded = !this.expanded;
+      if (this.expanded) {
+        await this.$nextTick();
+        this.$refs.scroll?.refresh();
+      }
+    },
+
     startMouseDrag(event) {
       this.suppressMouseClick = false;
       const element = event.currentTarget;
@@ -190,6 +229,41 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.recent-works-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 200ms ease, visibility 0s 280ms;
+}
+
+.recent-works-collapse.is-expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.recent-works-collapse-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.recent-works-chevron {
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.recent-works-chevron.is-expanded {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-works-collapse,
+  .recent-works-chevron {
+    transition: none;
+  }
+}
 
 @media (hover: hover) and (pointer: fine) {
   .recent-works-scroll {
