@@ -254,7 +254,7 @@ router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id', (_value,
         const charsetMatch = jschardet_1.default.detect(fileBuffer).encoding;
         const fileContent = iconv_lite_1.default.decode(fileBuffer, charsetMatch);
         let lrc = [];
-        let extension = path_1.default.extname(fileName);
+        let extension = path_1.default.extname(fileName).toLowerCase();
         switch (extension) {
             case ".lrc":
                 lrc = (0, lyricParser_1.parseLrc)(fileContent);
@@ -262,6 +262,10 @@ router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id', (_value,
             case ".srt":
             case ".vtt":
                 lrc = (0, lyricParser_1.parseSrtOrVtt)(fileContent);
+                break;
+            case ".ass":
+            case ".ssa":
+                lrc = (0, lyricParser_1.parseAss)(fileContent);
                 break;
             default:
                 break;

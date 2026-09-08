@@ -929,5 +929,19 @@
     "filesFinished": "文件扫描完成：更新 {updated} 个，失败 {failed} 个，跳过 {skipped} 个。",
     "mainCoverFailed": "主图下载失败",
     "optionalCoverFailed": "非主图或缩略图下载失败，可忽略"
+  },
+  "subtitleReader": {
+    "title": "歌词浏览器",
+    "search": "搜索字幕内容",
+    "smaller": "缩小字号",
+    "larger": "放大字号",
+    "loading": "正在载入字幕…",
+    "failed": "字幕加载失败，请重试。",
+    "retry": "重试",
+    "noMatches": "没有找到匹配的字幕",
+    "empty": "此文件没有可显示的字幕",
+    "lineCount": "{count} / {total} 条字幕",
+    "unavailable": "字幕文件不可用，请返回文件夹重新选择。",
+    "files": "同文件夹字幕"
   }
 }

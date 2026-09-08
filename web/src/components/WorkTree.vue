@@ -85,6 +85,7 @@
         >
           <q-item-section avatar style="position: relative;">
             <q-icon size="34px" v-if="item.type === 'folder'" color="amber" name="folder" />
+            <q-icon size="34px" v-else-if="isSubtitle(item)" color="info" name="subtitles" />
             <q-icon size="34px" v-else-if="item.type === 'text'" color="info" name="description" />
             <q-icon size="34px" v-else-if="item.type === 'image'" color="orange" name="photo" />
             <!-- <q-img width="34px" height="34px" v-else-if="item.type === 'image'" :src="imgSrc(item)" contain :ratio="1/1"  name="thumbnail" /> -->
@@ -259,6 +260,10 @@ export default {
   methods: {
     formatSeconds,
 
+    isSubtitle (item) {
+      return item.type !== 'folder' && /\.(lrc|srt|vtt|ass|ssa)$/i.test(item.title || '')
+    },
+
     visibleFiles (items) {
       return this.$store.state.AudioPlayer.hideSubtitleFiles
         ? items.filter(item => item.type === 'folder' || !/\.(lrc|srt|ass|ssa|vtt)$/i.test(item.title || ''))
@@ -348,6 +353,8 @@ export default {
     onClickItem (item) {
       if (item.type === 'folder') {
         this.path.push(item.title);
+      } else if (this.isSubtitle(item)) {
+        this.$router.push({ name: 'lyrics', params: { id: this.metadata.id, hash: String(item.hash).split('/').pop() } });
       } else if (item.type === 'image') {
         this.openPreviewImg(item);
       } else if (item.type === 'text' || item.type === 'image') {

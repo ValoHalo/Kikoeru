@@ -929,5 +929,19 @@
     "filesFinished": "File scan completed. Updated: {updated}, failed: {failed}, skipped: {skipped}.",
     "mainCoverFailed": "Main cover download failed",
     "optionalCoverFailed": "A secondary cover or thumbnail failed to download and may be skipped"
+  },
+  "subtitleReader": {
+    "title": "Lyrics browser",
+    "search": "Search subtitles",
+    "smaller": "Decrease text size",
+    "larger": "Increase text size",
+    "loading": "Loading subtitles…",
+    "failed": "Could not load subtitles. Please try again.",
+    "retry": "Retry",
+    "noMatches": "No matching subtitles",
+    "empty": "This file has no subtitles to display",
+    "lineCount": "{count} / {total} lines",
+    "unavailable": "This subtitle file is unavailable. Return to the folder and select it again.",
+    "files": "Subtitles in this folder"
   }
 }

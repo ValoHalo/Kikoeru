@@ -929,5 +929,19 @@
     "filesFinished": "檔案掃描完成：更新 {updated} 個，失敗 {failed} 個，跳過 {skipped} 個。",
     "mainCoverFailed": "主圖下載失敗",
     "optionalCoverFailed": "非主圖或縮圖下載失敗，可忽略"
+  },
+  "subtitleReader": {
+    "title": "歌詞瀏覽器",
+    "search": "搜尋字幕內容",
+    "smaller": "縮小字級",
+    "larger": "放大字級",
+    "loading": "正在載入字幕…",
+    "failed": "字幕載入失敗，請重試。",
+    "retry": "重試",
+    "noMatches": "找不到符合的字幕",
+    "empty": "此檔案沒有可顯示的字幕",
+    "lineCount": "{count} / {total} 條字幕",
+    "unavailable": "字幕檔案無法使用，請返回資料夾重新選擇。",
+    "files": "同資料夾字幕"
   }
 }

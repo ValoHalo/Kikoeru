@@ -163,6 +163,7 @@ export default {
     },
     isWorkPage () { return this.$route.path.startsWith('/work/') },
     headerTitle () {
+      if (this.$route.name === 'lyrics') return t('subtitleReader.title')
       if (this.isWorkPage) return t('mainLayout.workDetails')
       if (this.$route.path.startsWith('/favourites')) return t('common.favourites')
       if (this.isFullScreenPage) return t('mainLayout.nowPlaying')

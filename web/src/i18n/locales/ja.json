@@ -929,5 +929,19 @@
     "filesFinished": "ファイルのスキャンが完了しました。更新：{updated}件、失敗：{failed}件、スキップ：{skipped}件。",
     "mainCoverFailed": "メインカバーのダウンロードに失敗しました",
     "optionalCoverFailed": "サブ画像またはサムネイルのダウンロード失敗は無視できます"
+  },
+  "subtitleReader": {
+    "title": "歌詞ビュー",
+    "search": "字幕を検索",
+    "smaller": "文字を小さく",
+    "larger": "文字を大きく",
+    "loading": "字幕を読み込み中…",
+    "failed": "字幕を読み込めませんでした。再試行してください。",
+    "retry": "再試行",
+    "noMatches": "一致する字幕がありません",
+    "empty": "表示できる字幕がありません",
+    "lineCount": "{count} / {total} 行",
+    "unavailable": "字幕ファイルを開けません。フォルダーに戻って選び直してください。",
+    "files": "同じフォルダーの字幕"
   }
 }
