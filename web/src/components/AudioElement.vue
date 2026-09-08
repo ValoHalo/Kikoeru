@@ -55,6 +55,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import Lyric from 'lrc-file-parser'
 import Plyr from 'plyr'
 import 'plyr/dist/plyr.css'
@@ -435,7 +436,7 @@ export default {
       if (!this.resumeHistroyDone) {
         this.player.currentTime = this.resumeHistroySeconds;
         this.RESUME_HISTROY_SECONDS_DONE()
-        this.$q.notify({message: "已恢复播放历史", timeout: 1000})
+        this.$q.notify({message: t('audioElement.historyRestored'), timeout: 1000})
       }
     },
 
@@ -758,7 +759,7 @@ export default {
       document.addEventListener('click', initAudio);
       if (this.$q.platform.is.safari && this.$q.platform.is.mobile) {
         this.$q.notify({
-          message: "监测到safari平台上开启了音频可视化功能，注意移动端safari有bug，如果没有声音的话，请关闭音频可视化功能",
+          message: t('audioElement.safariVisualizerWarning'),
           timeout: 5000
         })
       }

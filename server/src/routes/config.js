@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,22 +19,22 @@ const SETUP_VERSION = 1;
 const NETWORK_TEST_TARGETS = [
     {
         key: 'dlsite',
-        label: 'DLsite 元数据',
+        label: 'config.dlsiteMetadata',
         url: 'https://www.dlsite.com/maniax/api/=/product.json?workno=RJ01000001&locale=ja_JP',
     },
     {
         key: 'dlsiteImage',
-        label: 'DLsite 图片 CDN',
+        label: 'config.dlsiteImages',
         url: 'https://img.dlsite.jp/',
     },
     {
         key: 'metaServer',
-        label: 'Kikoeru 元数据服务',
+        label: 'config.metadataService',
         url: null,
     },
     {
         key: 'github',
-        label: 'GitHub Releases',
+        label: 'config.githubReleases',
         url: 'https://api.github.com/repos/ValoHalo/Kikoeru/releases/latest',
     },
 ];
@@ -47,7 +48,7 @@ function normalizeNetworkConfig(input = {}) {
     const mode = httpClient.resolveProxyMode(input);
     const port = Number(input.httpProxyPort || 0);
     if (mode === httpClient.PROXY_MODES.MANUAL && (!Number.isInteger(port) || port < 1 || port > 65535)) {
-        throw new Error('手动代理端口必须是 1 到 65535 之间的整数');
+        throw new Error(t('config.proxyPortInvalid'));
     }
     return {
         httpProxyMode: mode,
@@ -59,11 +60,11 @@ function normalizeNetworkConfig(input = {}) {
 async function inspectRootFolder(rootFolder, maxDepth) {
     const folderPath = path_1.default.resolve(String(rootFolder.path || '').trim());
     if (!path_1.default.isAbsolute(String(rootFolder.path || '').trim())) {
-        throw new Error('媒体目录必须使用绝对路径');
+        throw new Error(t('config.folderAbsolute'));
     }
     const stat = await fs_1.default.promises.stat(folderPath);
     if (!stat.isDirectory()) {
-        throw new Error('媒体目录路径不是文件夹');
+        throw new Error(t('config.folderNotDirectory'));
     }
     await fs_1.default.promises.access(folderPath, fs_1.default.constants.R_OK);
 
@@ -104,6 +105,7 @@ async function testNetwork(networkConfig) {
     const metaBaseUrl = String(config_1.config.kikoeruMetaServerUrl || '').replace(/\/$/, '');
     const targets = NETWORK_TEST_TARGETS.map(target => ({
         ...target,
+        label: t(target.label),
         url: target.key === 'metaServer'
             ? `${metaBaseUrl}/api/static/RJ01469493?locale=${config_1.config.tagLanguage}`
             : target.url,
@@ -177,14 +179,14 @@ router.post('/admin/validate-root-folder', async (req, res) => {
     try {
         const rootFolder = req.body && req.body.rootFolder || {};
         if (!String(rootFolder.name || '').trim()) {
-            res.status(400).send({ error: '请填写媒体目录名称' });
+            res.status(400).send({ error: t('config.folderNameRequired') });
             return;
         }
         const result = await inspectRootFolder(rootFolder, Number(config_1.config.scannerMaxRecursionDepth) || 2);
         res.send({ rootFolder: result });
     }
     catch (error) {
-        res.status(400).send({ error: `媒体目录检查失败：${error.message || error}` });
+        res.status(400).send({ error: t('config.folderCheckFailed', { value: error.message || error }) });
     }
 });
 router.post('/admin/network-test', async (req, res) => {
@@ -201,7 +203,7 @@ router.post('/admin/complete-setup', async (req, res) => {
         const input = req.body && req.body.config || {};
         const rootFolders = Array.isArray(input.rootFolders) ? input.rootFolders : [];
         if (rootFolders.length === 0) {
-            res.status(400).send({ error: '请至少添加一个媒体目录' });
+            res.status(400).send({ error: t('config.folderRequired') });
             return;
         }
         const names = new Set();
@@ -209,7 +211,7 @@ router.post('/admin/complete-setup', async (req, res) => {
         for (const rootFolder of rootFolders) {
             const checked = await inspectRootFolder(rootFolder, Number(config_1.config.scannerMaxRecursionDepth) || 2);
             if (!checked.name || names.has(checked.name)) {
-                res.status(400).send({ error: '媒体目录名称不能为空或重复' });
+                res.status(400).send({ error: t('config.folderNameDuplicate') });
                 return;
             }
             names.add(checked.name);
@@ -225,10 +227,10 @@ router.post('/admin/complete-setup', async (req, res) => {
             transcodeOption,
             setupVersion: SETUP_VERSION,
         });
-        res.send({ message: '初始化设置已保存', completed: true });
+        res.send({ message: t('config.setupSaved'), completed: true });
     }
     catch (error) {
-        res.status(400).send({ error: `保存初始化设置失败：${error.message || error}` });
+        res.status(400).send({ error: t('config.setupFailed', { value: error.message || error }) });
     }
 });
 router.put('/admin', async (req, res, next) => {
@@ -243,10 +245,10 @@ router.put('/admin', async (req, res, next) => {
             (0, config_1.setNewConfigValue)(newConfigValues);
             if (newTagLanguage && newTagLanguage !== oldTagLanguage) {
                 const updated = await renameTagsToLanguage(newTagLanguage);
-                res.send({ message: `保存成功，已根据 tagLanguage=${newTagLanguage} 更新 ${updated} 个标签名称.` });
+                res.send({ message: t('config.savedWithTags', { newTagLanguage: newTagLanguage, count: updated }) });
             }
             else {
-                res.send({ message: '保存成功.' });
+                res.send({ message: t('config.saved') });
             }
         }
         catch (err) {
@@ -254,21 +256,21 @@ router.put('/admin', async (req, res, next) => {
         }
     }
     else {
-        res.status(403).send({ error: '只有 admin 账号能修改配置文件.' });
+        res.status(403).send({ error: t('config.adminWriteRequired') });
     }
 });
 router.post('/admin/refresh-tags', async (req, res, next) => {
     if (!config_1.config.auth || req.user.name === 'admin') {
         try {
             const updated = await renameTagsToLanguage(config_1.config.tagLanguage);
-            res.send({ message: `已根据 tagLanguage=${config_1.config.tagLanguage} 刷新 ${updated} 个标签名称.` });
+            res.send({ message: t('config.tagsRefreshed', { tagLanguage: config_1.config.tagLanguage, count: updated }) });
         }
         catch (err) {
             next(err);
         }
     }
     else {
-        res.status(403).send({ error: '只有 admin 账号能修改配置文件.' });
+        res.status(403).send({ error: t('config.adminWriteRequired') });
     }
 });
 router.get('/admin', (req, res, next) => {
@@ -281,7 +283,7 @@ router.get('/admin', (req, res, next) => {
         }
     }
     else {
-        res.status(403).send({ error: '只有 admin 账号能读取管理配置文件.' });
+        res.status(403).send({ error: t('config.adminReadRequired') });
     }
 });
 router.get('/shared', (req, res, next) => {

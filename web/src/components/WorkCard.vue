@@ -35,9 +35,9 @@
 
           <!-- 评价分布明细 -->
           <q-tooltip v-if=metadata.rate_count_detail class="text-subtitle1">
-            <div>平均: {{ metadata.rate_average_2dp }}</div>
+            <div>{{ $t('workCard.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
             <div v-for="(rate, index) in sortedRatings" :key=index class="row items-center">
-              <div class="col">{{ rate.review_point }}星</div>
+              <div class="col">{{ $t('workCard.stars', { count: rate.review_point }) }}</div>
 
               <!-- 评价占比 -->
               <q-linear-progress
@@ -62,7 +62,7 @@
         <div class="work-card-reviews work-card-muted">
           <q-icon name="chat_bubble_outline" size="16px" />
           <span>{{ metadata.review_count }}</span>
-          <q-tooltip>评论数</q-tooltip>
+          <q-tooltip>{{ $t('workCard.reviews') }}</q-tooltip>
         </div>
 
         <!-- DLsite链接 -->
@@ -71,10 +71,10 @@
       <!-- 价格&售出数 -->
       <div v-show="metadata.title" class="work-card-commerce">
         <span class="work-card-price">
-          {{ metadata.price }}<small> 日元</small>
+          {{ metadata.price }}<small>{{ $t('workCard.yen') }}</small>
         </span>
-        <span class="work-card-muted">售出 {{ metadata.dl_count }}</span>
-        <span v-if="metadata.nsfw === false" class="work-card-age">全年龄</span>
+        <span class="work-card-muted">{{ $t('workCard.sales', { count: metadata.dl_count }) }}</span>
+        <span v-if="metadata.nsfw === false" class="work-card-age">{{ $t('workCard.allAges') }}</span>
         <a v-if="!dlsiteCode.startsWith('CC')" class="work-card-store" :href="`https://www.dlsite.com/home/work/=/product_id/${dlsiteCode}.html`" rel="noreferrer noopener" target="_blank">DLsite <q-icon name="open_in_new" size="14px" /></a>
       </div>
     </div>

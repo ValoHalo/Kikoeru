@@ -12,7 +12,7 @@
         :style="{'--cover-url': `url(${coverUrl})`}"
       >
         <div class="player-header" v-touch-swipe.mouse.down="toggleHide">
-          <button type="button" class="pull-handler" aria-label="收起播放器" @click="toggleHide">
+          <button type="button" class="pull-handler" :aria-label="$t('audioPlayer.collapse')" @click="toggleHide">
             <svg class="player-handle" viewBox="0 0 96 14" fill="none" aria-hidden="true" focusable="false">
               <path d="M2.5 6 L44 6 Q48 6 52 6 L93.5 6" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
@@ -73,17 +73,17 @@
         </div>
 
         <div class="player-transport">
-          <q-btn flat round icon="skip_previous" aria-label="上一曲" @click="previousTrack()"><q-tooltip>上一曲</q-tooltip></q-btn>
-          <q-btn flat round :icon="rewindIcon" aria-label="快退" @click="rewind(true)"><q-tooltip>快退</q-tooltip></q-btn>
-          <q-btn flat round class="player-toggle" size="24px" :icon="playingIcon" aria-label="播放或暂停" @click="togglePlaying()"><q-tooltip>播放或暂停</q-tooltip></q-btn>
-          <q-btn flat round :icon="forwardIcon" aria-label="快进" @click="forward(true)"><q-tooltip>快进</q-tooltip></q-btn>
-          <q-btn flat round icon="skip_next" aria-label="下一曲" @click="nextTrack()"><q-tooltip>下一曲</q-tooltip></q-btn>
+          <q-btn flat round icon="skip_previous" :aria-label="$t('audioPlayer.previousTrack')" @click="previousTrack()"><q-tooltip>{{ $t('audioPlayer.previousTrack') }}</q-tooltip></q-btn>
+          <q-btn flat round :icon="rewindIcon" :aria-label="$t('audioPlayer.rewind')" @click="rewind(true)"><q-tooltip>{{ $t('audioPlayer.rewind') }}</q-tooltip></q-btn>
+          <q-btn flat round class="player-toggle" size="24px" :icon="playingIcon" :aria-label="$t('audioPlayer.playPause')" @click="togglePlaying()"><q-tooltip>{{ $t('audioPlayer.playPause') }}</q-tooltip></q-btn>
+          <q-btn flat round :icon="forwardIcon" :aria-label="$t('audioPlayer.fastForward')" @click="forward(true)"><q-tooltip>{{ $t('audioPlayer.fastForward') }}</q-tooltip></q-btn>
+          <q-btn flat round icon="skip_next" :aria-label="$t('audioPlayer.nextTrack')" @click="nextTrack()"><q-tooltip>{{ $t('audioPlayer.nextTrack') }}</q-tooltip></q-btn>
         </div>
 
         <!-- HTML5 volume in iOS is read-only -->
         <div class="player-volume row items-center" v-if="!$q.platform.is.ios">
           <q-icon name="volume_down" size="20px" />
-          <q-slider v-model="volume" :min="0" :max="1" :step="0.01" class="col q-mx-md" aria-label="音量" />
+          <q-slider v-model="volume" :min="0" :max="1" :step="0.01" class="col q-mx-md" :aria-label="$t('audioPlayer.volume')" />
           <q-icon name="volume_up" size="20px" />
         </div>
 
@@ -112,7 +112,7 @@
               size="md" 
               padding="none sm" 
               icon="queue_music" 
-              aria-label="切换曲目"
+              :aria-label="$t('audioPlayer.switchTrack')"
               @click="showCurrentPlayList = !showCurrentPlayList" 
             >
             </q-btn>
@@ -138,7 +138,7 @@
               size="md"
               padding="none sm"
               icon="picture_in_picture"
-              aria-label="桌面歌词"
+              :aria-label="$t('audioPlayer.pipLyrics')"
               :aria-pressed="enablePIPLyrics"
               @click="setPIPLyrics"
             />
@@ -149,7 +149,7 @@
               size="md"
               padding="none sm"
               icon="subtitles"
-              aria-label="歌词选择"
+              :aria-label="$t('audioPlayer.selectLyrics')"
               @click="showLyricSelection = true"
             />
 
@@ -160,7 +160,7 @@
               size="md"
               padding="none sm"
               icon="more_horiz"
-              aria-label="更多播放设置"
+              :aria-label="$t('audioPlayer.moreSettings')"
             >
               <q-menu class="player-settings-menu" anchor="top right" self="bottom right">
                 <q-item>
@@ -169,7 +169,7 @@
                     <q-select
                       dense
                       borderless
-                      label="播放速度"
+                      :label="$t('audioPlayer.playbackRate')"
                       :model-value="playbackRate"
                       :options="playbackRates"
                       :option-label="rate => `${rate}×`"
@@ -179,12 +179,12 @@
                 </q-item>
                 <q-item v-if="enableVideoSource && isCurrentPlayingFileVideo" clickable v-close-popup @click="onSetEnableVideoSourcePIP(!enableVideoSourcePIP)">
                   <q-item-section avatar><q-icon name="picture_in_picture_alt" /></q-item-section>
-                  <q-item-section>视频画中画</q-item-section>
+                  <q-item-section>{{ $t('audioPlayer.videoPip') }}</q-item-section>
                   <q-item-section side v-if="enableVideoSourcePIP"><q-icon name="done" /></q-item-section>
                 </q-item>
                 <q-item v-if="enableVisualizer" clickable v-close-popup @click="flipCover">
                   <q-item-section avatar><q-icon name="equalizer" /></q-item-section>
-                  <q-item-section>音效均衡器</q-item-section>
+                  <q-item-section>{{ $t('audioPlayer.equalizer') }}</q-item-section>
                   <q-item-section side v-if="isFlipCover"><q-icon name="done" /></q-item-section>
                 </q-item>
                 <q-separator v-if="hasLyric" spaced />
@@ -195,7 +195,7 @@
                       :model-value="lyricOffsetSeconds"
                       @update:model-value="lyricOffsetChange"
                       type="number"
-                      prefix="歌词偏移"
+                      :prefix="$t('audioPlayer.lyricOffset')"
                       suffix="s"
                       style="max-width: 100%;"
                       outlined
@@ -235,7 +235,7 @@
         <!-- 操作当前播放列表的控制按钮 -->
         <div class="row" style="padding: 5px; height: 45px;">
           <q-btn dense round size="md" icon="edit" color="primary" @click="editCurrentPlayList = !editCurrentPlayList" style="height: 35px; width: 35px;" class="col-auto" />
-          <q-btn dense round size="md" icon="save" color="teal" style="height: 35px; width: 35px;" class="col-auto q-mx-sm" aria-label="保存当前队列" @click="openSaveQueueDialog"><q-tooltip>保存当前队列</q-tooltip></q-btn>
+          <q-btn dense round size="md" icon="save" color="teal" style="height: 35px; width: 35px;" class="col-auto q-mx-sm" :aria-label="$t('audioPlayer.saveQueue')" @click="openSaveQueueDialog"><q-tooltip>{{ $t('audioPlayer.saveQueue') }}</q-tooltip></q-btn>
           <q-space />
           <q-btn dense round size="md" icon="delete_forever" color="red" @click="emptyQueue()" style="height: 35px; width: 35px;" class="col-auto" />
         </div>
@@ -287,9 +287,9 @@
     <q-dialog v-model="showSaveQueueDialog">
       <q-card class="save-queue-dialog">
         <q-form @submit.prevent="saveQueueAsPlaylist">
-          <q-card-section><div class="text-h6">保存当前队列</div></q-card-section>
-          <q-card-section class="q-pt-none"><q-input v-model.trim="saveQueueName" autofocus outlined label="播放列表名称" maxlength="80" :rules="[value => Boolean(value) || '请输入名称']" /></q-card-section>
-          <q-card-actions align="right"><q-btn flat label="取消" v-close-popup /><q-btn flat color="primary" label="保存" type="submit" :loading="savingQueue" /></q-card-actions>
+          <q-card-section><div class="text-h6">{{ $t('audioPlayer.saveQueue') }}</div></q-card-section>
+          <q-card-section class="q-pt-none"><q-input v-model.trim="saveQueueName" autofocus outlined :label="$t('audioPlayer.playlistName')" maxlength="80" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section>
+          <q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.save')" type="submit" :loading="savingQueue" /></q-card-actions>
         </q-form>
       </q-card>
     </q-dialog>
@@ -297,29 +297,24 @@
     <q-dialog v-model="lyricSyncDialog"  seamless position="top">
       <q-card class="bg-primary text-white">
         <q-card-section>
-          <div class="text-h6">歌词同步辅助工具</div>
+          <div class="text-h6">{{ $t('audioPlayer.syncTool') }}</div>
         </q-card-section>
 
-        <q-card-section class="q-pt-none">
-          这是一个辅助计算歌词偏移量的工具，当音频和歌词的时间出现不同步的时候，使用此工具来计算修复的歌词偏移量。
-          请在正常播放状态下播放音频和歌词，从声音和歌词中找到一个关键点A，对应声音A和歌词A，
-          判断先听到声音还是先看到歌词，当其中一个出现时，点击下方对应的按钮，接着在另一个元素出现时再次点击一次按钮。
-          这里将会计算两次点击之间的时间差，点击“应用偏移量”即可立即刚才两次点击的时间差作为歌词偏移量。
-        </q-card-section>
+        <q-card-section class="q-pt-none">{{ $t('audioPlayer.syncInstructions') }}</q-card-section>
 
         <q-card-section v-if="fixState === 'ready'">
-          <q-btn @click="startFixLyricSync('lyric')">歌词先出现了</q-btn>
-          <q-btn @click="startFixLyricSync('audio')">先听到了声音</q-btn>
+          <q-btn @click="startFixLyricSync('lyric')">{{ $t('audioPlayer.lyricsFirst') }}</q-btn>
+          <q-btn @click="startFixLyricSync('audio')">{{ $t('audioPlayer.audioFirst') }}</q-btn>
         </q-card-section>
 
         <q-card-section v-if="fixState === 'measure'">
-          <q-btn @click="stopFixLyricSync">{{ fixWhoStartFirst == "audio" ? "歌词这个时候出现了" : "这个时候才听到了声音" }}</q-btn>
+          <q-btn @click="stopFixLyricSync">{{ fixWhoStartFirst == "audio" ? $t('audioPlayer.lyricsNow') : $t('audioPlayer.audioNow') }}</q-btn>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn @click="lyricSyncDialog = false">关闭</q-btn>
-          <q-btn v-if="fixState !== 'ready'" @click="fixState = 'ready'" >重新计量偏移量</q-btn>
-          <q-btn v-if="fixState === 'done'" @click="fixApply">应用偏移量 {{ showDeltaSeconds }}</q-btn>
+          <q-btn @click="lyricSyncDialog = false">{{ $t('common.close') }}</q-btn>
+          <q-btn v-if="fixState !== 'ready'" @click="fixState = 'ready'" >{{ $t('audioPlayer.measureAgain') }}</q-btn>
+          <q-btn v-if="fixState === 'done'" @click="fixApply">{{ $t('audioPlayer.applyOffset', { showDeltaSeconds: showDeltaSeconds }) }}</q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -331,6 +326,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import draggable from 'vuedraggable'
 import AudioElement from 'components/AudioElement.vue'
 import Scrollable from 'components/Scrollable.vue'
@@ -530,13 +526,13 @@ export default {
     playModeString () {
       switch (this.playMode.name) {
         case "all repeat":
-          return "全部"
+          return t('common.all')
         case "repeat once":
-          return "单曲循环"
+          return t('audioPlayer.repeatTrack')
         case "shuffle":
-          return "随机"
+          return t('audioPlayer.shuffle')
         default:
-          return "列表播放"
+          return t('audioPlayer.playList')
       }
     },
 
@@ -641,7 +637,7 @@ export default {
       this.lyricOffsetChange(this.fixDeltaMills / 1000);
       this.lyricSyncDialog = false;
       this.fixState = "ready";
-      this.$q.notify({message: `歌词偏移量(${this.fixDeltaMills/1000}s)已应用`, timeout: 500})
+      this.$q.notify({message: t('audioPlayer.offsetApplied', { value: this.fixDeltaMills/1000 }), timeout: 500})
     },
 
     ...mapMutations('AudioPlayer', {
@@ -688,9 +684,9 @@ export default {
       try {
         await this.$axios.post('/api/playlists', { name: this.saveQueueName, items: this.queueCopy.map(this.playlistItemFromTrack) })
         this.showSaveQueueDialog = false
-        this.$q.notify({ message: '播放列表已保存', type: 'positive' })
+        this.$q.notify({ message: t('audioPlayer.playlistSaved'), type: 'positive' })
       } catch (error) {
-        const message = error.response && error.response.data && error.response.data.error ? error.response.data.error : '保存播放列表失败'
+        const message = error.response && error.response.data && error.response.data.error ? error.response.data.error : t('audioPlayer.savePlaylistFailed')
         this.$q.notify({ message, type: 'negative' })
       } finally {
         this.savingQueue = false
@@ -754,7 +750,7 @@ export default {
 
     setPIPLyrics() {
       if (!this.enablePIPLyrics) {
-        this.$q.notify({message: "创建桌面歌词组件中，请稍等...", timeout: 500})
+        this.$q.notify({message: t('audioPlayer.openingPip'), timeout: 500})
       }
       this.setEnablePIPLyrics(!this.enablePIPLyrics)
     },
@@ -849,17 +845,17 @@ export default {
     // 当发生特定配置改动，需要用户刷新页面时，通过这个通知来提示用户
     suggestRefreshPage() {
       this.$q.notify({
-        message: "配置已更改，建议刷新页面",
+        message: t('audioPlayer.reloadSuggested'),
         timeout: 5000,
         actions: [
-          { label: "立即刷新",
+          { label: t('audioPlayer.reloadNow'),
             handler: () => {
               // this.$router.push(`/fullScreenPlayer/${this.playWorkId}`)
               // this.$router.push(`/fullScreenPlayer`)
               this.$router.go(0);
             }
           },
-          { icon: 'close', 'aria-label': '关闭' }
+          { icon: 'close', 'aria-label': t('common.close') }
         ],
       });
     },

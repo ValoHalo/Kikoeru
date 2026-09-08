@@ -5,7 +5,7 @@
 
     <div class="q-mt-lg q-ml-md row items-center">
       <span class="text-h5 text-weight-regular q-pa-xs relative-position">
-        {{pageTitle}}
+        {{ pageTitle ? $t(pageTitle) : '' }}
         <q-badge color="secondary" floating>{{pagination.totalCount}}</q-badge>
       </span>
       <div v-if="isAdvanceSearch"><!--高级搜索模式的多关键字展示-->
@@ -18,7 +18,7 @@
             flat 
             size="xs"
             icon="close"
-            :aria-label="`移除关键词 ${meta.d}`"
+            :aria-label="$t('works.removeKeyword', { d: meta.d })"
             @click="removeAdvanceSearchKeyword(index)"
           />
         </q-badge>
@@ -41,7 +41,7 @@
         v-model="sortCategoryOption"
         :options="sortCategoryOptions"
         :option-label="humanReadableLabel"
-        label="排序属性"
+        :label="$t('works.sortBy')"
         class="col-auto"
       />
 
@@ -58,7 +58,7 @@
         @update:model-value="nsfwOption = $event"
         :options="nsfwOptions"
         :option-label="humanReadableLabel"
-        label="年龄分级"
+        :label="$t('works.ageRating')"
         class="col-auto"
       />
 
@@ -73,7 +73,7 @@
         v-model="lyricOption"
         :options="lyricOptions"
         :option-label="humanReadableLabel"
-        label="字幕筛选"
+        :label="$t('works.subtitleFilter')"
         clearable
         multiple
         class="col-auto works-filter-lyrics"
@@ -90,19 +90,19 @@
         emit-value
         map-options
         clearable
-        label="作品分组"
-        :display-value="collectionId ? (collections.find(item => String(item.id) === collectionId)?.name || '分组不可用') : '全部分组'"
+        :label="$t('common.collections')"
+        :display-value="collectionId ? (collections.find(item => String(item.id) === collectionId)?.name || $t('works.unavailableCollection')) : $t('works.allCollections')"
         @popup-show="loadCollections"
       >
         <template #no-option>
-          <q-item><q-item-section class="text-grey">暂无作品分组</q-item-section></q-item>
+          <q-item><q-item-section class="text-grey">{{ $t('works.noCollections') }}</q-item-section></q-item>
         </template>
       </q-select>
       </div>
 
       <div class="works-display-controls">
       <!-- 排序顺序 -->
-      <q-toggle v-model="sortInDesc" :label="sortInDesc ? '降序' : '升序'" />
+      <q-toggle v-model="sortInDesc" :label="sortInDesc ? $t('works.descending') : $t('works.ascending')" />
 
       <!-- 切换显示模式按钮 -->
       <q-btn-toggle
@@ -220,7 +220,7 @@
           <q-pagination :model-value="displayPage" :max="maxPages" :max-pages="7" boundary-links direction-links color="primary" @update:model-value="gotoPage" />
         </div>
 
-        <div v-show="workListMode === WORK_LIST_MODES.WATERFALL && stopLoad" class="q-mt-lg q-mb-xl text-h6 text-bold text-center">无更多作品</div>
+        <div v-show="workListMode === WORK_LIST_MODES.WATERFALL && stopLoad" class="q-mt-lg q-mb-xl text-h6 text-bold text-center">{{ $t('works.noMoreWorks') }}</div>
 
         <template v-slot:loading>
           <div class="row justify-center q-my-md">
@@ -233,6 +233,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import WorkCard from 'components/WorkCard.vue'
 import WorkListItem from 'components/WorkListItem.vue'
 import NotifyMixin from '../mixins/Notification.js'
@@ -510,7 +511,7 @@ export default {
         const response = await this.$axios.get('/api/library/collections')
         this.collections = response.data.collections || []
       } catch (error) {
-        this.showErrNotif(error.response?.data?.error || '读取作品分组失败')
+        this.showErrNotif(error.response?.data?.error || t('works.loadCollectionsFailed'))
       } finally {
         this.loadingCollections = false
       }
@@ -607,13 +608,13 @@ export default {
 
             switch (restrict) {
               case 'tags':
-                pageTitle = '搜索标签：'
+                pageTitle = 'works.searchTag'
                 break
               case 'vas':
-                pageTitle = '搜索声优：'
+                pageTitle = 'works.searchVoiceActor'
                 break
               case 'circles':
-                pageTitle = '社团作品：'
+                pageTitle = 'works.searchCircle'
                 break
             }
             // pageTitle += name || ''
@@ -632,13 +633,13 @@ export default {
             }
           })
       } else if (this.isAdvanceSearch) {
-        this.pageTitle = '聚合搜索'
+        this.pageTitle = 'common.advancedSearch'
         this.searchMetas = []
       } else if (this.$route.query.keyword) {
-        this.pageTitle = '搜索关键字：';
+        this.pageTitle = 'works.searchKeyword';
         this.searchMetas = [this.$route.query.keyword];
       } else {
-        this.pageTitle = '所有作品'
+        this.pageTitle = 'works.allWorks'
         this.searchMetas = [];
       }
     },
@@ -679,19 +680,19 @@ export default {
     // 通过这个函数可以将release转换成更加可阅读的文字标签“发售日期”
     humanReadableLabel(label) {
       switch(label) {
-        case "release": return "发售日期";
-        case "rating": return "我的评价";
-        case "dl_count": return "售出数量";
-        case "price": return "售出价格";
-        case "rate_average_2dp": return "听众评分";
-        case "review_count": return "评论数量";
-        case "id": return "作品番号";
-        case "created_at": return "添加时间";
-        case "random": return "随机排序";
-        case "nsfw_0": return "所有分级";
-        case "nsfw_1": return "全年龄";
-        case "nsfw_2": return "十八禁";
-        case "lyric_local": return "本地歌词";
+        case "release": return t('works.releaseDate');
+        case "rating": return t('common.myRating');
+        case "dl_count": return t('works.sales');
+        case "price": return t('works.price');
+        case "rate_average_2dp": return t('works.rating');
+        case "review_count": return t('works.reviewCount');
+        case "id": return t('works.workCode');
+        case "created_at": return t('works.addedAt');
+        case "random": return t('works.random');
+        case "nsfw_0": return t('works.allRatings');
+        case "nsfw_1": return t('works.allAges');
+        case "nsfw_2": return t('works.adult');
+        case "lyric_local": return t('common.localLyrics');
         default: return label;
       }
     },
@@ -717,13 +718,13 @@ export default {
     onAddAdvanceSearchKeyword(value) {
       const keyword = value.trim()
       if (keyword === "") {
-        this.showErrNotif("无法添加空白的关键字");
+        this.showErrNotif(t('works.emptyKeyword'));
         return;
       }
 
       for (let kw of this.advanceSearchKeywords) {
         if (kw.t == AdvanceSearchCondType.FUZZY && kw.d == keyword) {
-          this.showErrNotif("关键字重复，添加失败");
+          this.showErrNotif(t('works.duplicateKeyword'));
           return;
         }
       }

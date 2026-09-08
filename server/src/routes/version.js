@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -28,7 +29,7 @@ async function fetchLatestVersions() {
         || !responseStable.data.tag_name
         || !responseLatest.data[0]
         || !responseLatest.data[0].tag_name) {
-        throw new Error('GitHub release response is missing version tags');
+        throw new Error(t('updateManager.versionInvalid'));
     }
     const latest_stable = responseStable.data.tag_name;
     const latest_release = responseLatest.data[0].tag_name;
@@ -39,7 +40,7 @@ const versionCache = new VersionCheckCache_1.VersionCheckCache(fetchLatestVersio
     initialValue: initialGitHubResponse,
 });
 router.get('/', async (_req, res) => {
-    const lockReason = '新版解决了旧版扫描时将かの仔和こっこ识别为同一个人的问题，建议进行扫描以自动修复这一问题';
+    const lockReason = t('version.scanRecommended');
     const latest = await versionCache.get();
     const selectedLatest = config_1.config.checkBetaUpdate
         ? latest.latest_release

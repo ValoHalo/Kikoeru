@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -44,16 +45,16 @@ const config_1 = require("../config");
 const db = __importStar(require("../database/db"));
 const accessControl_1 = require("../auth/accessControl");
 router.post('/user', accessControl_1.requireAdministrator, [
-    (0, express_validator_1.check)('name')
+    (0, express_validator_1.check)('name', (_value, { path }) => t('validation.invalidValue', { field: path }))
         .isLength({ min: 5 })
-        .withMessage('用户名长度至少为 5'),
-    (0, express_validator_1.check)('password')
+        .withMessage(() => t('credentials.usernameLength')),
+    (0, express_validator_1.check)('password', (_value, { path }) => t('validation.invalidValue', { field: path }))
         .isLength({ min: 5 })
-        .withMessage('密码长度至少为 5'),
-    (0, express_validator_1.check)('group')
+        .withMessage(() => t('credentials.passwordLength')),
+    (0, express_validator_1.check)('group', (_value, { path }) => t('validation.invalidValue', { field: path }))
         .custom(value => {
         if (value !== 'user' && value !== 'guest') {
-            throw new Error(`用户组名称必须为 ['user', 'guest'] 的一个.`);
+            throw new Error(t('credentials.groupInvalid'));
         }
         return true;
     })
@@ -73,9 +74,9 @@ router.post('/user', accessControl_1.requireAdministrator, [
             password: (0, utils_1.md5)(user.password),
             group: user.group
         })
-            .then(() => res.send({ message: `用户 ${user.name} 创建成功.` }))
+            .then(() => res.send({ message: t('credentials.userCreated', { name: user.name }) }))
             .catch((err) => {
-            if (err.message.indexOf('已存在') !== -1) {
+            if (err.code === 'USER_EXISTS') {
                 res.status(403).send({ error: err.message });
             }
             else {
@@ -84,16 +85,16 @@ router.post('/user', accessControl_1.requireAdministrator, [
         });
     }
     else {
-        res.status(403).send({ error: '只有 admin 账号能创建新用户.' });
+        res.status(403).send({ error: t('credentials.adminCreateRequired') });
     }
 });
 router.put('/user', accessControl_1.requireAuthenticatedWrite, [
-    (0, express_validator_1.check)('name')
+    (0, express_validator_1.check)('name', (_value, { path }) => t('validation.invalidValue', { field: path }))
         .isLength({ min: 5 })
-        .withMessage('用户名长度至少为 5'),
-    (0, express_validator_1.check)('newPassword')
+        .withMessage(() => t('credentials.usernameLength')),
+    (0, express_validator_1.check)('newPassword', (_value, { path }) => t('validation.invalidValue', { field: path }))
         .isLength({ min: 5 })
-        .withMessage('密码长度至少为 5')
+        .withMessage(() => t('credentials.passwordLength'))
 ], (req, res, next) => {
     const errors = (0, express_validator_1.validationResult)(req);
     if (!errors.isEmpty()) {
@@ -105,10 +106,10 @@ router.put('/user', accessControl_1.requireAuthenticatedWrite, [
     const newPassword = (0, utils_1.md5)(req.body.newPassword);
     if (!config_1.config.auth || req.user.name === 'admin' || req.user.name === user.name) {
         db.updateUserPassword(user, newPassword)
-            .then(() => res.send({ message: '密码修改成功.' }))
+            .then(() => res.send({ message: t('credentials.passwordChanged') }))
             .catch((err) => {
-            if (err.message.indexOf('用户名错误.') !== -1) {
-                res.status(403).send({ error: '用户名错误.' });
+            if (err.message.indexOf(t('credentials.usernameInvalid')) !== -1) {
+                res.status(403).send({ error: t('credentials.usernameInvalid') });
             }
             else {
                 next(err);
@@ -116,7 +117,7 @@ router.put('/user', accessControl_1.requireAuthenticatedWrite, [
         });
     }
     else {
-        res.status(403).send({ error: '只能修改自己账号的密码.' });
+        res.status(403).send({ error: t('credentials.ownPasswordOnly') });
     }
 });
 router.delete('/user', accessControl_1.requireAdministrator, (req, res, next) => {
@@ -125,18 +126,18 @@ router.delete('/user', accessControl_1.requireAdministrator, (req, res, next) =>
         if (!users.find((user) => user.name === 'admin')) {
             db.deleteUser(users)
                 .then(() => {
-                res.send({ message: '删除成功.' });
+                res.send({ message: t('credentials.deleted') });
             })
                 .catch((err) => {
                 next(err);
             });
         }
         else {
-            res.status(403).send({ error: '不能删除内置的管理员账号.' });
+            res.status(403).send({ error: t('credentials.adminCannotDelete') });
         }
     }
     else {
-        res.status(403).send({ error: '只有 admin 账号能删除用户.' });
+        res.status(403).send({ error: t('credentials.adminDeleteRequired') });
     }
 });
 router.get('/users', accessControl_1.requireAdministrator, (req, res, next) => {
@@ -151,7 +152,7 @@ router.get('/users', accessControl_1.requireAdministrator, (req, res, next) => {
         });
     }
     else {
-        res.status(403).send({ error: '只有 admin 账号能浏览用户.' });
+        res.status(403).send({ error: t('credentials.adminReadRequired') });
     }
 });
 exports.default = router;

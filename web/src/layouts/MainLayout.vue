@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh Lpr lFf">
-    <AppHeader :title="headerTitle" :parent="isWorkPage ? '媒体库' : ''" :immersive="isFullScreenPage" @toggle-drawer="drawerOpen = !drawerOpen" />
+    <AppHeader :title="headerTitle" :parent="isWorkPage ? $t('common.library') : ''" :immersive="isFullScreenPage" @toggle-drawer="drawerOpen = !drawerOpen" />
 
     <q-drawer
       v-model="drawerOpen"
@@ -23,17 +23,17 @@
               <q-item-section avatar><q-icon :name="link.icon" /></q-item-section>
               <q-item-section><q-item-label class="text-subtitle1">{{ link.title }}</q-item-label></q-item-section>
             </q-item>
-            <q-item clickable v-ripple @click="randomPlay"><q-item-section avatar><q-icon name="shuffle" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">随心听</q-item-label></q-item-section></q-item>
+            <q-item clickable v-ripple @click="randomPlay"><q-item-section avatar><q-icon name="shuffle" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.randomPlay') }}</q-item-label></q-item-section></q-item>
             <q-item clickable v-ripple @click="showTimer = true">
               <q-item-section avatar><q-icon name="timer" /></q-item-section>
-              <q-item-section><q-item-label class="text-subtitle1">睡眠定时</q-item-label><q-item-label v-if="sleepMode" caption>{{ sleepTimeCaption }}</q-item-label></q-item-section>
+              <q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.sleepTimer') }}</q-item-label><q-item-label v-if="sleepMode" caption>{{ sleepTimeCaption }}</q-item-label></q-item-section>
             </q-item>
           </q-list>
 
           <q-list padding class="drawer-secondary">
             <q-item clickable v-ripple @click="cycleColorScheme">
               <q-item-section avatar><q-icon name="brightness_6" /></q-item-section>
-              <q-item-section><q-item-label class="text-subtitle1">夜间模式</q-item-label><q-item-label caption>{{ colorSchemeCaption }}</q-item-label></q-item-section>
+              <q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.darkMode') }}</q-item-label><q-item-label caption>{{ colorSchemeCaption }}</q-item-label></q-item-section>
               <q-item-section side class="color-scheme-toggle-section">
                 <button
                   type="button"
@@ -41,8 +41,8 @@
                   :class="`color-scheme-toggle--${colorScheme}`"
                   role="switch"
                   :aria-checked="colorSchemeAriaChecked"
-                  :aria-label="`夜间模式：${colorSchemeCaption}。点击切换`"
-                  :title="`夜间模式：${colorSchemeCaption}`"
+                  :aria-label="$t('mainLayout.toggleDarkMode', { colorSchemeCaption: colorSchemeCaption })"
+                  :title="$t('mainLayout.darkModeTitle', { colorSchemeCaption: colorSchemeCaption })"
                   @click.stop="cycleColorScheme"
                 >
                   <span class="color-scheme-toggle__track" aria-hidden="true" />
@@ -50,11 +50,11 @@
                 </button>
               </q-item-section>
             </q-item>
-            <q-item clickable v-ripple to="/about" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="info" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">关于</q-item-label></q-item-section></q-item>
-            <q-item clickable v-ripple to="/preferences" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="tune" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">设置</q-item-label></q-item-section></q-item>
-            <q-item v-if="canManage" clickable v-ripple to="/admin" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="admin_panel_settings" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">管理设置</q-item-label></q-item-section></q-item>
-            <q-item v-if="!isSignedIn" clickable v-ripple @click="openLoginDialog"><q-item-section avatar><q-icon name="login" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">登录</q-item-label></q-item-section></q-item>
-            <q-item v-else clickable v-ripple @click="confirm = true"><q-item-section avatar><q-icon name="exit_to_app" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">登出</q-item-label><q-item-label caption lines="1">{{ userName }}</q-item-label></q-item-section></q-item>
+            <q-item clickable v-ripple to="/about" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="info" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.about') }}</q-item-label></q-item-section></q-item>
+            <q-item clickable v-ripple to="/preferences" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="tune" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.settings') }}</q-item-label></q-item-section></q-item>
+            <q-item v-if="canManage" clickable v-ripple to="/admin" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="admin_panel_settings" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.administration') }}</q-item-label></q-item-section></q-item>
+            <q-item v-if="!isSignedIn" clickable v-ripple @click="openLoginDialog"><q-item-section avatar><q-icon name="login" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.login') }}</q-item-label></q-item-section></q-item>
+            <q-item v-else clickable v-ripple @click="confirm = true"><q-item-section avatar><q-icon name="exit_to_app" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.logout') }}</q-item-label><q-item-label caption lines="1">{{ userName }}</q-item-label></q-item-section></q-item>
           </q-list>
         </div>
       </q-scroll-area>
@@ -65,7 +65,7 @@
         <q-form @submit="login">
           <q-card-section class="row items-center">
             <q-avatar icon="login" color="primary" text-color="white" />
-            <span class="q-ml-sm">登录</span>
+            <span class="q-ml-sm">{{ $t('common.login') }}</span>
           </q-card-section>
           <q-card-section class="q-pt-none q-gutter-md">
             <q-input
@@ -73,26 +73,26 @@
               filled
               autofocus
               autocomplete="username"
-              label="用户名"
-              :rules="[value => Boolean(value && value.length >= 5) || '用户名长度至少为 5']"
+              :label="$t('common.username')"
+              :rules="[value => Boolean(value && value.length >= 5) || $t('mainLayout.usernameLength')]"
             />
             <q-input
               v-model="loginPassword"
               filled
               type="password"
               autocomplete="current-password"
-              label="密码"
-              :rules="[value => Boolean(value && value.length >= 5) || '密码长度至少为 5']"
+              :label="$t('common.password')"
+              :rules="[value => Boolean(value && value.length >= 5) || $t('mainLayout.passwordLength')]"
             />
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="取消" color="primary" :disable="loginSubmitting" @click="cancelLogin" />
-            <q-btn flat label="登录" color="primary" type="submit" :loading="loginSubmitting" />
+            <q-btn flat :label="$t('common.cancel')" color="primary" :disable="loginSubmitting" @click="cancelLogin" />
+            <q-btn flat :label="$t('common.login')" color="primary" type="submit" :loading="loginSubmitting" />
           </q-card-actions>
         </q-form>
       </q-card>
     </q-dialog>
-    <q-dialog v-model="confirm" persistent><q-card class="auth-dialog-card"><q-card-section class="row items-center"><q-avatar icon="power_settings_new" color="primary" text-color="white" /><span class="q-ml-sm">是否退出登录？</span></q-card-section><q-card-actions align="right"><q-btn flat label="取消" color="primary" v-close-popup /><q-btn flat label="退出" color="primary" @click="logout()" v-close-popup /></q-card-actions></q-card></q-dialog>
+    <q-dialog v-model="confirm" persistent><q-card class="auth-dialog-card"><q-card-section class="row items-center"><q-avatar icon="power_settings_new" color="primary" text-color="white" /><span class="q-ml-sm">{{ $t('mainLayout.logoutPrompt') }}</span></q-card-section><q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" color="primary" v-close-popup /><q-btn flat :label="$t('mainLayout.exit')" color="primary" @click="logout()" v-close-popup /></q-card-actions></q-card></q-dialog>
     <SleepMode v-if="oldSleepTimerUIStyle" v-model="showTimer" />
     <CountDownSleepMode v-else v-model="showTimer" />
 
@@ -110,6 +110,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import PlayerBar from 'components/PlayerBar.vue'
 import AppHeader from 'components/AppHeader.vue'
 import AudioPlayer from 'components/AudioPlayer.vue'
@@ -136,9 +137,6 @@ export default {
       restoredQueueUser: '',
       preferencesLoaded: false,
       colorScheme: readColorScheme(),
-      links: [
-        { title: '媒体库', icon: 'widgets', path: '/' }, { title: '聚合搜索', icon: 'manage_search', path: '/search' }, { title: '大图模式', icon: 'play_circle', path: '/fullScreenPlayer' }, { title: '我的收藏', icon: 'favorite', path: '/favourites' }, { title: '播放列表', icon: 'queue_music', path: '/playlist' }, { title: '社团', icon: 'group', path: '/circles' }, { title: '标签', icon: 'label', path: '/tags' }, { title: '声优', icon: 'mic', path: '/vas' }
-      ]
     }
   },
   watch: {
@@ -158,17 +156,22 @@ export default {
     this.initUser()
   },
   computed: {
+    links () {
+      return [
+        { title: t('common.library'), icon: 'widgets', path: '/' }, { title: t('common.advancedSearch'), icon: 'manage_search', path: '/search' }, { title: t('mainLayout.fullscreen'), icon: 'play_circle', path: '/fullScreenPlayer' }, { title: t('common.favourites'), icon: 'favorite', path: '/favourites' }, { title: t('common.playlists'), icon: 'queue_music', path: '/playlist' }, { title: t('common.circles'), icon: 'group', path: '/circles' }, { title: t('common.tags'), icon: 'label', path: '/tags' }, { title: t('common.voiceActors'), icon: 'mic', path: '/vas' }
+      ]
+    },
     isWorkPage () { return this.$route.path.startsWith('/work/') },
     headerTitle () {
-      if (this.isWorkPage) return '作品详情'
-      if (this.$route.path.startsWith('/favourites')) return '我的收藏'
-      if (this.isFullScreenPage) return '正在播放'
-      const titles = { '/works': '媒体库', '/search': '聚合搜索', '/playlist': '播放列表', '/circles': '社团', '/tags': '标签', '/vas': '声优', '/preferences': '设置', '/about': '关于' }
-      return titles[this.$route.path] || '媒体库'
+      if (this.isWorkPage) return t('mainLayout.workDetails')
+      if (this.$route.path.startsWith('/favourites')) return t('common.favourites')
+      if (this.isFullScreenPage) return t('mainLayout.nowPlaying')
+      const titles = { '/works': t('common.library'), '/search': t('common.advancedSearch'), '/playlist': t('common.playlists'), '/circles': t('common.circles'), '/tags': t('common.tags'), '/vas': t('common.voiceActors'), '/preferences': t('common.settings'), '/about': t('mainLayout.about') }
+      return titles[this.$route.path] || t('common.library')
     },
     isFullScreenPage () { return this.$route.path && this.$route.path.startsWith('/fullScreenPlayer') },
     colorSchemeCaption () {
-      return this.colorScheme === COLOR_SCHEMES.SYSTEM ? '跟随系统' : this.colorScheme === COLOR_SCHEMES.DARK ? '已启用' : '已禁用'
+      return this.colorScheme === COLOR_SCHEMES.SYSTEM ? t('mainLayout.system') : this.colorScheme === COLOR_SCHEMES.DARK ? t('mainLayout.enabled') : t('mainLayout.disabled')
     },
     colorSchemeAriaChecked () {
       return this.colorScheme === COLOR_SCHEMES.SYSTEM ? 'mixed' : this.colorScheme === COLOR_SCHEMES.DARK ? 'true' : 'false'
@@ -178,7 +181,7 @@ export default {
     sleepTimeCaption () {
       if (typeof this.sleepTime === 'number') {
         const remaining = Math.max(0, this.sleepTime - Date.now())
-        return `剩余 ${Math.ceil(remaining / 60000)} 分钟`
+        return t('mainLayout.remainingMinutes', { value: Math.ceil(remaining / 60000) })
       }
       return this.sleepTime
     },
@@ -257,10 +260,10 @@ export default {
         const track = this.$store.getters['AudioPlayer/currentPlayingFile']
         if (!track.hash) return
         this.$q.notify({
-          message: `已恢复上次播放${track && track.title ? `：${track.title}` : ''}`,
+          message: track && track.title ? t('mainLayout.queueRestoredTrack', { title: track.title }) : t('mainLayout.queueRestored'),
           icon: 'restore',
           timeout: 3500,
-          actions: [{ label: '清除', handler: () => {
+          actions: [{ label: t('mainLayout.clear'), handler: () => {
             if (this.$store.state.User.name !== userName) return
             this.$q.localStorage.set(clearedQueueKey, true)
             this.$store.commit('AudioPlayer/EMPTY_QUEUE')
@@ -272,8 +275,8 @@ export default {
     },
     checkUpdate () {
       this.$axios.get('/api/version').then((res) => {
-        if (res.data.update_available && res.data.notifyUser) this.$q.notify({ message: 'GitHub上有新版本', color: 'primary', textColor: 'white', icon: 'cloud_download', timeout: 5000, actions: [{ label: '好', color: 'white' }, { label: '查看', color: 'white', handler: () => { Object.assign(document.createElement('a'), { target: '_blank', href: 'https://github.com/ValoHalo/Kikoeru/releases' }).click() } }] })
-        if (res.data.lockFileExists) this.$q.notify({ message: res.data.lockReason, type: 'warning', timeout: 60000, actions: [{ label: '以后提醒我', color: 'black' }, { label: '前往音声库', color: 'black', handler: () => this.$router.push('/admin#scanner') }] })
+        if (res.data.update_available && res.data.notifyUser) this.$q.notify({ message: t('mainLayout.updateAvailable'), color: 'primary', textColor: 'white', icon: 'cloud_download', timeout: 5000, actions: [{ label: t('mainLayout.ok'), color: 'white' }, { label: t('mainLayout.view'), color: 'white', handler: () => { Object.assign(document.createElement('a'), { target: '_blank', href: 'https://github.com/ValoHalo/Kikoeru/releases' }).click() } }] })
+        if (res.data.lockFileExists) this.$q.notify({ message: res.data.lockReason, type: 'warning', timeout: 60000, actions: [{ label: t('mainLayout.remindLater'), color: 'black' }, { label: t('mainLayout.openLibrary'), color: 'black', handler: () => this.$router.push('/admin#scanner') }] })
       }).catch(() => {})
     },
     readSharedConfig () {
@@ -309,15 +312,15 @@ export default {
     showAnonymousLoginPrompt () {
       if (this.loginDialog || this.loginPromptDismiss || this.$q.localStorage.getItem(LOGIN_PROMPT_DISMISSED_KEY) === true) return
       this.loginPromptDismiss = this.$q.notify({
-        message: '登录后可保存收藏、进度和播放记录',
+        message: t('mainLayout.loginPrompt'),
         color: 'primary',
         textColor: 'white',
         icon: 'login',
         position: 'bottom',
         timeout: 0,
         actions: [
-          { label: '登录', color: 'white', handler: () => this.openLoginDialog() },
-          { label: '不再提示', color: 'white', handler: () => this.dismissLoginPromptPermanently() }
+          { label: t('common.login'), color: 'white', handler: () => this.openLoginDialog() },
+          { label: t('mainLayout.dismissPrompt'), color: 'white', handler: () => this.dismissLoginPromptPermanently() }
         ]
       })
     },
@@ -335,10 +338,10 @@ export default {
       try {
         await this.$axios.post('/api/auth/me', { name: this.loginName, password: this.loginPassword })
         const authState = await this.initUser({ showPrompt: false, retry: false })
-        if (!authState || !authState.user) throw new Error('登录状态确认失败')
+        if (!authState || !authState.user) throw new Error(t('mainLayout.loginUnconfirmed'))
         this.loginDialog = false
         this.loginPassword = ''
-        this.showSuccNotif('登录成功')
+        this.showSuccNotif(t('mainLayout.loginSucceeded'))
         if (redirect.startsWith('/') && !redirect.startsWith('//')) {
           this.$router.replace(redirect).catch(() => {})
         } else {
@@ -348,7 +351,7 @@ export default {
         const message = error.response && error.response.data
           ? error.response.data.error || (error.response.data.errors && error.response.data.errors[0] && error.response.data.errors[0].msg)
           : error.message
-        if (error.response && error.response.status === 401) this.showWarnNotif(message || '用户名或密码错误')
+        if (error.response && error.response.status === 401) this.showWarnNotif(message || t('mainLayout.invalidCredentials'))
         else this.showErrNotif(message || error)
       } finally {
         this.loginSubmitting = false

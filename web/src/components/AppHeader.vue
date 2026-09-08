@@ -1,12 +1,12 @@
 <template>
   <q-header class="app-header" :reveal="immersive" :reveal-offset="100">
     <q-toolbar class="app-toolbar">
-      <q-btn flat round dense icon="menu" class="app-header-button" aria-label="菜单" @click="$emit('toggle-drawer')">
-        <q-tooltip>导航菜单</q-tooltip>
+      <q-btn flat round dense icon="menu" class="app-header-button" :aria-label="$t('appHeader.menu')" @click="$emit('toggle-drawer')">
+        <q-tooltip>{{ $t('appHeader.navigation') }}</q-tooltip>
       </q-btn>
       <div class="app-heading">
         <router-link to="/" class="app-brand">Kikoeru</router-link>
-        <nav class="app-location" aria-label="当前位置">
+        <nav class="app-location" :aria-label="$t('appHeader.currentLocation')">
           <template v-if="parent">
             <router-link :to="parentTo" class="app-location-parent">{{ parent }}</router-link>
             <q-icon name="chevron_right" size="16px" class="app-location-separator" />
@@ -14,14 +14,14 @@
           <span class="app-location-title">{{ title }}</span>
         </nav>
       </div>
-      <q-btn flat round dense :icon="searchOpen ? 'close' : 'search'" class="app-header-button app-search-toggle" :aria-label="searchOpen ? '关闭搜索' : '搜索作品'" :aria-expanded="searchOpen" @click="toggleSearch" />
+      <q-btn flat round dense :icon="searchOpen ? 'close' : 'search'" class="app-header-button app-search-toggle" :aria-label="searchOpen ? $t('appHeader.closeSearch') : $t('appHeader.searchWorks')" :aria-expanded="searchOpen" @click="toggleSearch" />
       <form class="app-search" :class="{ 'app-search--open': searchOpen }" role="search" @submit.prevent="submitSearch">
-        <q-btn flat round dense icon="search" type="submit" class="app-search-button" aria-label="提交搜索"><q-tooltip>搜索作品</q-tooltip></q-btn>
-        <input ref="searchInput" v-model="keyword" type="search" :placeholder="isAdvanceSearch ? '添加作品、声优、标签、社团关键词' : '搜索作品、声优、标签、社团'" :aria-label="isAdvanceSearch ? '添加搜索关键词' : '搜索作品'" @keydown.esc="closeSearch" @keydown.enter="onSearchEnter" />
-        <q-btn v-if="keyword" flat round dense icon="close" class="app-search-button" aria-label="清除搜索" @click="clearSearch"><q-tooltip>清除搜索</q-tooltip></q-btn>
+        <q-btn flat round dense icon="search" type="submit" class="app-search-button" :aria-label="$t('appHeader.submitSearch')"><q-tooltip>{{ $t('appHeader.searchWorks') }}</q-tooltip></q-btn>
+        <input ref="searchInput" v-model="keyword" type="search" :placeholder="isAdvanceSearch ? $t('appHeader.advancedPlaceholder') : $t('appHeader.searchPlaceholder')" :aria-label="isAdvanceSearch ? $t('appHeader.addSearchTerm') : $t('appHeader.searchWorks')" @keydown.esc="closeSearch" @keydown.enter="onSearchEnter" />
+        <q-btn v-if="keyword" flat round dense icon="close" class="app-search-button" :aria-label="$t('appHeader.clearSearch')" @click="clearSearch"><q-tooltip>{{ $t('appHeader.clearSearch') }}</q-tooltip></q-btn>
         <span class="app-search-divider" aria-hidden="true" />
-        <q-btn flat round dense :icon="isAdvanceSearch ? 'add' : 'tune'" class="app-search-button" :class="{ 'app-search-active': isAdvanceSearch }" :aria-label="isAdvanceSearch ? '添加关键词' : '聚合搜索'" @click="isAdvanceSearch ? submitSearch() : openAdvanceSearch()">
-          <q-tooltip>{{ isAdvanceSearch ? '添加关键词' : '聚合搜索' }}</q-tooltip>
+        <q-btn flat round dense :icon="isAdvanceSearch ? 'add' : 'tune'" class="app-search-button" :class="{ 'app-search-active': isAdvanceSearch }" :aria-label="isAdvanceSearch ? $t('appHeader.addKeyword') : $t('common.advancedSearch')" @click="isAdvanceSearch ? submitSearch() : openAdvanceSearch()">
+          <q-tooltip>{{ isAdvanceSearch ? $t('appHeader.addKeyword') : $t('common.advancedSearch') }}</q-tooltip>
         </q-btn>
       </form>
     </q-toolbar>

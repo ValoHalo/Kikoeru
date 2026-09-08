@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="q-px-md q-pt-sm">
-      <q-btn flat dense no-caps icon="arrow_back" label="返回" color="primary" @click="backToWorks" />
+      <q-btn flat dense no-caps icon="arrow_back" :label="$t('common.back')" color="primary" @click="backToWorks" />
     </div>
-    <div v-if="workUnavailable" class="q-pa-xl text-center text-grey">当前内容显示设置下无可用作品</div>
+    <div v-if="workUnavailable" class="q-pa-xl text-center text-grey">{{ $t('work.unavailable') }}</div>
     <template v-if="metadataLoaded">
       <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy" />
       <RelatedWorks :metadata="metadata" />

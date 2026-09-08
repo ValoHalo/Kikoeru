@@ -1,15 +1,15 @@
 <template>
   <q-page class="admin-page admin-management-page">
     <header class="settings-heading">
-      <h1>音声库</h1>
+      <h1>{{ $t('folders.title') }}</h1>
     </header>
 
     <section class="settings-section" aria-labelledby="folders-title">
       <div class="settings-section__heading">
         <q-icon name="folder_open" size="22px" />
         <div>
-          <h2 id="folders-title">音声文件夹</h2>
-          <div class="text-caption text-grey-7">目录路径以运行 Kikoeru 的服务器为准。</div>
+          <h2 id="folders-title">{{ $t('folders.mediaFolders') }}</h2>
+          <div class="text-caption text-grey-7">{{ $t('folders.description') }}</div>
         </div>
       </div>
       <q-form class="library-folder-form" @submit="onSubmitRootFolder">
@@ -17,17 +17,17 @@
           outlined dense hide-bottom-space
           v-model="rootFolder.name"
           required lazy-rules
-          :rules="[val => !config.rootFolders.find(rootFolder => rootFolder.name === val) || '该别名已存在，文件夹别名不能重复']"
-          label="文件夹别名"
+          :rules="[val => !config.rootFolders.find(rootFolder => rootFolder.name === val) || $t('folders.duplicateName')]"
+          :label="$t('folders.alias')"
         />
         <q-input
           outlined dense hide-bottom-space
           v-model="rootFolder.path"
           required lazy-rules
-          :rules="[val => !config.rootFolders.find(rootFolder => rootFolder.path === val) || '该路径已存在，文件夹路径不能重复']"
-          label="绝对路径"
+          :rules="[val => !config.rootFolders.find(rootFolder => rootFolder.path === val) || $t('folders.duplicatePath')]"
+          :label="$t('folders.absolutePath')"
         />
-        <q-btn class="settings-action-button" unelevated no-caps type="submit" color="primary" icon="create_new_folder" label="添加文件夹" />
+        <q-btn class="settings-action-button" unelevated no-caps type="submit" color="primary" icon="create_new_folder" :label="$t('folders.add')" />
       </q-form>
       <q-list bordered separator class="settings-list">
           <q-item class="settings-row settings-row--action" v-for="(rootFolder, index) in config.rootFolders" :key="rootFolder.name">
@@ -36,13 +36,13 @@
               <q-item-label caption>{{rootFolder.path}}</q-item-label>
             </q-item-section>
             <q-item-section side class="settings-control">
-              <q-btn outline dense class="settings-icon-button" color="negative" icon="delete_outline" :aria-label="`删除文件夹 ${rootFolder.name}`" @click="removeFromRootFolders(index)">
-                <q-tooltip>删除文件夹</q-tooltip>
+              <q-btn outline dense class="settings-icon-button" color="negative" icon="delete_outline" :aria-label="$t('folders.deleteNamed', { name: rootFolder.name })" @click="removeFromRootFolders(index)">
+                <q-tooltip>{{ $t('folders.delete') }}</q-tooltip>
               </q-btn>
             </q-item-section>
           </q-item>
           <q-item v-if="!config.rootFolders.length" class="settings-row">
-            <q-item-section class="text-grey-7">尚未添加文件夹</q-item-section>
+            <q-item-section class="text-grey-7">{{ $t('folders.empty') }}</q-item-section>
           </q-item>
       </q-list>
     </section>

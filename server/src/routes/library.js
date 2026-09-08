@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 
 const express = require("express");
 const { body, param, query } = require("express-validator");
@@ -16,7 +17,7 @@ function username(req) {
     return getRequestUsername(req, config);
 }
 
-router.get('/archived', query('page').optional().isInt({ min: 1 }), async (req, res, next) => {
+router.get('/archived', query('page', (_value, { path }) => t('validation.invalidValue', { field: path })).optional().isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
@@ -35,23 +36,23 @@ router.get('/archived', query('page').optional().isInt({ min: 1 }), async (req, 
     }
 });
 
-router.put('/works/:workId/archive', requireAuthenticatedWrite, param('workId').isInt({ min: 1 }), async (req, res, next) => {
+router.put('/works/:workId/archive', requireAuthenticatedWrite, param('workId', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const archived = await db.archiveWork(username(req), Number(req.params.workId));
         if (!archived) {
-            res.status(404).send({ error: '作品不存在' });
+            res.status(404).send({ error: t('library.workMissing') });
             return;
         }
-        res.send({ message: '作品已归档' });
+        res.send({ message: t('library.archived') });
     }
     catch (error) {
         next(error);
     }
 });
 
-router.delete('/works/:workId/archive', requireAuthenticatedWrite, param('workId').isInt({ min: 1 }), async (req, res, next) => {
+router.delete('/works/:workId/archive', requireAuthenticatedWrite, param('workId', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
@@ -73,7 +74,7 @@ router.get('/collections', async (req, res, next) => {
     }
 });
 
-router.post('/collections', requireAuthenticatedWrite, body('name').trim().isLength({ min: 1, max: 80 }), async (req, res) => {
+router.post('/collections', requireAuthenticatedWrite, body('name', (_value, { path }) => t('validation.invalidValue', { field: path })).trim().isLength({ min: 1, max: 80 }), async (req, res) => {
     if (!isValidRequest(req, res))
         return;
     try {
@@ -82,17 +83,17 @@ router.post('/collections', requireAuthenticatedWrite, body('name').trim().isLen
     }
     catch (error) {
         const duplicate = /unique|duplicate/i.test(String(error && error.message || error));
-        res.status(duplicate ? 409 : 500).send({ error: duplicate ? '分组名称已存在' : '创建作品分组失败' });
+        res.status(duplicate ? 409 : 500).send({ error: duplicate ? t('library.duplicateName') : t('library.createFailed') });
     }
 });
 
-router.get('/collections/:id', param('id').isInt({ min: 1 }), async (req, res, next) => {
+router.get('/collections/:id', param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const result = await db.getWorkCollection(username(req), Number(req.params.id));
         if (!result) {
-            res.status(404).send({ error: '作品分组不存在' });
+            res.status(404).send({ error: t('library.collectionMissing') });
             return;
         }
         normalize(result.items, { dateOnly: true });
@@ -105,30 +106,30 @@ router.get('/collections/:id', param('id').isInt({ min: 1 }), async (req, res, n
     }
 });
 
-router.patch('/collections/:id', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), body('name').trim().isLength({ min: 1, max: 80 }), async (req, res) => {
+router.patch('/collections/:id', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), body('name', (_value, { path }) => t('validation.invalidValue', { field: path })).trim().isLength({ min: 1, max: 80 }), async (req, res) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const updated = await db.renameWorkCollection(username(req), Number(req.params.id), req.body.name);
         if (!updated) {
-            res.status(404).send({ error: '作品分组不存在' });
+            res.status(404).send({ error: t('library.collectionMissing') });
             return;
         }
-        res.send({ message: '作品分组已重命名' });
+        res.send({ message: t('library.renamed') });
     }
     catch (error) {
         const duplicate = /unique|duplicate/i.test(String(error && error.message || error));
-        res.status(duplicate ? 409 : 500).send({ error: duplicate ? '分组名称已存在' : '重命名作品分组失败' });
+        res.status(duplicate ? 409 : 500).send({ error: duplicate ? t('library.duplicateName') : t('library.renameFailed') });
     }
 });
 
-router.delete('/collections/:id', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), async (req, res, next) => {
+router.delete('/collections/:id', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const deleted = await db.deleteWorkCollection(username(req), Number(req.params.id));
         if (!deleted) {
-            res.status(404).send({ error: '作品分组不存在' });
+            res.status(404).send({ error: t('library.collectionMissing') });
             return;
         }
         res.status(204).end();
@@ -138,30 +139,30 @@ router.delete('/collections/:id', requireAuthenticatedWrite, param('id').isInt({
     }
 });
 
-router.post('/collections/:id/items', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), body('workIds').isArray({ min: 1, max: 1000 }), body('workIds.*').isInt({ min: 1 }), async (req, res, next) => {
+router.post('/collections/:id/items', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), body('workIds', (_value, { path }) => t('validation.invalidValue', { field: path })).isArray({ min: 1, max: 1000 }), body('workIds.*', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const workIds = [...new Set(req.body.workIds.map(Number))];
         const added = await db.addWorkCollectionItems(username(req), Number(req.params.id), workIds);
         if (added === null) {
-            res.status(404).send({ error: '作品分组不存在' });
+            res.status(404).send({ error: t('library.collectionMissing') });
             return;
         }
-        res.status(201).send({ message: added ? `已加入 ${added} 个作品` : '所选作品已在分组中', added });
+        res.status(201).send({ message: added ? t('library.added', { count: added }) : t('library.alreadyAdded'), added });
     }
     catch (error) {
         next(error);
     }
 });
 
-router.delete('/collections/:id/items/:workId', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), param('workId').isInt({ min: 1 }), async (req, res, next) => {
+router.delete('/collections/:id/items/:workId', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), param('workId', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const deleted = await db.removeWorkCollectionItem(username(req), Number(req.params.id), Number(req.params.workId));
         if (deleted === null) {
-            res.status(404).send({ error: '作品分组不存在' });
+            res.status(404).send({ error: t('library.collectionMissing') });
             return;
         }
         res.status(204).end();
@@ -171,16 +172,16 @@ router.delete('/collections/:id/items/:workId', requireAuthenticatedWrite, param
     }
 });
 
-router.put('/collections/:id/items/order', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), body('workIds').isArray({ min: 0, max: 1000 }), body('workIds.*').isInt({ min: 1 }), async (req, res, next) => {
+router.put('/collections/:id/items/order', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), body('workIds', (_value, { path }) => t('validation.invalidValue', { field: path })).isArray({ min: 0, max: 1000 }), body('workIds.*', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const reordered = await db.reorderWorkCollectionItems(username(req), Number(req.params.id), req.body.workIds.map(Number), req.query.nsfw === '1');
         if (!reordered) {
-            res.status(400).send({ error: '作品分组不存在，或作品顺序与服务器不一致' });
+            res.status(400).send({ error: t('library.orderMismatch') });
             return;
         }
-        res.send({ message: '作品顺序已保存' });
+        res.send({ message: t('library.orderSaved') });
     }
     catch (error) {
         next(error);

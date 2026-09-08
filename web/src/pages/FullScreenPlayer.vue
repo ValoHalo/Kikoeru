@@ -18,6 +18,7 @@
 </template>
    
 <script>
+import { t } from '../i18n'
 import { mapState, mapGetters } from 'vuex'
 import LyricsBar from 'components/LyricsBar.vue'
 
@@ -576,7 +577,7 @@ export default {
       this.$router.push(`/work/${this.workid}`);
     } else if (this.workid === undefined && this.playWorkId === 0) {
       this.$q.notify({
-        message: "当前没有播放任何作品，请先播放一个作品然后打开可视化页面",
+        message: t('fullScreenPlayer.noPlayback'),
         color: "negative",
       });
       this.$router.push(`/works`);

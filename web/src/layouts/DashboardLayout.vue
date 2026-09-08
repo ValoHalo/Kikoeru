@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh Lpr lFf">
-    <AppHeader :title="compactSectionTitle" parent="管理设置" parent-to="/admin" @toggle-drawer="drawerOpen = !drawerOpen" />
+    <AppHeader :title="compactSectionTitle" :parent="$t('common.administration')" parent-to="/admin" @toggle-drawer="drawerOpen = !drawerOpen" />
 
     <q-drawer
       v-model="drawerOpen"
@@ -37,8 +37,8 @@
           <q-list padding class="admin-drawer-secondary">
             <q-item clickable v-ripple exact to="/" active-class="text-primary text-weight-medium">
               <q-item-section avatar><q-icon name="home" /></q-item-section>
-              <q-item-section><q-item-label class="text-subtitle1">回到主页</q-item-label></q-item-section>
-              <q-tooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">回到主页</q-tooltip>
+              <q-item-section><q-item-label class="text-subtitle1">{{ $t('dashboardLayout.home') }}</q-item-label></q-item-section>
+              <q-tooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('dashboardLayout.home') }}</q-tooltip>
             </q-item>
           </q-list>
         </div>
@@ -52,6 +52,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import NotifyMixin from '../mixins/Notification.js'
 import AppHeader from 'components/AppHeader.vue'
 import { applyColorScheme, COLOR_SCHEMES, hasSavedColorScheme, readColorScheme } from '../colorScheme'
@@ -67,41 +68,43 @@ export default {
     return {
       drawerOpen: false,
       drawerMini: true,
-      links: [
-        {
-          title: '音声库',
-          icon: 'folder',
-          path: '/admin'
-        },
-        {
-          title: '用户管理',
-          icon: 'person',
-          path: '/admin/usermanage'
-        },
-        {
-          title: '默认设置',
-          icon: 'tune',
-          path: '/admin/defaults'
-        },
-        {
-          title: '高级设置',
-          icon: 'settings',
-          path: '/admin/advanced'
-        },
-        {
-          title: '更新',
-          icon: 'system_update_alt',
-          path: '/admin/update'
-        }
-      ]
     }
   },
 
   computed: {
+    links () {
+      return [
+        {
+          title: t('dashboardLayout.folders'),
+          icon: 'folder',
+          path: '/admin'
+        },
+        {
+          title: t('dashboardLayout.users'),
+          icon: 'person',
+          path: '/admin/usermanage'
+        },
+        {
+          title: t('dashboardLayout.defaults'),
+          icon: 'tune',
+          path: '/admin/defaults'
+        },
+        {
+          title: t('dashboardLayout.advanced'),
+          icon: 'settings',
+          path: '/admin/advanced'
+        },
+        {
+          title: t('common.update'),
+          icon: 'system_update_alt',
+          path: '/admin/update'
+        }
+      ]
+    },
     compactSectionTitle () {
-      if (this.$route.path === '/admin/setup') return '初始设置'
+      if (this.$route.path === '/admin/setup') return t('dashboardLayout.setup')
       const current = this.links.find(link => link.path === this.$route.path)
-      return current ? current.title : '管理设置'
+      return current ? current.title : t('common.administration')
     }
   },
 

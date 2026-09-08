@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -52,11 +53,11 @@ const PAGE_SIZE = config_1.config.pageSize || 12;
 const { sendHiddenCover } = require("./utils/coverVisibility");
 const { prepareWorks } = require('./utils/workVisibility');
 router.get(['/works', '/search', '/:field(circle|tag|va)s/:id/works'],
-    (0, express_validator_1.query)('collectionId').optional().isInt({ min: 1 }),
+    (0, express_validator_1.query)('collectionId', (_value, { path }) => t('validation.invalidValue', { field: path })).optional().isInt({ min: 1 }),
     (req, res, next) => {
         if ((0, validate_1.isValidRequest)(req, res)) next();
     });
-router.get('/cover/:id', (0, express_validator_1.param)('id').isInt(), async (req, res, next) => {
+router.get('/cover/:id', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = parseInt(req.params.id || "0");
@@ -82,7 +83,7 @@ router.get('/cover/:id', (0, express_validator_1.param)('id').isInt(), async (re
         }
     });
 });
-router.get('/work/:id', (0, express_validator_1.param)('id').isInt(), (req, res, next) => {
+router.get('/work/:id', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
@@ -90,7 +91,7 @@ router.get('/work/:id', (0, express_validator_1.param)('id').isInt(), (req, res,
         .then(async work => {
         (0, normalize_1.default)(work);
         if (req.query.nsfw === '1' && work[0]?.nsfw !== false) {
-            res.status(404).send({ error: '当前内容显示设置下无可用作品' });
+            res.status(404).send({ error: t('metadata.unavailable') });
             return;
         }
         await prepareWorks(work, req.query.nsfw === '1');
@@ -98,7 +99,7 @@ router.get('/work/:id', (0, express_validator_1.param)('id').isInt(), (req, res,
     })
         .catch(err => next(err));
 });
-router.get('/workInfo/:code', (0, express_validator_1.param)('code').isString(), (req, res, next) => {
+router.get('/workInfo/:code', (0, express_validator_1.param)('code', (_value, { path }) => t('validation.invalidValue', { field: path })).isString(), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const code = req.params.code;
@@ -108,7 +109,7 @@ router.get('/workInfo/:code', (0, express_validator_1.param)('code').isString(),
         .then(async work => {
         (0, normalize_1.default)(work);
         if (req.query.nsfw === '1' && work[0]?.nsfw !== false) {
-            res.status(404).send({ error: '当前内容显示设置下无可用作品' });
+            res.status(404).send({ error: t('metadata.unavailable') });
             return;
         }
         await prepareWorks(work, req.query.nsfw === '1');
@@ -116,7 +117,7 @@ router.get('/workInfo/:code', (0, express_validator_1.param)('code').isString(),
     })
         .catch(err => next(err));
 });
-router.get('/tracks/:id', (0, express_validator_1.param)('id').isInt(), async (req, res, next) => {
+router.get('/tracks/:id', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
@@ -126,7 +127,7 @@ router.get('/tracks/:id', (0, express_validator_1.param)('id').isInt(), async (r
             .where('id', '=', work_id)
             .first();
         if (req.query.nsfw === '1' && work?.nsfw !== false && work?.nsfw !== 0) {
-            res.status(404).send({ error: '当前内容显示设置下无可用作品' });
+            res.status(404).send({ error: t('metadata.unavailable') });
             return;
         }
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
@@ -148,18 +149,18 @@ router.get('/tracks/:id', (0, express_validator_1.param)('id').isInt(), async (r
             }
             catch (err) {
                 console.error(err);
-                res.status(500).send({ error: '获取文件列表失败，请检查文件是否存在或重新扫描清理' });
+                res.status(500).send({ error: t('metadata.filesFailed') });
             }
         }
         else {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('metadata.folderMissing', { root_folder: work.root_folder }) });
         }
     }
     catch (err) {
         next(err);
     }
 });
-router.get('/works', (0, express_validator_1.query)('page').optional({ nullable: true }).isInt(), (0, express_validator_1.query)('order').optional({ nullable: true }).isIn(["release", "rating", "dl_count", "price", "rate_average_2dp", "review_count", "id", "created_at", "random", "betterRandom"]), (0, express_validator_1.query)('sort').optional({ nullable: true }).isIn(['desc', 'asc']), (0, express_validator_1.query)('nsfw').optional({ nullable: true }).isInt().isIn([0, 1, 2]), (0, express_validator_1.query)('seed').optional({ nullable: true }).isInt(), async (req, res) => {
+router.get('/works', (0, express_validator_1.query)('page', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt(), (0, express_validator_1.query)('order', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isIn(["release", "rating", "dl_count", "price", "rate_average_2dp", "review_count", "id", "created_at", "random", "betterRandom"]), (0, express_validator_1.query)('sort', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isIn(['desc', 'asc']), (0, express_validator_1.query)('nsfw', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt().isIn([0, 1, 2]), (0, express_validator_1.query)('seed', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt(), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const currentPage = parseInt(req.query.page) || 1;
@@ -186,11 +187,11 @@ router.get('/works', (0, express_validator_1.query)('page').optional({ nullable:
         });
     }
     catch (err) {
-        res.status(500).send({ error: '服务器错误' });
+        res.status(500).send({ error: t('metadata.serverError') });
         console.error(err);
     }
 });
-router.get('/:field(circle|tag|va)s/:id', (0, express_validator_1.param)('field').isIn(['circle', 'tag', 'va']), (req, res, next) => {
+router.get('/:field(circle|tag|va)s/:id', (0, express_validator_1.param)('field', (_value, { path }) => t('validation.invalidValue', { field: path })).isIn(['circle', 'tag', 'va']), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     return db.getMetadata({ field: req.params.field, id: req.params.id })
@@ -200,9 +201,9 @@ router.get('/:field(circle|tag|va)s/:id', (0, express_validator_1.param)('field'
         }
         else {
             const errorMessage = {
-                'circle': `社团${req.params.id}不存在`,
-                'tag': `标签${req.params.id}不存在`,
-                'va': `声优${req.params.id}不存在`
+                'circle': t('metadata.circleMissing', { id: req.params.id }),
+                'tag': t('metadata.tagMissing', { id: req.params.id }),
+                'va': t('metadata.voiceActorMissing', { id: req.params.id })
             };
             res.status(404).send({ error: errorMessage[req.params.field] });
         }
@@ -243,11 +244,11 @@ router.get('/search', async (req, res) => {
         });
     }
     catch (err) {
-        res.status(500).send({ error: '查询过程中出错' });
+        res.status(500).send({ error: t('metadata.queryFailed') });
         console.error(err);
     }
 });
-router.get('/:field(circle|tag|va)s/:id/works', (0, express_validator_1.param)('field').isIn(['circle', 'tag', 'va']), async (req, res) => {
+router.get('/:field(circle|tag|va)s/:id/works', (0, express_validator_1.param)('field', (_value, { path }) => t('validation.invalidValue', { field: path })).isIn(['circle', 'tag', 'va']), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const currentPage = parseInt(req.query.page) || 1;
@@ -274,11 +275,11 @@ router.get('/:field(circle|tag|va)s/:id/works', (0, express_validator_1.param)('
         });
     }
     catch (err) {
-        res.status(500).send({ error: '查询过程中出错' });
+        res.status(500).send({ error: t('metadata.queryFailed') });
         console.error(err);
     }
 });
-router.get('/:field(circle|tag|va)s/', (0, express_validator_1.param)('field').isIn(['circle', 'tag', 'va']), (req, res, next) => {
+router.get('/:field(circle|tag|va)s/', (0, express_validator_1.param)('field', (_value, { path }) => t('validation.invalidValue', { field: path })).isIn(['circle', 'tag', 'va']), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const field = req.params.field;
@@ -292,7 +293,7 @@ router.post('/uncensor/tags', accessControl_1.requireAdministrator, async functi
     await db.uncensorDlsiteTags();
     res.send({ result: "finished" });
 });
-router.post('/work/scan/:id', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id').isInt(), async function (req, res) {
+router.post('/work/scan/:id', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async function (req, res) {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = parseInt(req.params.id);
@@ -303,7 +304,7 @@ router.post('/work/scan/:id', accessControl_1.requireAdministrator, (0, express_
             .first();
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (!rootFolder) {
-            res.status(500).send({ error: "扫描作品文件失败，没有找到rootFolder: " + work.root_folder });
+            res.status(500).send({ error: t('metadata.scanFolderMissing', { root_folder: work.root_folder }) });
             return;
         }
         const memo = await (0, utils_1.scrapeWorkMemo)(path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
@@ -313,10 +314,10 @@ router.post('/work/scan/:id', accessControl_1.requireAdministrator, (0, express_
     }
     catch (err) {
         console.error(err);
-        res.status(500).send({ error: "刷新作品本地文件失败：" + err.message });
+        res.status(500).send({ error: t('metadata.scanFailed', { message: err.message }) });
     }
 });
-router.post('/work/fix/gbk/:id', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id').isInt(), async (req, res) => {
+router.post('/work/fix/gbk/:id', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
@@ -336,19 +337,19 @@ router.post('/work/fix/gbk/:id', accessControl_1.requireAdministrator, (0, expre
                 res.send({ memo });
             }
             catch (err) {
-                res.status(500).send({ error: '修复乱码文件夹出现错误' + err.message });
+                res.status(500).send({ error: t('metadata.renameFolderFailed', { message: err.message }) });
             }
         }
         else {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('metadata.folderMissing', { root_folder: work.root_folder }) });
         }
     }
     catch (err) {
         console.error(err);
-        res.status(500).send({ error: "修复乱码问题失败：" + err.message });
+        res.status(500).send({ error: t('metadata.encodingFailed', { message: err.message }) });
     }
 });
-router.delete('/work/:id', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id').isInt(), async (req, res, _next) => {
+router.delete('/work/:id', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, _next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = parseInt(req.params.id);
@@ -359,7 +360,7 @@ router.delete('/work/:id', accessControl_1.requireAdministrator, (0, express_val
             .where('id', '=', work_id)
             .first();
         if (!work) {
-            res.status(404).send({ error: `作品 id=${work_id} 不存在` });
+            res.status(404).send({ error: t('metadata.workMissing', { work_id: work_id }) });
             return;
         }
         const rootFolder = config_1.config.rootFolders.find(rf => rf.name === work.root_folder);
@@ -377,14 +378,14 @@ router.delete('/work/:id', accessControl_1.requireAdministrator, (0, express_val
             console.warn(`删除封面失败: ${e.message}`);
         }
         await db.knex.transaction(async (trx) => { await db.removeWork(work_id, async () => trx); });
-        res.send({ success: true, message: `作品 "${work.title}" 已删除` });
+        res.send({ success: true, message: t('metadata.workDeleted', { title: work.title }) });
     }
     catch (err) {
         console.error(err);
-        res.status(500).send({ error: '删除作品失败：' + err.message });
+        res.status(500).send({ error: t('metadata.deleteFailed', { message: err.message }) });
     }
 });
-router.get('/work/:id/fileinfo', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id').isInt(), async (req, res, _next) => {
+router.get('/work/:id/fileinfo', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, _next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = parseInt(req.params.id);
@@ -394,7 +395,7 @@ router.get('/work/:id/fileinfo', accessControl_1.requireAdministrator, (0, expre
             .where('id', '=', work_id)
             .first();
         if (!work) {
-            res.status(404).send({ error: `作品 id=${work_id} 不存在` });
+            res.status(404).send({ error: t('metadata.workMissing', { work_id: work_id }) });
             return;
         }
         const rootFolder = config_1.config.rootFolders.find(rf => rf.name === work.root_folder);
@@ -407,7 +408,7 @@ router.get('/work/:id/fileinfo', accessControl_1.requireAdministrator, (0, expre
     }
     catch (err) {
         console.error(err);
-        res.status(500).send({ error: '获取文件信息失败：' + err.message });
+        res.status(500).send({ error: t('metadata.fileInfoFailed', { message: err.message }) });
     }
 });
 exports.default = router;

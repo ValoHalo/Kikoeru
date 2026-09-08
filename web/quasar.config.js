@@ -4,6 +4,7 @@ export default defineConfig(function () {
   const apiTarget = process.env.KIKOERU_DEV_API || 'http://127.0.0.1:8888'
   return {
     boot: [
+      'i18n',
       'store',
       'axios',
       'socket.io'

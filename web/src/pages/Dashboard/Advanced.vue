@@ -3,27 +3,27 @@
   <q-form class="settings-form" @submit="onSubmit">
     <header class="settings-heading">
       <div>
-        <h1>高级设置</h1>
-        <div class="text-caption text-grey-7">管理爬虫、扫描、服务器和媒体库存储配置。</div>
+        <h1>{{ $t('advanced.title') }}</h1>
+        <div class="text-caption text-grey-7">{{ $t('advanced.description') }}</div>
       </div>
     </header>
     <section class="settings-section" aria-labelledby="crawler-settings-title">
       <div class="settings-section__heading">
         <q-icon name="travel_explore" size="22px" />
-        <div><h2 id="crawler-settings-title">爬虫设置</h2><div class="text-caption text-grey-7">控制元数据语言、请求节奏和代理连接。</div></div>
+        <div><h2 id="crawler-settings-title">{{ $t('advanced.crawler') }}</h2><div class="text-caption text-grey-7">{{ $t('advanced.crawlerHint') }}</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
           <q-item-section>
-            <q-item-label>标签语言</q-item-label>
-            <q-item-label caption>从 DLSite 爬取的标签元数据的语言</q-item-label>
+            <q-item-label>{{ $t('advanced.tagLanguage') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.tagLanguageHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section side class="settings-control">
             <div class="tag-language-control">
               <q-btn-toggle v-model="config.tagLanguage" dense unelevated no-caps toggle-color="primary" :options="tagLanguageOptions" />
-              <q-btn flat no-caps color="primary" icon="refresh" label="刷新标签名称" :loading="refreshTagsLoading" @click="refreshTagNames">
-                <q-tooltip>先保存语言设置，再用当前语言刷新数据库中的标签名称</q-tooltip>
+              <q-btn flat no-caps color="primary" icon="refresh" :label="$t('advanced.refreshTags')" :loading="refreshTagsLoading" @click="refreshTagNames">
+                <q-tooltip>{{ $t('advanced.refreshTagsHint') }}</q-tooltip>
               </q-btn>
             </div>
           </q-item-section>
@@ -31,18 +31,18 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>恢复原始标签名称</q-item-label>
-            <q-item-label caption>将数据库中的 DLsite 和谐标签名恢复为原始名称；此操作无法自动撤销。</q-item-label>
+            <q-item-label>{{ $t('advanced.restoreTags') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.restoreTagsHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-btn outline no-caps class="settings-action-button" color="warning" icon="restart_alt" label="恢复标签" :loading="uncensorTagsLoading" @click="confirmUncensorTags" />
+            <q-btn outline no-caps class="settings-action-button" color="warning" icon="restart_alt" :label="$t('advanced.restoreTagsAction')" :loading="uncensorTagsLoading" @click="confirmUncensorTags" />
           </q-item-section>
         </q-item>
 
         <q-item>
           <q-item-section>
-            <q-item-label>DLsite 超时时间</q-item-label>
-            <q-item-label caption>默认 10000 毫秒</q-item-label>
+            <q-item-label>{{ $t('advanced.dlsiteTimeout') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultDlsiteTimeout') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -55,8 +55,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('dlsiteTimeout') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.dlsiteTimeout}`" @click="restoreNumericDefault('dlsiteTimeout')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.dlsiteTimeout }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('dlsiteTimeout') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetDlsiteTimeout', { dlsiteTimeout: numericDefaults.dlsiteTimeout })" @click="restoreNumericDefault('dlsiteTimeout')">
+                  <q-tooltip>{{ $t('advanced.resetDlsiteTimeoutHint', { dlsiteTimeout: numericDefaults.dlsiteTimeout }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -65,8 +65,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>HVDB 超时时间</q-item-label>
-            <q-item-label caption>默认 10000 毫秒</q-item-label>
+            <q-item-label>{{ $t('advanced.hvdbTimeout') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultDlsiteTimeout') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -79,8 +79,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('hvdbTimeout') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.hvdbTimeout}`" @click="restoreNumericDefault('hvdbTimeout')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.hvdbTimeout }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('hvdbTimeout') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetHvdbTimeout', { hvdbTimeout: numericDefaults.hvdbTimeout })" @click="restoreNumericDefault('hvdbTimeout')">
+                  <q-tooltip>{{ $t('advanced.resetHvdbTimeoutHint', { hvdbTimeout: numericDefaults.hvdbTimeout }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -89,8 +89,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>重新请求间隔时间</q-item-label>
-            <q-item-label caption>默认 2000 毫秒</q-item-label>
+            <q-item-label>{{ $t('advanced.retryDelay') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultRetryDelay') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -103,8 +103,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('retryDelay') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.retryDelay}`" @click="restoreNumericDefault('retryDelay')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.retryDelay }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('retryDelay') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetRetryDelay', { retryDelay: numericDefaults.retryDelay })" @click="restoreNumericDefault('retryDelay')">
+                  <q-tooltip>{{ $t('advanced.resetRetryDelayHint', { retryDelay: numericDefaults.retryDelay }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -113,8 +113,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>请求最大尝试次数</q-item-label>
-            <q-item-label caption>默认 5</q-item-label>
+            <q-item-label>{{ $t('advanced.retry') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultRetry') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -127,8 +127,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('retry') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.retry}`" @click="restoreNumericDefault('retry')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.retry }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('retry') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetRetry', { retry: numericDefaults.retry })" @click="restoreNumericDefault('retry')">
+                  <q-tooltip>{{ $t('advanced.resetRetryHint', { retry: numericDefaults.retry }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -137,8 +137,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>爬虫并行任务数量</q-item-label>
-            <q-item-label caption>默认 16</q-item-label>
+            <q-item-label>{{ $t('advanced.parallelism') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultParallelism') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -151,8 +151,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('maxParallelism') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.maxParallelism}`" @click="restoreNumericDefault('maxParallelism')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.maxParallelism }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('maxParallelism') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetParallelism', { maxParallelism: numericDefaults.maxParallelism })" @click="restoreNumericDefault('maxParallelism')">
+                  <q-tooltip>{{ $t('advanced.resetParallelismHint', { maxParallelism: numericDefaults.maxParallelism }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -161,8 +161,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>联网方式</q-item-label>
-            <q-item-label caption>直连、读取服务器环境变量，或手动指定 HTTP 代理</q-item-label>
+            <q-item-label>{{ $t('advanced.proxyMode') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.proxyModeHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="settings-control settings-control--wide">
             <q-btn-toggle v-model="config.httpProxyMode" dense unelevated no-caps toggle-color="primary" :options="proxyModeOptions" />
@@ -171,25 +171,25 @@
 
         <q-item v-if="config.httpProxyMode === 'environment'">
           <q-item-section>
-            <q-item-label>环境变量代理</q-item-label>
-            <q-item-label caption>读取服务器进程的 HTTP_PROXY、HTTPS_PROXY 和 NO_PROXY</q-item-label>
+            <q-item-label>{{ $t('advanced.environmentProxy') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.environmentProxyHint') }}</q-item-label>
           </q-item-section>
         </q-item>
 
         <q-item v-if="config.httpProxyMode === 'manual'">
           <q-item-section>
-            <q-item-label>HTTP 代理主机</q-item-label>
-            <q-item-label caption>留空时使用 127.0.0.1</q-item-label>
+            <q-item-label>{{ $t('advanced.proxyHost') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.proxyHostHint') }}</q-item-label>
           </q-item-section>
           <q-item-section avatar>
-            <q-input v-model="config.httpProxyHost" dense outlined hide-bottom-space aria-label="HTTP 代理主机" input-class="text-right" style="max-width: 160px;" />
+            <q-input v-model="config.httpProxyHost" dense outlined hide-bottom-space :aria-label="$t('advanced.proxyHost')" input-class="text-right" style="max-width: 160px;" />
           </q-item-section>
         </q-item>
 
         <q-item v-if="config.httpProxyMode === 'manual'">
           <q-item-section>
-            <q-item-label>HTTP 代理端口</q-item-label>
-            <q-item-label caption>1 到 65535</q-item-label>
+            <q-item-label>{{ $t('advanced.proxyPort') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.proxyPortHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -202,8 +202,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('httpProxyPort') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.httpProxyPort}`" @click="restoreNumericDefault('httpProxyPort')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.httpProxyPort }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('httpProxyPort') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetProxyPort', { httpProxyPort: numericDefaults.httpProxyPort })" @click="restoreNumericDefault('httpProxyPort')">
+                  <q-tooltip>{{ $t('advanced.resetProxyPortHint', { httpProxyPort: numericDefaults.httpProxyPort }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -212,8 +212,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>联网测试</q-item-label>
-            <q-item-label caption>直接使用当前页面中的参数，不需要先保存</q-item-label>
+            <q-item-label>{{ $t('advanced.networkTest') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.networkTestHint') }}</q-item-label>
             <div v-if="networkResults.length" class="q-mt-sm">
               <q-chip v-for="result in networkResults" :key="result.key" dense square :color="result.ok ? 'positive' : 'negative'" text-color="white" :icon="result.ok ? 'check' : 'close'">
                 {{ result.label }}
@@ -221,7 +221,7 @@
             </div>
           </q-item-section>
           <q-item-section side>
-            <q-btn outline no-caps class="settings-action-button" color="primary" icon="network_check" label="测试联网" :loading="networkTestLoading" @click="testNetwork" />
+            <q-btn outline no-caps class="settings-action-button" color="primary" icon="network_check" :label="$t('advanced.testNetwork')" :loading="networkTestLoading" @click="testNetwork" />
           </q-item-section>
         </q-item>
       </q-list>
@@ -230,13 +230,13 @@
     <section class="settings-section" aria-labelledby="scanner-settings-title">
       <div class="settings-section__heading">
         <q-icon name="folder_open" size="22px" />
-            <div><h2 id="scanner-settings-title">文件夹扫描</h2><div class="text-caption text-grey-7">设置递归深度和自动监听。</div></div>
+            <div><h2 id="scanner-settings-title">{{ $t('advanced.scanner') }}</h2><div class="text-caption text-grey-7">{{ $t('advanced.scannerHint') }}</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
           <q-item-section>
-            <q-item-label>最大递归扫描深度</q-item-label>
-            <q-item-label caption>默认 2</q-item-label>
+            <q-item-label>{{ $t('advanced.recursionDepth') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultRecursionDepth') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -249,8 +249,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('scannerMaxRecursionDepth') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.scannerMaxRecursionDepth}`" @click="restoreNumericDefault('scannerMaxRecursionDepth')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.scannerMaxRecursionDepth }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('scannerMaxRecursionDepth') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetRecursionDepth', { scannerMaxRecursionDepth: numericDefaults.scannerMaxRecursionDepth })" @click="restoreNumericDefault('scannerMaxRecursionDepth')">
+                  <q-tooltip>{{ $t('advanced.resetRecursionDepthHint', { scannerMaxRecursionDepth: numericDefaults.scannerMaxRecursionDepth }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -258,8 +258,8 @@
         </q-item>
         <q-item>
           <q-item-section>
-            <q-item-label>扫描时跳过清理音声库</q-item-label>
-            <q-item-label caption>是否跳过清理不存在的音声（不推荐，默认不跳过）</q-item-label>
+            <q-item-label>{{ $t('advanced.skipCleanup') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.skipCleanupHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section side>
@@ -269,8 +269,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>启用文件监听</q-item-label>
-            <q-item-label caption>监听媒体目录变化并自动加入新作品；实验性功能，修改后需重启服务器。</q-item-label>
+            <q-item-label>{{ $t('advanced.fileWatcher') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.fileWatcherHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side>
             <q-toggle v-model="config.enableFileWatcher" dense />
@@ -282,13 +282,13 @@
     <section class="settings-section" aria-labelledby="server-settings-title">
       <div class="settings-section__heading">
         <q-icon name="dns" size="22px" />
-        <div><h2 id="server-settings-title">Web 服务器</h2><div class="text-caption text-grey-7">网络与认证设置保存后需要重启程序。</div></div>
+        <div><h2 id="server-settings-title">{{ $t('advanced.server') }}</h2><div class="text-caption text-grey-7">{{ $t('advanced.serverHint') }}</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
           <q-item-section>
-            <q-item-label>用户验证</q-item-label>
-            <q-item-label caption>是否启用用户验证（生产环境下无法修改此设置）</q-item-label>
+            <q-item-label>{{ $t('advanced.authentication') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.authenticationHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -298,8 +298,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>启用Gzip</q-item-label>
-            <q-item-label caption>对网络传输启用Gzip压缩</q-item-label>
+            <q-item-label>{{ $t('advanced.gzip') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.gzipHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -309,8 +309,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>设置端口号</q-item-label>
-            <q-item-label caption>服务器监听端口号</q-item-label>
+            <q-item-label>{{ $t('advanced.listenPort') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.listenPortHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -323,8 +323,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('listenPort') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.listenPort}`" @click="restoreNumericDefault('listenPort')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.listenPort }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('listenPort') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetListenPort', { listenPort: numericDefaults.listenPort })" @click="restoreNumericDefault('listenPort')">
+                  <q-tooltip>{{ $t('advanced.resetListenPortHint', { listenPort: numericDefaults.listenPort }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -333,8 +333,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>屏蔽远程连接</q-item-label>
-            <q-item-label caption>只允许本地访问，默认为false。更改此设置需要重启程序</q-item-label>
+            <q-item-label>{{ $t('advanced.localOnly') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.localOnlyHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -344,8 +344,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>token 过期时间</q-item-label>
-            <q-item-label caption>默认 2592000 秒</q-item-label>
+            <q-item-label>{{ $t('advanced.tokenExpiry') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultTokenExpiry') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -358,8 +358,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('expiresIn') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.expiresIn}`" @click="restoreNumericDefault('expiresIn')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.expiresIn }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('expiresIn') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetTokenExpiry', { expiresIn: numericDefaults.expiresIn })" @click="restoreNumericDefault('expiresIn')">
+                  <q-tooltip>{{ $t('advanced.resetTokenExpiryHint', { expiresIn: numericDefaults.expiresIn }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -368,8 +368,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>每页显示的音声数量</q-item-label>
-            <q-item-label caption>默认 12</q-item-label>
+            <q-item-label>{{ $t('advanced.pageSize') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultPageSize') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -382,8 +382,8 @@
               input-class="settings-number-input text-center"
             >
               <template #before>
-                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('pageSize') }" flat round dense icon="restart_alt" :aria-label="`恢复默认值 ${numericDefaults.pageSize}`" @click="restoreNumericDefault('pageSize')">
-                  <q-tooltip>恢复默认值：{{ numericDefaults.pageSize }}</q-tooltip>
+                <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('pageSize') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetPageSize', { pageSize: numericDefaults.pageSize })" @click="restoreNumericDefault('pageSize')">
+                  <q-tooltip>{{ $t('advanced.resetPageSizeHint', { pageSize: numericDefaults.pageSize }) }}</q-tooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -395,13 +395,13 @@
     <section class="settings-section" aria-labelledby="security-settings-title">
       <div class="settings-section__heading">
         <q-icon name="shield" size="22px" />
-        <div><h2 id="security-settings-title">安全</h2><div class="text-caption text-grey-7">显示只能通过配置文件控制的运行模式。</div></div>
+        <div><h2 id="security-settings-title">{{ $t('advanced.security') }}</h2><div class="text-caption text-grey-7">{{ $t('advanced.securityHint') }}</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
           <q-item-section>
-            <q-item-label>生产环境</q-item-label>
-            <q-item-label caption>此设置无法在网页端修改，详情请查阅GitHub Wiki中关于配置文件的说明</q-item-label>
+            <q-item-label>{{ $t('advanced.production') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.productionHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -414,13 +414,13 @@
     <section class="settings-section" aria-labelledby="other-settings-title">
       <div class="settings-section__heading">
         <q-icon name="settings" size="22px" />
-        <div><h2 id="other-settings-title">其它设置</h2><div class="text-caption text-grey-7">控制更新检查和本地数据目录策略。</div></div>
+        <div><h2 id="other-settings-title">{{ $t('advanced.other') }}</h2><div class="text-caption text-grey-7">{{ $t('advanced.otherHint') }}</div></div>
       </div>
       <q-list bordered separator class="settings-list">
         <q-item>
           <q-item-section>
-            <q-item-label>检查更新</q-item-label>
-            <q-item-label caption>打开网页时是否检查更新</q-item-label>
+            <q-item-label>{{ $t('advanced.checkUpdates') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.checkUpdatesHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -430,8 +430,8 @@
 
         <q-item v-if="config.checkUpdate">
           <q-item-section>
-            <q-item-label>检查测试版更新</q-item-label>
-            <q-item-label caption>是否检查测试版更新</q-item-label>
+            <q-item-label>{{ $t('advanced.checkBeta') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.checkBetaHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -441,8 +441,8 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>数据库使用默认路径</q-item-label>
-            <q-item-label caption>使用程序所在位置下的sqlite文件夹，并忽略databaseFolderDir设置（如无必要请勿修改，更改此设置需要重启程序）</q-item-label>
+            <q-item-label>{{ $t('advanced.defaultDatabasePath') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultDatabasePathHint') }}</q-item-label>
           </q-item-section>
 
           <q-item-section avatar>
@@ -452,20 +452,20 @@
 
         <q-item>
           <q-item-section>
-            <q-item-label>封面使用默认路径</q-item-label>
-            <q-item-label caption>使用程序数据目录下的 covers 文件夹</q-item-label>
+            <q-item-label>{{ $t('advanced.defaultCoverPath') }}</q-item-label>
+            <q-item-label caption>{{ $t('advanced.defaultCoverPathHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-toggle v-model="config.coverUseDefaultPath" dense aria-label="封面使用默认路径" />
+            <q-toggle v-model="config.coverUseDefaultPath" dense :aria-label="$t('advanced.defaultCoverPath')" />
           </q-item-section>
         </q-item>
 
         <q-item v-if="!config.coverUseDefaultPath">
           <q-item-section>
-            <q-item-label>封面文件夹路径</q-item-label>
+            <q-item-label>{{ $t('advanced.coverFolder') }}</q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-input v-model="config.coverFolderDir" outlined dense hide-bottom-space required style="width: 360px; max-width: 100%;" aria-label="封面文件夹路径" />
+            <q-input v-model="config.coverFolderDir" outlined dense hide-bottom-space required style="width: 360px; max-width: 100%;" :aria-label="$t('advanced.coverFolder')" />
           </q-item-section>
         </q-item>
 
@@ -481,9 +481,9 @@
         unelevated
         icon="save"
         type="submit"
-        aria-label="保存设置"
+        :aria-label="$t('advanced.saveSettings')"
       >
-        <q-tooltip>{{ hasUnsavedChanges ? '保存修改' : '保存设置' }}</q-tooltip>
+        <q-tooltip>{{ hasUnsavedChanges ? $t('advanced.saveChanges') : $t('advanced.saveSettings') }}</q-tooltip>
       </q-btn>
     </div>
   </q-form>
@@ -491,6 +491,7 @@
 </template>
 
 <script>
+import { t } from '../../i18n'
 import NotifyMixin from '../../mixins/Notification.js'
 
 export default {
@@ -519,21 +520,26 @@ export default {
         expiresIn: 2592000,
         pageSize: 12,
       }),
-      tagLanguageOptions: [
-        { label: '简', value: 'zh-cn' },
-        { label: '繁', value: 'zh-tw' },
-        { label: '日', value: 'ja-jp' },
-        { label: 'Eng', value: 'en-us' },
-      ],
-      proxyModeOptions: [
-        { label: '直连', value: 'direct' },
-        { label: '环境变量', value: 'environment' },
-        { label: '手动代理', value: 'manual' },
-      ],
+
     }
   },
 
   computed: {
+    tagLanguageOptions () {
+      return [
+        { label: t('advanced.simplified'), value: 'zh-cn' },
+        { label: t('advanced.traditional'), value: 'zh-tw' },
+        { label: t('advanced.japanese'), value: 'ja-jp' },
+        { label: t('advanced.english'), value: 'en-us' },
+      ]
+    },
+    proxyModeOptions () {
+      return [
+        { label: t('advanced.direct'), value: 'direct' },
+        { label: t('advanced.environment'), value: 'environment' },
+        { label: t('advanced.manual'), value: 'manual' },
+      ]
+    },
     hasUnsavedChanges () {
       return this.savedConfigSnapshot !== '' && JSON.stringify(this.config) !== this.savedConfigSnapshot
     },
@@ -577,8 +583,8 @@ export default {
         .then((response) => {
           this.networkResults = response.data.results || []
           const successCount = this.networkResults.filter(item => item.ok).length
-          if (successCount === this.networkResults.length) this.showSuccNotif('联网测试全部通过')
-          else this.showWarnNotif(`联网测试通过 ${successCount}/${this.networkResults.length} 项`)
+          if (successCount === this.networkResults.length) this.showSuccNotif(t('common.networkPassed'))
+          else this.showWarnNotif(t('advanced.networkSummary', { successCount: successCount, count: this.networkResults.length }))
         })
         .catch((error) => this.showErrNotif((error.response && error.response.data.error) || error.message || error))
         .finally(() => { this.networkTestLoading = false })
@@ -615,17 +621,17 @@ export default {
 
     confirmUncensorTags () {
       this.$q.dialog({
-        title: '恢复原始标签名称',
-        message: '此操作会批量修改数据库中的标签名称，且无法自动撤销。确定继续吗？',
-        cancel: { label: '取消', flat: true },
-        ok: { label: '恢复标签', color: 'warning', flat: true },
+        title: t('advanced.restoreTags'),
+        message: t('advanced.restoreTagsPrompt'),
+        cancel: { label: t('common.cancel'), flat: true },
+        ok: { label: t('advanced.restoreTagsAction'), color: 'warning', flat: true },
       }).onOk(() => this.uncensorTags())
     },
 
     uncensorTags () {
       this.uncensorTagsLoading = true
       this.$axios.post('/api/uncensor/tags')
-        .then(() => this.showSuccNotif('标签名称已恢复'))
+        .then(() => this.showSuccNotif(t('advanced.tagsRestored')))
         .catch((error) => this.showErrNotif((error.response && error.response.data.error) || error.message || error))
         .finally(() => { this.uncensorTagsLoading = false })
     },

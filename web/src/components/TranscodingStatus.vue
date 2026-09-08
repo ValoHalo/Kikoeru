@@ -12,6 +12,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import { mapGetters } from 'vuex'
 import { ServerApi } from 'src/utils'
 
@@ -55,8 +56,8 @@ export default {
     },
 
     failureDetails () {
-      if (this.serverFailed) return this.serverStatus.error || '转码任务失败'
-      if (this.statusError) return '无法获取转码状态'
+      if (this.serverFailed) return this.serverStatus.error || t('transcodingStatus.taskFailed')
+      if (this.statusError) return t('transcodingStatus.statusUnavailable')
       return ''
     },
 
@@ -66,10 +67,10 @@ export default {
 
     showMessage () {
       if (this.serverStatus.ready) return `AAC ${this.transcodeBitRate}k`
-      if (this.serverFailed) return '转码失败'
-      if (this.statusError) return '转码状态获取失败'
-      if (this.progressPercent === null) return '等待转码'
-      return `转码 ${Math.max(0, Math.min(100, this.progressPercent)).toFixed(0)}%`
+      if (this.serverFailed) return t('transcodingStatus.failed')
+      if (this.statusError) return t('transcodingStatus.statusFailed')
+      if (this.progressPercent === null) return t('transcodingStatus.waiting')
+      return t('transcodingStatus.progress', { value: Math.max(0, Math.min(100, this.progressPercent)).toFixed(0) })
     },
 
     color () {

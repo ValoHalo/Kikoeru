@@ -3,7 +3,7 @@
       <q-dialog v-model="showReviewDialog" @hide="closeDialog">
         <q-card>
           <q-card-section class="q-pb-sm">
-            <div class="text-body1">我的评论</div>
+            <div class="text-body1">{{ $t('writeReview.title') }}</div>
           </q-card-section>
 
           <q-card-section class="q-pt-none">
@@ -27,11 +27,11 @@
               color="white"
               text-color="primary"
               :options="[
-                {label: '想听', value: 'marked'},
-                {label: '在听', value: 'listening'},
-                {label: '听过', value: 'listened'},
-                {label: '重听', value: 'replay'},
-                {label: '搁置', value: 'postponed'}
+                {label: $t('writeReview.marked'), value: 'marked'},
+                {label: $t('writeReview.listening'), value: 'listening'},
+                {label: $t('writeReview.listened'), value: 'listened'},
+                {label: $t('writeReview.replay'), value: 'replay'},
+                {label: $t('writeReview.postponed'), value: 'postponed'}
               ]"
             />
           </q-card-section>
@@ -48,12 +48,12 @@
           
           <div class="row justify-between">
             <q-card-actions  class="text-red">
-              <q-btn flat label="删除标记" v-close-popup @click="deleteConfirm = true" />
+              <q-btn flat :label="$t('writeReview.deleteMark')" v-close-popup @click="deleteConfirm = true" />
             </q-card-actions>
 
             <q-card-actions align="right" class="text-primary">
-              <q-btn flat label="确定" v-close-popup @click="submitReview()" />
-              <q-btn flat label="取消" v-close-popup @click="closeDialog()" />
+              <q-btn flat :label="$t('common.ok')" v-close-popup @click="submitReview()" />
+              <q-btn flat :label="$t('common.cancel')" v-close-popup @click="closeDialog()" />
             </q-card-actions>
           </div>
         </q-card>
@@ -62,12 +62,12 @@
       <q-dialog v-model="deleteConfirm" persistent transition-show="scale" transition-hide="scale">
         <q-card class="bg-teal text-white" style="width: 300px">
           <q-card-section>
-            <div class="text-h6">确定要删除标记吗</div>
+            <div class="text-h6">{{ $t('writeReview.deletePrompt') }}</div>
           </q-card-section>
 
           <q-card-actions align="right" class="text-teal">
-              <q-btn flat label="确定" v-close-popup @click="deleteReview()" />
-              <q-btn flat label="取消" v-close-popup @click="closeDialog()"/>
+              <q-btn flat :label="$t('common.ok')" v-close-popup @click="deleteReview()" />
+              <q-btn flat :label="$t('common.cancel')" v-close-popup @click="closeDialog()"/>
           </q-card-actions>
         </q-card>
       </q-dialog>

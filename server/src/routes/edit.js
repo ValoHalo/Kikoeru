@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -15,7 +16,7 @@ const accessControl_1 = require("../auth/accessControl");
 const router = express_1.default.Router();
 router.use(accessControl_1.requireAdministrator);
 const upload = (0, multer_1.default)({ dest: os_1.default.tmpdir() });
-router.post('/work/:id', (0, express_validator_1.param)('id').isInt(), async function (req, res) {
+router.post('/work/:id', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async function (req, res) {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = parseInt(req.params.id);
@@ -26,17 +27,17 @@ router.post('/work/:id', (0, express_validator_1.param)('id').isInt(), async fun
     }
     catch (err) {
         console.error(err);
-        res.status(500).send({ error: "修改作品meta失败：" + err.message });
+        res.status(500).send({ error: t('edit.metadataFailed', { message: err.message }) });
     }
 });
-router.post('/img/:id', (0, express_validator_1.param)('id').isInt(), upload.single('file'), async (req, res) => {
+router.post('/img/:id', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), upload.single('file'), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
     const imgFile = req.file;
     const coverType = req.body.type;
     if (imgFile.mimetype != "image/jpeg") {
-        res.status(500).send({ success: false, message: "图像文件非jpeg，无法保存自定义封面，目前只支持jpeg格式的封面" });
+        res.status(500).send({ success: false, message: t('edit.jpegRequired') });
         return;
     }
     const type = coverType || 'main';
@@ -49,7 +50,7 @@ router.post('/img/:id', (0, express_validator_1.param)('id').isInt(), upload.sin
     console.log("work edit img: ", work_id, coverType, imgFile);
     res.send({ success: true });
 });
-router.post('/recover/img/:id', (0, express_validator_1.param)('id').isInt(), upload.single('file'), async (req, res) => {
+router.post('/recover/img/:id', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), upload.single('file'), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
@@ -63,7 +64,7 @@ router.post('/recover/img/:id', (0, express_validator_1.param)('id').isInt(), up
         res.send({ success: true });
     }
     else {
-        res.send({ success: false, message: "origin cover not exists" });
+        res.send({ success: false, message: t('edit.coverMissing') });
     }
 });
 exports.default = router;

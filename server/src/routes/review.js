@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -46,7 +47,7 @@ const validate_1 = require("./utils/validate");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
 const { prepareWorks } = require('./utils/workVisibility');
-router.get('/', (0, express_validator_1.query)('page').optional({ nullable: true }).isInt(), (0, express_validator_1.query)('sort').optional({ nullable: true }).isIn(['desc', 'asc']), (0, express_validator_1.query)('seed').optional({ nullable: true }).isInt(), (0, express_validator_1.query)('filter').optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']), async (req, res) => {
+router.get('/', (0, express_validator_1.query)('page', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt(), (0, express_validator_1.query)('sort', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isIn(['desc', 'asc']), (0, express_validator_1.query)('seed', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt(), (0, express_validator_1.query)('filter', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const currentPage = parseInt(req.query.page) || 1;
@@ -69,11 +70,11 @@ router.get('/', (0, express_validator_1.query)('page').optional({ nullable: true
         });
     }
     catch (err) {
-        res.status(500).send({ error: '查询过程中出错' });
+        res.status(500).send({ error: t('review.queryFailed') });
         console.error(err);
     }
 });
-router.put('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.body)('work_id').isInt(), (0, express_validator_1.body)('rating').optional({ nullable: true }).isInt(), (0, express_validator_1.body)('progress').optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']), (0, express_validator_1.body)('starOnly').optional({ nullable: true }).isBoolean(), (0, express_validator_1.body)('progressOnly').optional({ nullable: true }).isBoolean(), (req, res) => {
+router.put('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.body)('work_id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.body)('rating', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt(), (0, express_validator_1.body)('progress', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']), (0, express_validator_1.body)('starOnly', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isBoolean(), (0, express_validator_1.body)('progressOnly', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isBoolean(), (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
@@ -88,23 +89,23 @@ router.put('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator
     db.updateUserReview(username, req.body.work_id, req.body.rating, req.body.review_text, req.body.progress, starOnly, progressOnly)
         .then(() => {
         if (progressOnly) {
-            res.send({ message: '更新进度成功' });
+            res.send({ message: t('review.progressSaved') });
         }
         else {
-            res.send({ message: '评价成功' });
+            res.send({ message: t('review.saved') });
         }
     }).catch((err) => {
-        res.status(500).send({ error: '评价失败，服务器错误' });
+        res.status(500).send({ error: t('review.saveFailed') });
         console.error(err);
     });
 });
-router.delete('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.query)('work_id').isInt(), (req, res, next) => {
+router.delete('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.query)('work_id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
     db.deleteUserReview(username, Number(req.query.work_id))
         .then(() => {
-        res.send({ message: '删除标记成功' });
+        res.send({ message: t('review.deleted') });
     }).catch((err) => next(err));
 });
 exports.default = router;

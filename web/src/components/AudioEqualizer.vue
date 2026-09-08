@@ -1,12 +1,12 @@
 <template>
   <div class="container">
-    <div class="text-h5">均衡器</div>
+    <div class="text-h5">{{ $t('audioEqualizer.title') }}</div>
     <q-toggle
       :disable="disable"
       v-model="isFlipLeftRightChannel"
       color="primary"
       :icon="isFlipLeftRightChannel ? 'sync_alt' : 'headphones'"
-      label="左右声道交换"
+      :label="$t('audioEqualizer.swapChannels')"
     />
   </div>
 </template>

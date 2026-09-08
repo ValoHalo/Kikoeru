@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isAdministratorRequest = isAdministratorRequest;
@@ -23,8 +24,8 @@ function requireAdministrator(req, res, next) {
     }
     res.status(403).send({
         error: config.auth
-            ? "只有管理员可以执行该操作."
-            : "危险写操作已禁用；请启用鉴权，或显式允许未鉴权写操作.",
+            ? t('accessControl.adminRequired')
+            : t('accessControl.writeDisabled'),
     });
 }
 
@@ -34,7 +35,7 @@ function requireAuthenticatedWrite(req, res, next) {
         next();
         return;
     }
-    res.status(403).send({ error: "该写操作要求登录，或由管理员显式允许未鉴权写入." });
+    res.status(403).send({ error: t('accessControl.loginRequired') });
 }
 
 function isAuthenticatedWriteRequest(req, config) {

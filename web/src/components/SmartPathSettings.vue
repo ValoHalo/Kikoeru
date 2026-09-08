@@ -1,8 +1,8 @@
 <template>
   <q-item tag="label" class="smart-path-row">
     <q-item-section>
-      <q-item-label>智能路径</q-item-label>
-      <q-item-label caption>打开作品后，自动进入包含音频的文件夹。</q-item-label>
+      <q-item-label>{{ $t('smartPathSettings.title') }}</q-item-label>
+      <q-item-label caption>{{ $t('smartPathSettings.description') }}</q-item-label>
     </q-item-section>
     <q-item-section side class="smart-path-control">
       <q-toggle :model-value="enabled" color="primary" @update:model-value="$emit('update:enabled', $event)" />
@@ -11,8 +11,8 @@
 
   <q-item tag="label" class="smart-path-row" :disable="!enabled">
     <q-item-section>
-      <q-item-label>效果音偏好</q-item-label>
-      <q-item-label caption>优先进入效果音目录。</q-item-label>
+      <q-item-label>{{ $t('smartPathSettings.preferEffects') }}</q-item-label>
+      <q-item-label caption>{{ $t('smartPathSettings.preferEffectsHint') }}</q-item-label>
     </q-item-section>
     <q-item-section side class="smart-path-control">
       <q-toggle :model-value="preferEffect" :disable="!enabled" color="primary" @update:model-value="$emit('update:preferEffect', $event)" />
@@ -21,20 +21,20 @@
 
   <q-item class="smart-path-row" :disable="!enabled">
     <q-item-section>
-      <q-item-label>音频类型优先级</q-item-label>
-      <q-item-label caption>优先进入包含靠前格式的音频目录。</q-item-label>
+      <q-item-label>{{ $t('smartPathSettings.formatPriority') }}</q-item-label>
+      <q-item-label caption>{{ $t('smartPathSettings.formatPriorityHint') }}</q-item-label>
     </q-item-section>
     <q-item-section side class="smart-path-control smart-path-control--order">
-      <q-btn flat dense no-caps icon-right="sort" :disable="!enabled" :label="audioTypeLabel" aria-label="调整音频类型优先级" @click="showAudioTypeDialog = true" />
+      <q-btn flat dense no-caps icon-right="sort" :disable="!enabled" :label="audioTypeLabel" :aria-label="$t('smartPathSettings.reorderFormats')" @click="showAudioTypeDialog = true" />
     </q-item-section>
   </q-item>
 
   <q-dialog v-model="showAudioTypeDialog">
     <q-card class="smart-path-dialog">
       <q-card-section class="row items-center no-wrap">
-        <div class="text-subtitle1 text-weight-medium">音频类型优先级</div>
+        <div class="text-subtitle1 text-weight-medium">{{ $t('smartPathSettings.formatPriority') }}</div>
         <q-space />
-        <q-btn v-close-popup flat round dense icon="close" aria-label="关闭" />
+        <q-btn v-close-popup flat round dense icon="close" :aria-label="$t('common.close')" />
       </q-card-section>
       <q-separator />
       <q-list separator>
@@ -43,14 +43,14 @@
           <q-item-section><q-item-label class="text-weight-medium">{{ type }}</q-item-label></q-item-section>
           <q-item-section side>
             <div class="row no-wrap">
-              <q-btn flat round dense icon="arrow_upward" :disable="index === 0" :aria-label="`${type} 上移`" @click="moveType(index, -1)" />
-              <q-btn flat round dense icon="arrow_downward" :disable="index === orderedTypes.length - 1" :aria-label="`${type} 下移`" @click="moveType(index, 1)" />
+              <q-btn flat round dense icon="arrow_upward" :disable="index === 0" :aria-label="$t('smartPathSettings.moveUp', { type: type })" @click="moveType(index, -1)" />
+              <q-btn flat round dense icon="arrow_downward" :disable="index === orderedTypes.length - 1" :aria-label="$t('smartPathSettings.moveDown', { type: type })" @click="moveType(index, 1)" />
             </div>
           </q-item-section>
         </q-item>
       </q-list>
       <q-separator />
-      <q-card-actions align="right"><q-btn v-close-popup flat no-caps color="primary" label="完成" /></q-card-actions>
+      <q-card-actions align="right"><q-btn v-close-popup flat no-caps color="primary" :label="$t('smartPathSettings.done')" /></q-card-actions>
     </q-card>
   </q-dialog>
 </template>

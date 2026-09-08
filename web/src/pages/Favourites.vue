@@ -1,16 +1,16 @@
 <template>
   <q-page padding class="favourites-page">
     <q-tabs :model-value="mode" dense outside-arrows mobile-arrows align="left" active-color="primary" indicator-color="primary" class="favourites-tabs" @update:model-value="changeMode">
-      <q-tab name="histroy" icon="history" label="播放历史" />
-      <q-tab name="review" icon="star" label="我的评价" />
-      <q-tab name="progress" icon="headphones" label="我的进度" />
-      <q-tab name="archived" icon="archive" label="已归档" />
-      <q-tab name="folder" icon="folder_special" label="作品分组" />
+      <q-tab name="histroy" icon="history" :label="$t('favourites.history')" />
+      <q-tab name="review" icon="star" :label="$t('common.myRating')" />
+      <q-tab name="progress" icon="headphones" :label="$t('favourites.progress')" />
+      <q-tab name="archived" icon="archive" :label="$t('favourites.archived')" />
+      <q-tab name="folder" icon="folder_special" :label="$t('common.collections')" />
     </q-tabs>
 
     <div v-if="!['histroy', 'folder', 'archived'].includes(mode)" class="row justify-end q-mt-md">
-      <q-select dense outlined v-model="sortBy" :options="sortOptions" />
-      <q-btn :disable="sortButtonDisabled" flat round dense class="q-ml-sm" :icon="direction ? 'arrow_downward' : 'arrow_upward'" aria-label="切换排序方向" @click="switchSortMode" />
+      <q-select dense outlined v-model="sortBy" :options="sortOptions" :display-value="sortOptions.find(option => option.order === sortBy.order)?.label" />
+      <q-btn :disable="sortButtonDisabled" flat round dense class="q-ml-sm" :icon="direction ? 'arrow_downward' : 'arrow_upward'" :aria-label="$t('favourites.sortDirection')" @click="switchSortMode" />
     </div>
 
     <div v-if="mode === 'progress'" class="q-pt-md">
@@ -33,27 +33,27 @@
     <div v-else class="row q-col-gutter-md q-pt-md">
       <div v-if="!selectedCollection || $q.screen.gt.sm" class="col-12 col-md-4">
         <div class="row items-center q-mb-sm">
-          <div class="text-subtitle1 text-weight-medium">作品分组</div>
+          <div class="text-subtitle1 text-weight-medium">{{ $t('common.collections') }}</div>
           <q-space />
-          <q-btn flat round dense icon="add" aria-label="新建作品分组" @click="openCreateDialog"><q-tooltip>新建分组</q-tooltip></q-btn>
-          <q-btn flat round dense icon="refresh" aria-label="刷新作品分组" :loading="collectionLoading" @click="loadCollections"><q-tooltip>刷新</q-tooltip></q-btn>
+          <q-btn flat round dense icon="add" :aria-label="$t('favourites.newCollection')" @click="openCreateDialog"><q-tooltip>{{ $t('favourites.createCollection') }}</q-tooltip></q-btn>
+          <q-btn flat round dense icon="refresh" :aria-label="$t('favourites.refreshCollections')" :loading="collectionLoading" @click="loadCollections"><q-tooltip>{{ $t('common.refresh') }}</q-tooltip></q-btn>
         </div>
         <q-list v-if="collections.length" bordered separator>
           <q-item v-for="collection in collections" :key="collection.id" clickable v-ripple :active="selectedCollection && selectedCollection.id === collection.id" active-class="bg-primary text-white" @click="openCollection(collection.id)">
             <q-item-section avatar><q-icon name="folder" /></q-item-section>
-            <q-item-section><q-item-label lines="1">{{ collection.name }}</q-item-label><q-item-label caption :class="{ 'text-white': selectedCollection && selectedCollection.id === collection.id }">{{ collection.item_count }} 个作品</q-item-label></q-item-section>
+            <q-item-section><q-item-label lines="1">{{ collection.name }}</q-item-label><q-item-label caption :class="{ 'text-white': selectedCollection && selectedCollection.id === collection.id }">{{ $t('favourites.workCount', { count: collection.item_count }) }}</q-item-label></q-item-section>
             <q-item-section side><q-icon name="chevron_right" :color="selectedCollection && selectedCollection.id === collection.id ? 'white' : undefined" /></q-item-section>
           </q-item>
         </q-list>
-        <div v-else-if="!collectionLoading" class="empty-state text-center text-grey q-pa-xl"><q-icon name="folder_special" size="42px" class="q-mb-sm" /><div>还没有作品分组</div></div>
+        <div v-else-if="!collectionLoading" class="empty-state text-center text-grey q-pa-xl"><q-icon name="folder_special" size="42px" class="q-mb-sm" /><div>{{ $t('favourites.noCollections') }}</div></div>
       </div>
 
       <div v-if="selectedCollection" class="col-12 col-md-8">
         <div class="row items-center no-wrap q-mb-sm">
-          <q-btn v-if="$q.screen.lt.md" flat round dense icon="arrow_back" aria-label="返回分组列表" @click="closeCollection" />
+          <q-btn v-if="$q.screen.lt.md" flat round dense icon="arrow_back" :aria-label="$t('favourites.backToCollections')" @click="closeCollection" />
           <div class="col text-subtitle1 text-weight-medium ellipsis q-ml-sm">{{ selectedCollection.name }}</div>
-          <q-btn flat round dense icon="more_vert" aria-label="更多分组操作">
-            <q-menu><q-list dense style="min-width: 140px"><q-item clickable v-close-popup @click="openRenameDialog"><q-item-section avatar><q-icon name="edit" /></q-item-section><q-item-section>重命名</q-item-section></q-item><q-item clickable v-close-popup class="text-negative" @click="confirmDeleteCollection"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>删除</q-item-section></q-item></q-list></q-menu>
+          <q-btn flat round dense icon="more_vert" :aria-label="$t('favourites.moreActions')">
+            <q-menu><q-list dense style="min-width: 140px"><q-item clickable v-close-popup @click="openRenameDialog"><q-item-section avatar><q-icon name="edit" /></q-item-section><q-item-section>{{ $t('common.rename') }}</q-item-section></q-item><q-item clickable v-close-popup class="text-negative" @click="confirmDeleteCollection"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>{{ $t('common.delete') }}</q-item-section></q-item></q-list></q-menu>
           </q-btn>
         </div>
 
@@ -65,25 +65,26 @@
                 <q-item-section>
                   <q-item-label lines="2"><router-link :to="`/work/${work.id}`" class="text-primary">{{ work.title }}</router-link></q-item-label>
                   <q-item-label caption>{{ work.circle && work.circle.name }}</q-item-label>
-                  <q-badge v-if="work.archived_at" color="grey-7" label="已归档" class="collection-archive-badge" />
+                  <q-badge v-if="work.archived_at" color="grey-7" :label="$t('favourites.archived')" class="collection-archive-badge" />
                 </q-item-section>
-                <q-item-section side class="collection-handle"><q-icon name="drag_handle" /><q-tooltip>拖动排序</q-tooltip></q-item-section>
-                <q-item-section side><q-btn flat round dense icon="close" color="negative" aria-label="从分组移除" @click="removeCollectionItem(work.id)" /></q-item-section>
+                <q-item-section side class="collection-handle"><q-icon name="drag_handle" /><q-tooltip>{{ $t('favourites.reorder') }}</q-tooltip></q-item-section>
+                <q-item-section side><q-btn flat round dense icon="close" color="negative" :aria-label="$t('favourites.removeFromCollection')" @click="removeCollectionItem(work.id)" /></q-item-section>
               </q-item>
             </template>
           </draggable>
         </q-list>
-        <div v-else class="empty-state text-center text-grey q-pa-xl">此分组还没有作品</div>
+        <div v-else class="empty-state text-center text-grey q-pa-xl">{{ $t('favourites.emptyCollection') }}</div>
       </div>
-      <div v-else-if="$q.screen.gt.sm" class="col-md-8 empty-state text-center text-grey q-pa-xl">选择一个作品分组</div>
+      <div v-else-if="$q.screen.gt.sm" class="col-md-8 empty-state text-center text-grey q-pa-xl">{{ $t('favourites.selectCollection') }}</div>
     </div>
 
-    <q-dialog v-model="showCreateDialog"><q-card class="collection-dialog"><q-form @submit.prevent="createCollection"><q-card-section><div class="text-h6">新建作品分组</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="collectionName" autofocus outlined maxlength="80" label="分组名称" :rules="[value => Boolean(value) || '请输入名称']" /></q-card-section><q-card-actions align="right"><q-btn flat label="取消" v-close-popup /><q-btn flat color="primary" label="创建" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
-    <q-dialog v-model="showRenameDialog"><q-card class="collection-dialog"><q-form @submit.prevent="renameCollection"><q-card-section><div class="text-h6">重命名作品分组</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="collectionName" autofocus outlined maxlength="80" label="分组名称" :rules="[value => Boolean(value) || '请输入名称']" /></q-card-section><q-card-actions align="right"><q-btn flat label="取消" v-close-popup /><q-btn flat color="primary" label="保存" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
+    <q-dialog v-model="showCreateDialog"><q-card class="collection-dialog"><q-form @submit.prevent="createCollection"><q-card-section><div class="text-h6">{{ $t('favourites.newCollection') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="collectionName" autofocus outlined maxlength="80" :label="$t('favourites.collectionName')" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.create')" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
+    <q-dialog v-model="showRenameDialog"><q-card class="collection-dialog"><q-form @submit.prevent="renameCollection"><q-card-section><div class="text-h6">{{ $t('favourites.renameCollection') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="collectionName" autofocus outlined maxlength="80" :label="$t('favourites.collectionName')" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.save')" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
   </q-page>
 </template>
 
 <script>
+import { t } from '../i18n'
 import draggable from 'vuedraggable'
 import FavListItem from 'components/FavListItem.vue'
 import NotifyMixin from '../mixins/Notification.js'
@@ -100,33 +101,38 @@ export default {
     return {
       mode: 'histroy', progressFilter: 'marked', works: [], loading: false, stopLoad: false,
       pagination: { currentPage: 0, pageSize: 12, totalCount: 0 }, sortMode: 'desc',
-      sortBy: { label: '标记时间', order: 'updated_at' },
-      sortOptions: [
-        { label: '标记时间', order: 'updated_at' }, { label: '评价', order: 'userRating' },
-        { label: '发布时间', order: 'release' }, { label: '评论数量', order: 'review_count' },
-        { label: '售出数量', order: 'dl_count' }, { label: '全年龄新作', order: 'allage' },
-        { label: '18禁新作', order: 'nsfw' }
-      ],
-      progressOptions: [
-        { label: '想听', value: 'marked' }, { label: '在听', value: 'listening' },
-        { label: '听过', value: 'listened' }, { label: '重听', value: 'replay' },
-        { label: '搁置', value: 'postponed' }
-      ],
+      sortBy: { order: 'updated_at' },
+
       collections: [], selectedCollection: null, collectionWorks: [], collectionLoading: false,
       showCreateDialog: false, showRenameDialog: false, collectionName: ''
     }
   },
   computed: {
+    sortOptions () {
+      return [
+        { label: t('favourites.markedAt'), order: 'updated_at' }, { label: t('favourites.rating'), order: 'userRating' },
+        { label: t('favourites.releasedAt'), order: 'release' }, { label: t('favourites.reviewCount'), order: 'review_count' },
+        { label: t('favourites.sales'), order: 'dl_count' }, { label: t('favourites.newAllAges'), order: 'allage' },
+        { label: t('favourites.newAdult'), order: 'nsfw' }
+      ]
+    },
+    progressOptions () {
+      return [
+        { label: t('favourites.marked'), value: 'marked' }, { label: t('favourites.listening'), value: 'listening' },
+        { label: t('favourites.listened'), value: 'listened' }, { label: t('favourites.replay'), value: 'replay' },
+        { label: t('favourites.postponed'), value: 'postponed' }
+      ]
+    },
     direction () { return this.sortMode === 'desc' },
     sortButtonDisabled () { return this.sortBy.order === 'allage' || this.sortBy.order === 'nsfw' },
     emptyMessage () {
-      if (this.mode === 'archived') return '还没有归档作品'
-      if (this.mode === 'histroy') return '播放过的作品会出现在这里'
-      return '在作品页面标星或标记进度后，作品会出现在这里'
+      if (this.mode === 'archived') return t('favourites.noArchived')
+      if (this.mode === 'histroy') return t('favourites.noHistory')
+      return t('favourites.noReviews')
     }
   },
   watch: {
-    sortBy (value) { localStorage.sortByFavourites = JSON.stringify(value); this.reset() },
+    sortBy (value) { localStorage.sortByFavourites = JSON.stringify({ order: value.order }); this.reset() },
     sortMode () { this.reset() },
     route () { this.mode = this.route; this.reset() },
     progress () { this.progressFilter = this.progress; this.reset() }
@@ -165,7 +171,7 @@ export default {
         this.pagination = response.data.pagination
         if (this.works.length >= Number(this.pagination.totalCount)) this.stopLoad = true
       } catch (error) {
-        this.showErrNotif(this.errorMessage(error, '读取作品失败'))
+        this.showErrNotif(this.errorMessage(error, t('favourites.loadWorksFailed')))
         this.stopLoad = true
       } finally { this.loading = false }
     },
@@ -179,7 +185,7 @@ export default {
           if (stillExists) await this.openCollection(this.selectedCollection.id)
           else this.closeCollection()
         }
-      } catch (error) { this.showErrNotif(this.errorMessage(error, '读取作品分组失败')) }
+      } catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.loadCollectionsFailed'))) }
       finally { this.collectionLoading = false }
     },
     async openCollection (id) {
@@ -187,7 +193,7 @@ export default {
         const response = await this.$axios.get(`/api/library/collections/${id}`)
         this.selectedCollection = response.data.collection
         this.collectionWorks = response.data.items || []
-      } catch (error) { this.showErrNotif(this.errorMessage(error, '读取作品分组失败')) }
+      } catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.loadCollectionsFailed'))) }
     },
     closeCollection () { this.selectedCollection = null; this.collectionWorks = [] },
     openCreateDialog () { this.collectionName = ''; this.showCreateDialog = true },
@@ -199,7 +205,7 @@ export default {
         this.showCreateDialog = false
         await this.loadCollections()
         await this.openCollection(response.data.id)
-      } catch (error) { this.showErrNotif(this.errorMessage(error, '创建作品分组失败')) }
+      } catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.createFailed'))) }
     },
     async renameCollection () {
       if (!this.collectionName || !this.selectedCollection) return
@@ -207,23 +213,23 @@ export default {
         await this.$axios.patch(`/api/library/collections/${this.selectedCollection.id}`, { name: this.collectionName })
         this.showRenameDialog = false
         await this.loadCollections()
-      } catch (error) { this.showErrNotif(this.errorMessage(error, '重命名作品分组失败')) }
+      } catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.renameFailed'))) }
     },
-    confirmDeleteCollection () { this.$q.dialog({ title: '删除作品分组', message: `确定删除“${this.selectedCollection.name}”吗？作品本身不会被删除。`, cancel: '取消', ok: { label: '删除', color: 'negative' } }).onOk(() => this.deleteCollection()) },
+    confirmDeleteCollection () { this.$q.dialog({ title: t('favourites.deleteCollection'), message: t('favourites.deletePrompt', { name: this.selectedCollection.name }), cancel: t('common.cancel'), ok: { label: t('common.delete'), color: 'negative' } }).onOk(() => this.deleteCollection()) },
     async deleteCollection () {
       try { await this.$axios.delete(`/api/library/collections/${this.selectedCollection.id}`); this.closeCollection(); await this.loadCollections() }
-      catch (error) { this.showErrNotif(this.errorMessage(error, '删除作品分组失败')) }
+      catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.deleteFailed'))) }
     },
     async removeCollectionItem (workId) {
       try {
         await this.$axios.delete(`/api/library/collections/${this.selectedCollection.id}/items/${workId}`)
         this.collectionWorks = this.collectionWorks.filter(item => Number(item.id) !== Number(workId))
         await this.loadCollections()
-      } catch (error) { this.showErrNotif(this.errorMessage(error, '从分组移除作品失败')) }
+      } catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.removeFailed'))) }
     },
     async saveCollectionOrder () {
       try { await this.$axios.put(`/api/library/collections/${this.selectedCollection.id}/items/order`, { workIds: this.collectionWorks.map(item => Number(item.id)) }) }
-      catch (error) { this.showErrNotif(this.errorMessage(error, '保存作品顺序失败')); await this.openCollection(this.selectedCollection.id) }
+      catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.reorderFailed'))); await this.openCollection(this.selectedCollection.id) }
     }
   }
 }

@@ -1,7 +1,7 @@
 <template>
   <q-card class="image-editor-card">
     <q-card-section>
-      <div class="text-h6">图像编辑器</div>
+      <div class="text-h6">{{ $t('imageEditor.title') }}</div>
     </q-card-section>
 
     <q-card-section class="canvas-container">
@@ -22,7 +22,7 @@
 
     <q-card-actions class="row items-center">
       <div class="col q-px-md">
-        <span>调整裁剪区域</span>
+        <span>{{ $t('imageEditor.crop') }}</span>
         <q-slider
           v-model="offset"
           :min="0"
@@ -31,14 +31,15 @@
         />
       </div>
       <div class="col-auto">
-        <q-btn color="primary" label="确认" :loading="saving" @click="confirmCrop" />
-        <q-btn color="negative" label="取消" :disable="saving" v-close-popup />
+        <q-btn color="primary" :label="$t('common.confirm')" :loading="saving" @click="confirmCrop" />
+        <q-btn color="negative" :label="$t('common.cancel')" :disable="saving" v-close-popup />
       </div>
     </q-card-actions>
   </q-card>
 </template>
 
 <script>
+import { t } from '../i18n'
 import NotifyMixin from '../mixins/Notification.js'
 import { ServerApi } from 'src/utils'
 
@@ -63,6 +64,14 @@ export default {
     }
   },
 
+  computed: {
+    coverTypeOptions () {
+      return [
+        { label: t('imageEditor.mainCover'), value: 'main' },
+        { label: t('imageEditor.thumbnail'), value: 'sam' }
+      ]
+    },
+  },
   data () {
     return {
       saving: false,
@@ -76,10 +85,6 @@ export default {
       context: null,
       resizeObserver: null,
       coverType: 'main',
-      coverTypeOptions: [
-        { label: '主封面', value: 'main' },
-        { label: '缩略图', value: 'sam' }
-      ]
     }
   },
 
@@ -108,7 +113,7 @@ export default {
       this.updateCropDimensions()
       this.drawCropPreview()
     }
-    image.onerror = () => this.showErrNotif('无法加载图像，请检查文件是否仍然存在')
+    image.onerror = () => this.showErrNotif(t('imageEditor.loadFailed'))
 
     if (typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(() => this.drawCropPreview())
@@ -189,7 +194,7 @@ export default {
 
     async confirmCrop () {
       if (!this.image || this.destinationWidth <= 0 || this.destinationHeight <= 0) {
-        this.showErrNotif('图像尚未加载完成')
+        this.showErrNotif(t('imageEditor.imageNotReady'))
         return
       }
 
@@ -223,14 +228,14 @@ export default {
           output.toDataURL('image/jpeg', 1),
           this.coverType
         )
-        if (!result.success) throw new Error(result.message || '服务器未确认封面更新成功')
-        this.showSuccNotif('封面更新成功')
+        if (!result.success) throw new Error(result.message || t('imageEditor.saveUnconfirmed'))
+        this.showSuccNotif(t('imageEditor.saved'))
         this.$emit('saved')
       } catch (error) {
         const message = error.response && error.response.data
           ? error.response.data.error || error.response.data.message
           : error.message
-        this.showErrNotif(`更新封面失败: ${message || error}`)
+        this.showErrNotif(t('imageEditor.saveFailed', { value: message || error }))
       } finally {
         this.saving = false
       }

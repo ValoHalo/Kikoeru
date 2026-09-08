@@ -34,7 +34,7 @@ function applyNetworkConfig(requestConfig = {}, networkConfig = config) {
     if (mode === PROXY_MODES.MANUAL) {
         const port = Number(networkConfig.httpProxyPort);
         if (!Number.isInteger(port) || port < 1 || port > 65535) {
-            throw new Error('手动代理端口必须是 1 到 65535 之间的整数');
+            throw new Error(require('../i18n').t('config.proxyPortInvalid'));
         }
         const tunnelOptions = {
             proxy: {

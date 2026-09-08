@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -46,12 +47,12 @@ const accessControl_1 = require("../auth/accessControl");
 const token_1 = require("../auth/token");
 const router = express_1.default.Router();
 router.post('/me', [
-    (0, express_validator_1.check)('name')
+    (0, express_validator_1.check)('name', (_value, { path }) => t('validation.invalidValue', { field: path }))
         .isLength({ min: 5 })
-        .withMessage('用户名长度至少为 5'),
-    (0, express_validator_1.check)('password')
+        .withMessage(() => t('auth.usernameLength')),
+    (0, express_validator_1.check)('password', (_value, { path }) => t('validation.invalidValue', { field: path }))
         .isLength({ min: 5 })
-        .withMessage('密码长度至少为 5')
+        .withMessage(() => t('auth.passwordLength'))
 ], (req, res) => {
     const errors = (0, express_validator_1.validationResult)(req);
     if (!errors.isEmpty()) {
@@ -66,7 +67,7 @@ router.post('/me', [
         .then((user) => {
         if (!user) {
             res.set("WWW-Authenticate", "Bearer realm=\"Authorization Required\"");
-            res.status(401).send({ error: '用户名或密码错误.' });
+            res.status(401).send({ error: t('auth.invalidCredentials') });
         }
         else {
             const token = (0, utils_1.signToken)(user);
@@ -76,7 +77,7 @@ router.post('/me', [
     })
         .catch((err) => {
         console.error(err);
-        res.status(500).send({ error: '服务器错误' });
+        res.status(500).send({ error: t('auth.serverError') });
     });
 });
 router.post('/logout', (_req, res) => {

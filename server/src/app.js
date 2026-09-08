@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 "use strict";
+const { t } = require('./i18n');
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -93,16 +94,16 @@ function makeApp() {
         }
         else if (err.code === 'SQLITE_ERROR') {
             if (err.message.indexOf('no such table') !== -1) {
-                res.status(500).send({ error: '数据库结构尚未建立，请先执行扫描.' });
+                res.status(500).send({ error: t('app.schemaMissing') });
             }
             else {
-                res.status(500).send({ error: '数据库错误.' });
+                res.status(500).send({ error: t('app.databaseError') });
             }
         }
         else {
             console.error(new Date().toJSON(), 'Kikoeru log:', err);
             if (process.env.NODE_ENV === 'production' || config_1.config.production) {
-                res.status(500).send({ error: '服务器错误' });
+                res.status(500).send({ error: t('app.serverError') });
             }
             else {
                 res.status(500).send({ error: err.message || err });

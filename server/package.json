@@ -79,6 +79,7 @@
     "express": "^4.17.1",
     "express-jwt": "^6.0.0",
     "express-validator": "^6.10.1",
+    "i18next": "26.4.2",
     "iconv-lite": "^0.6.3",
     "jschardet": "^3.0.0",
     "jsonwebtoken": "^8.5.1",

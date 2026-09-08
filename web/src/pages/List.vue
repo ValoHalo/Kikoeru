@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="text-h5 text-weight-regular q-ma-md">
-      All {{restrict}}s
+      {{ $t(`list.${restrict}.title`) }}
     </div>
 
     <div class="row justify-center q-pb-xl q-pt-none">
       <div class="col-11">
-        <q-input dense rounded outlined v-model="keyword" :placeholder="`Search for a ${restrict}...`" class="q-mb-md">
+        <q-input dense rounded outlined v-model="keyword" :placeholder="$t(`list.${restrict}.search`)" class="q-mb-md">
           <template v-slot:append>
             <q-icon v-if="keyword === ''" name="search" />
             <q-icon v-else name="clear" class="cursor-pointer" @click="keyword = ''" />

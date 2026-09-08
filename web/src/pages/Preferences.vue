@@ -1,23 +1,27 @@
 <template>
   <q-page class="preferences-page q-pa-md">
     <header class="preferences-heading">
-      <div class="text-h5">设置</div>
-      <div class="text-caption text-grey-7">这些选项只影响当前浏览器，不会修改服务器配置。</div>
+      <div class="text-h5">{{ $t('common.settings') }}</div>
+      <div class="text-caption text-grey-7">{{ $t('preferences.description') }}</div>
     </header>
 
     <section class="preferences-section" aria-labelledby="appearance-settings-title">
       <div class="preferences-section__heading">
         <q-icon name="palette" size="22px" />
         <div>
-          <div id="appearance-settings-title" class="text-subtitle1 text-weight-medium">一般设置</div>
-          <div class="text-caption text-grey-7">控制界面主题与作品库在这台设备上的显示方式。</div>
+          <div id="appearance-settings-title" class="text-subtitle1 text-weight-medium">{{ $t('preferences.general') }}</div>
+          <div class="text-caption text-grey-7">{{ $t('preferences.generalHint') }}</div>
         </div>
       </div>
       <q-list bordered separator class="preferences-list">
         <q-item class="preference-row">
+          <q-item-section><q-item-label>{{ $t('common.interfaceLanguage') }}</q-item-label></q-item-section>
+          <q-item-section side class="preference-control preference-control--select"><InterfaceLanguage /></q-item-section>
+        </q-item>
+        <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>颜色模式</q-item-label>
-            <q-item-label caption>可固定为浅色或深色，也可跟随系统。</q-item-label>
+            <q-item-label>{{ $t('preferences.colorScheme') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.colorSchemeHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control preference-control--wide">
             <q-btn-toggle v-model="colorScheme" dense unelevated no-caps toggle-color="primary" :options="colorSchemeOptions" />
@@ -26,8 +30,8 @@
 
         <q-item class="preference-row accent-color-row">
           <q-item-section>
-            <q-item-label>强调色</q-item-label>
-            <q-item-label caption>统一用于按钮、选择状态与界面高亮。</q-item-label>
+            <q-item-label>{{ $t('preferences.accentColor') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.accentColorHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control preference-control--color">
             <div class="accent-color-control">
@@ -35,10 +39,10 @@
                 class="accent-color-picker-button"
                 unelevated
                 icon="colorize"
-                aria-label="选择强调色"
+                :aria-label="$t('preferences.chooseAccent')"
                 :style="{ backgroundColor: appliedAccentColor }"
               >
-                <q-tooltip>选择颜色</q-tooltip>
+                <q-tooltip>{{ $t('preferences.chooseColor') }}</q-tooltip>
                 <q-popup-proxy transition-show="scale" transition-hide="scale">
                   <q-color
                     :model-value="appliedAccentColor"
@@ -58,7 +62,7 @@
                 hide-bottom-space
                 maxlength="7"
                 input-class="accent-color-input"
-                aria-label="强调色 RGB HEX"
+                :aria-label="$t('preferences.accentHex')"
                 :error="accentColorInvalid"
                 @update:model-value="previewAccentColor"
                 @blur="normalizeAccentColorInput"
@@ -73,11 +77,11 @@
                 flat
                 dense
                 icon="restart_alt"
-                aria-label="恢复默认强调色"
+                :aria-label="$t('preferences.resetAccent')"
                 :disable="appliedAccentColor === defaultAccentColor"
                 @click="resetAccentColor"
               >
-                <q-tooltip>恢复默认</q-tooltip>
+                <q-tooltip>{{ $t('common.reset') }}</q-tooltip>
               </q-btn>
             </div>
           </q-item-section>
@@ -85,8 +89,8 @@
 
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>作品加载方式</q-item-label>
-            <q-item-label caption>瀑布流连续加载；分页便于记住当前位置。</q-item-label>
+            <q-item-label>{{ $t('preferences.workListMode') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.workListModeHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control">
             <q-btn-toggle v-model="workListMode" dense unelevated no-caps toggle-color="primary" :options="workListModeOptions" />
@@ -95,30 +99,30 @@
 
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>内容显示</q-item-label>
+            <q-item-label>{{ $t('preferences.contentDisplay') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control preference-control--select preference-control--content">
-            <q-select v-model="contentDisplayMode" :options="contentDisplayOptions" emit-value map-options dense outlined options-dense aria-label="内容显示" />
+            <q-select v-model="contentDisplayMode" :options="contentDisplayOptions" emit-value map-options dense outlined options-dense :aria-label="$t('preferences.contentDisplay')" />
           </q-item-section>
         </q-item>
 
         <q-item tag="label" class="preference-row">
-          <q-item-section><q-item-label>隐藏字幕文件</q-item-label></q-item-section>
-          <q-item-section side class="preference-control"><q-toggle v-model="hideSubtitleFiles" color="primary" aria-label="隐藏字幕文件" /></q-item-section>
+          <q-item-section><q-item-label>{{ $t('preferences.hideSubtitleFiles') }}</q-item-label></q-item-section>
+          <q-item-section side class="preference-control"><q-toggle v-model="hideSubtitleFiles" color="primary" :aria-label="$t('preferences.hideSubtitleFiles')" /></q-item-section>
         </q-item>
 
         <q-item tag="label" class="preference-row">
           <q-item-section>
-            <q-item-label>显示最近播放</q-item-label>
-            <q-item-label caption>在媒体库首页顶部显示最近播放的作品。</q-item-label>
+            <q-item-label>{{ $t('preferences.showRecent') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.showRecentHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control"><q-toggle v-model="enableShowRecent" color="primary" /></q-item-section>
         </q-item>
 
         <q-item tag="label" class="preference-row">
           <q-item-section>
-            <q-item-label>完整作品卡片</q-item-label>
-            <q-item-label caption>在卡片中直接显示标题、社团和完整标签信息。</q-item-label>
+            <q-item-label>{{ $t('preferences.fullCards') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.fullCardsHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control"><q-toggle v-model="oldWorkCardUIStyle" color="primary" /></q-item-section>
         </q-item>
@@ -135,31 +139,31 @@
       <div class="preferences-section__heading">
         <q-icon name="headphones" size="22px" />
         <div>
-          <div id="playback-settings-title" class="text-subtitle1 text-weight-medium">播放控制</div>
-          <div class="text-caption text-grey-7">调整播放器按钮与睡眠定时的操作方式。</div>
+          <div id="playback-settings-title" class="text-subtitle1 text-weight-medium">{{ $t('preferences.playback') }}</div>
+          <div class="text-caption text-grey-7">{{ $t('preferences.playbackHint') }}</div>
         </div>
       </div>
       <q-list bordered separator class="preferences-list">
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>后退跳跃秒数</q-item-label>
-            <q-item-label caption>播放器后退按钮使用的间隔。</q-item-label>
+            <q-item-label>{{ $t('preferences.rewind') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.rewindHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control"><q-btn-toggle v-model="rewindSeekTime" dense unelevated no-caps toggle-color="primary" :options="seekOptions" /></q-item-section>
         </q-item>
 
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>前进跳跃秒数</q-item-label>
-            <q-item-label caption>播放器前进按钮使用的间隔。</q-item-label>
+            <q-item-label>{{ $t('preferences.forward') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.forwardHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control"><q-btn-toggle v-model="forwardSeekTime" dense unelevated no-caps toggle-color="primary" :options="seekOptions" /></q-item-section>
         </q-item>
 
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>睡眠定时方式</q-item-label>
-            <q-item-label caption>切换方式时会取消正在运行的睡眠定时。</q-item-label>
+            <q-item-label>{{ $t('preferences.sleepTimer') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.sleepTimerHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control preference-control--wide">
             <q-btn-toggle :model-value="oldSleepTimerUIStyle" dense unelevated no-caps toggle-color="primary" :options="sleepTimerOptions" @update:model-value="setSleepTimerStyle" />
@@ -168,16 +172,16 @@
 
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>播放速度</q-item-label>
-            <q-item-label caption>刷新页面后继续使用所选速度。</q-item-label>
+            <q-item-label>{{ $t('preferences.playbackRate') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.playbackRateHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control preference-control--wide"><q-btn-toggle v-model="playbackRate" dense unelevated no-caps toggle-color="primary" :options="playbackRateOptions" /></q-item-section>
         </q-item>
 
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>默认字幕语言</q-item-label>
-            <q-item-label caption>自动加载时优先选择识别为该语言的本地字幕。</q-item-label>
+            <q-item-label>{{ $t('preferences.subtitleLanguage') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.subtitleLanguageHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control preference-control--select">
             <q-select v-model="defaultSubtitleLanguage" :options="subtitleLanguageOptions" emit-value map-options dense outlined options-dense />
@@ -186,16 +190,16 @@
 
         <q-item tag="label" class="preference-row">
           <q-item-section>
-            <q-item-label>启动时恢复上次队列</q-item-label>
-            <q-item-label caption>恢复曲目顺序和播放位置，并保持暂停。</q-item-label>
+            <q-item-label>{{ $t('preferences.restoreQueue') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.restoreQueueHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control"><q-toggle v-model="restoreLastQueue" color="primary" /></q-item-section>
         </q-item>
 
         <q-item tag="label" class="preference-row">
           <q-item-section>
-            <q-item-label>底栏显示快进与后退</q-item-label>
-            <q-item-label caption>用跳跃按钮替换上一曲和下一曲按钮。</q-item-label>
+            <q-item-label>{{ $t('preferences.seekButtons') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.seekButtonsHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control"><q-toggle v-model="swapSeekButton" color="primary" /></q-item-section>
         </q-item>
@@ -206,23 +210,23 @@
       <div class="preferences-section__heading">
         <q-icon name="graphic_eq" size="22px" />
         <div>
-          <div id="media-settings-title" class="text-subtitle1 text-weight-medium">媒体兼容</div>
-          <div class="text-caption text-grey-7">按当前浏览器能力选择播放和转码策略。</div>
+          <div id="media-settings-title" class="text-subtitle1 text-weight-medium">{{ $t('preferences.compatibility') }}</div>
+          <div class="text-caption text-grey-7">{{ $t('preferences.compatibilityHint') }}</div>
         </div>
       </div>
       <q-list bordered separator class="preferences-list">
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>音频转码</q-item-label>
-            <q-item-label caption>按需生成浏览器兼容的 AAC，不会改动原始文件。</q-item-label>
+            <q-item-label>{{ $t('preferences.transcode') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.transcodeHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control preference-control--wide"><q-btn-toggle v-model="transcodeOption" dense unelevated no-caps toggle-color="primary" :options="transcodeOptions" /></q-item-section>
         </q-item>
 
         <q-item class="preference-row">
           <q-item-section>
-            <q-item-label>需要转码的扩展名</q-item-label>
-            <q-item-label caption>全部取消时等同于关闭转码。</q-item-label>
+            <q-item-label>{{ $t('preferences.transcodeTypes') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.transcodeTypesHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control preference-control--types">
             <q-checkbox v-for="type in transcodeFileTypes" :key="type" :model-value="isTranscodeTypeEnabled(type)" :label="type" dense color="primary" @update:model-value="setTranscodeType(type, $event)" />
@@ -231,16 +235,16 @@
 
         <q-item tag="label" class="preference-row">
           <q-item-section>
-            <q-item-label>高级音频模式</q-item-label>
-            <q-item-label caption>启用音频可视化与声道控制；iOS 设备可能出现播放问题。</q-item-label>
+            <q-item-label>{{ $t('preferences.visualizer') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.visualizerHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control"><q-toggle v-model="enableVisualizer" color="primary" /></q-item-section>
         </q-item>
 
         <q-item tag="label" class="preference-row">
           <q-item-section>
-            <q-item-label>使用视频源播放</q-item-label>
-            <q-item-label caption>播放 MP4 音频时允许在大图模式中显示视频画面。</q-item-label>
+            <q-item-label>{{ $t('preferences.videoSource') }}</q-item-label>
+            <q-item-label caption>{{ $t('preferences.videoSourceHint') }}</q-item-label>
           </q-item-section>
           <q-item-section side class="preference-control"><q-toggle v-model="enableVideoSource" color="primary" /></q-item-section>
         </q-item>
@@ -250,17 +254,19 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import { mapState, mapMutations } from 'vuex'
 import { applyColorScheme, COLOR_SCHEMES, COLOR_SCHEME_EVENT, readColorScheme } from '../colorScheme'
 import { colorSchemeOptions, playbackRateOptions, seekOptions, sleepTimerOptions, subtitleLanguageOptions, transcodeOptions, workListModeOptions } from '../preferenceOptions'
 import { TRANSCODE_FILE_TYPES } from '../store/module-AudioPlayer/state'
 import { ACCENT_COLOR_EVENT, applyAccentColor, DEFAULT_ACCENT_COLOR, normalizeAccentColor, readAccentColor } from '../themeColor'
 import SmartPathSettings from '../components/SmartPathSettings.vue'
+import InterfaceLanguage from '../components/InterfaceLanguage.vue'
 
 export default {
   name: 'Preferences',
 
-  components: { SmartPathSettings },
+  components: { SmartPathSettings, InterfaceLanguage },
 
   data () {
     return {
@@ -268,23 +274,27 @@ export default {
       accentColorInput: readAccentColor(),
       appliedAccentColor: readAccentColor(),
       defaultAccentColor: DEFAULT_ACCENT_COLOR,
-      colorSchemeOptions,
-      contentDisplayOptions: [
-        { label: '不限制', value: 'all' },
-        { label: '仅遮罩 NSFW 封面', value: 'blur' },
-        { label: '仅显示全年龄内容', value: 'sfw' },
-      ],
-      workListModeOptions,
-      seekOptions,
+
       playbackRateOptions,
-      sleepTimerOptions,
-      subtitleLanguageOptions,
-      transcodeOptions,
+
       transcodeFileTypes: TRANSCODE_FILE_TYPES,
     }
   },
 
   computed: {
+    colorSchemeOptions () { return colorSchemeOptions() },
+    contentDisplayOptions () {
+      return [
+        { label: t('preferences.unrestricted'), value: 'all' },
+        { label: t('preferences.blurNsfw'), value: 'blur' },
+        { label: t('preferences.sfwOnly'), value: 'sfw' },
+      ]
+    },
+    workListModeOptions () { return workListModeOptions() },
+    seekOptions () { return seekOptions() },
+    sleepTimerOptions () { return sleepTimerOptions() },
+    subtitleLanguageOptions () { return subtitleLanguageOptions() },
+    transcodeOptions () { return transcodeOptions() },
     ...mapState('AudioPlayer', [
       'oldSleepTimerUIStyle',
       'sleepMode',
@@ -446,7 +456,7 @@ export default {
         this.CLEAR_SLEEP_MODE()
         this.$q.sessionStorage.set('sleepTime', null)
         this.$q.sessionStorage.set('sleepMode', false)
-        this.$q.notify({ message: '已取消当前睡眠定时', color: 'primary', icon: 'bedtime', timeout: 2000 })
+        this.$q.notify({ message: t('preferences.sleepCancelled'), color: 'primary', icon: 'bedtime', timeout: 2000 })
       }
       this.SET_OLD_SLEEP_TIMER_UI_STYLE(value)
     },

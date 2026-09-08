@@ -1,41 +1,40 @@
 <template>
   <q-page class="admin-page setup-page">
+    <InterfaceLanguage :label="$t('common.interfaceLanguage')" class="q-mb-md" />
     <header class="settings-heading">
       <div>
-        <h1>首次初始化</h1>
-        <div class="text-caption text-grey-7">完成媒体目录、联网方式和默认播放方式设置。</div>
+        <h1>{{ $t('setup.title') }}</h1>
+        <div class="text-caption text-grey-7">{{ $t('setup.description') }}</div>
       </div>
     </header>
 
     <q-stepper v-model="step" vertical color="primary" animated flat bordered>
-      <q-step :name="1" title="添加媒体目录" icon="folder" :done="step > 1">
+      <q-step :name="1" :title="$t('setup.addMediaFolder')" icon="folder" :done="step > 1">
         <q-list v-if="config.rootFolders.length" bordered separator class="settings-list q-mb-md">
           <q-item v-for="(folder, index) in config.rootFolders" :key="`${folder.name}-${folder.path}`">
             <q-item-section>
               <q-item-label>{{ folder.name }}</q-item-label>
               <q-item-label caption>{{ folder.path }}</q-item-label>
-              <q-item-label v-if="folder.workCount !== undefined" caption>
-                识别到 {{ folder.workCount }} 个作品目录
-                <span v-if="folder.unreadableCount">，{{ folder.unreadableCount }} 个子目录无法读取</span>
+              <q-item-label v-if="folder.workCount !== undefined" caption>{{ $t('setup.detectedFolders', { count: folder.workCount }) }}<span v-if="folder.unreadableCount">{{ $t('setup.unreadableFolders', { count: folder.unreadableCount }) }}</span>
               </q-item-label>
             </q-item-section>
             <q-item-section side>
-              <q-btn flat round dense icon="delete" color="negative" aria-label="移除媒体目录" @click="removeFolder(index)" />
+              <q-btn flat round dense icon="delete" color="negative" :aria-label="$t('setup.removeFolder')" @click="removeFolder(index)" />
             </q-item-section>
           </q-item>
         </q-list>
 
         <div class="row q-col-gutter-md">
-          <div class="col-12 col-sm-4"><q-input v-model.trim="folder.name" outlined dense label="目录名称" /></div>
-          <div class="col-12 col-sm-8"><q-input v-model.trim="folder.path" outlined dense label="绝对路径" /></div>
+          <div class="col-12 col-sm-4"><q-input v-model.trim="folder.name" outlined dense :label="$t('setup.folderName')" /></div>
+          <div class="col-12 col-sm-8"><q-input v-model.trim="folder.path" outlined dense :label="$t('setup.absolutePath')" /></div>
         </div>
         <div class="setup-step-actions row justify-between q-mt-md">
-          <q-btn no-caps class="settings-action-button" outline color="primary" icon="playlist_add" label="检查并添加" :loading="folderChecking" @click="checkAndAddFolder" />
-          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" label="下一步" :disable="config.rootFolders.length === 0" @click="step = 2" />
+          <q-btn no-caps class="settings-action-button" outline color="primary" icon="playlist_add" :label="$t('setup.checkAndAdd')" :loading="folderChecking" @click="checkAndAddFolder" />
+          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" :label="$t('common.next')" :disable="config.rootFolders.length === 0" @click="step = 2" />
         </div>
       </q-step>
 
-      <q-step :name="2" title="选择联网方式" icon="lan" :done="step > 2">
+      <q-step :name="2" :title="$t('setup.networkMode')" icon="lan" :done="step > 2">
         <div class="settings-control">
           <q-btn-toggle
             v-model="config.httpProxyMode"
@@ -46,21 +45,19 @@
             :options="proxyModeOptions"
           />
         </div>
-        <div v-if="config.httpProxyMode === 'environment'" class="text-caption text-grey-7 q-mt-md">
-          服务器会读取 HTTP_PROXY、HTTPS_PROXY 和 NO_PROXY 环境变量。
-        </div>
+        <div v-if="config.httpProxyMode === 'environment'" class="text-caption text-grey-7 q-mt-md">{{ $t('setup.environmentHint') }}</div>
         <div v-if="config.httpProxyMode === 'manual'" class="row q-col-gutter-md q-mt-sm">
-          <div class="col-12 col-sm-7"><q-input v-model.trim="config.httpProxyHost" outlined dense label="代理主机" hint="留空时使用 127.0.0.1" /></div>
-          <div class="col-12 col-sm-5"><q-input v-model.number="config.httpProxyPort" outlined dense type="number" min="1" max="65535" label="代理端口" /></div>
+          <div class="col-12 col-sm-7"><q-input v-model.trim="config.httpProxyHost" outlined dense :label="$t('setup.proxyHost')" :hint="$t('setup.proxyHostHint')" /></div>
+          <div class="col-12 col-sm-5"><q-input v-model.number="config.httpProxyPort" outlined dense type="number" min="1" max="65535" :label="$t('setup.proxyPort')" /></div>
         </div>
         <q-stepper-navigation class="row justify-between">
-          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" label="上一步" @click="step = 1" />
-          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" label="下一步" :disable="!networkConfigValid" @click="step = 3" />
+          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" :label="$t('common.previous')" @click="step = 1" />
+          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" :label="$t('common.next')" :disable="!networkConfigValid" @click="step = 3" />
         </q-stepper-navigation>
       </q-step>
 
-      <q-step :name="3" title="测试服务器联网" icon="network_check" :done="step > 3">
-        <q-btn no-caps class="settings-action-button" outline color="primary" icon="network_check" label="开始测试" :loading="networkTesting" @click="testNetwork" />
+      <q-step :name="3" :title="$t('setup.networkTest')" icon="network_check" :done="step > 3">
+        <q-btn no-caps class="settings-action-button" outline color="primary" icon="network_check" :label="$t('setup.startTest')" :loading="networkTesting" @click="testNetwork" />
         <q-list v-if="networkResults.length" bordered separator class="settings-list q-mt-md">
           <q-item v-for="result in networkResults" :key="result.key">
             <q-item-section avatar>
@@ -73,17 +70,17 @@
           </q-item>
         </q-list>
         <q-stepper-navigation class="row justify-between">
-          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" label="上一步" @click="step = 2" />
-          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" label="下一步" @click="step = 4" />
+          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" :label="$t('common.previous')" @click="step = 2" />
+          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon-right="navigate_next" :label="$t('common.next')" @click="step = 4" />
         </q-stepper-navigation>
       </q-step>
 
-      <q-step :name="4" title="选择默认播放方式" icon="headphones">
+      <q-step :name="4" :title="$t('setup.defaultPlayback')" icon="headphones">
         <q-option-group v-model="config.transcodeOption" :options="transcodeOptions" color="primary" />
-        <div class="text-caption text-grey-7 q-mt-sm">AAC 会按需生成，不会改动 NAS 中的原始音频。</div>
+        <div class="text-caption text-grey-7 q-mt-sm">{{ $t('setup.transcodeHint') }}</div>
         <q-stepper-navigation class="row justify-between">
-          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" label="上一步" @click="step = 3" />
-          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon="done" label="保存并前往扫描" :loading="saving" @click="completeSetup" />
+          <q-btn no-caps class="settings-action-button" flat color="primary" icon="navigate_before" :label="$t('common.previous')" @click="step = 3" />
+          <q-btn no-caps class="settings-action-button" unelevated color="primary" icon="done" :label="$t('setup.saveAndScan')" :loading="saving" @click="completeSetup" />
         </q-stepper-navigation>
       </q-step>
     </q-stepper>
@@ -91,10 +88,13 @@
 </template>
 
 <script>
+import { t } from '../../i18n'
 import NotifyMixin from '../../mixins/Notification.js'
+import InterfaceLanguage from '../../components/InterfaceLanguage.vue'
 
 export default {
   name: 'Setup',
+  components: { InterfaceLanguage },
   mixins: [NotifyMixin],
   data () {
     return {
@@ -111,19 +111,24 @@ export default {
         httpProxyPort: 0,
         transcodeOption: 'off'
       },
-      proxyModeOptions: [
-        { label: '直连', value: 'direct' },
-        { label: '环境变量', value: 'environment' },
-        { label: '手动代理', value: 'manual' }
-      ],
-      transcodeOptions: [
-        { label: '原始音频', value: 'off' },
-        { label: 'AAC 128k', value: 'aac 128' },
-        { label: 'AAC 320k', value: 'aac 320' }
-      ]
+
     }
   },
   computed: {
+    proxyModeOptions () {
+      return [
+        { label: t('setup.direct'), value: 'direct' },
+        { label: t('setup.environment'), value: 'environment' },
+        { label: t('setup.manual'), value: 'manual' }
+      ]
+    },
+    transcodeOptions () {
+      return [
+        { label: t('setup.originalAudio'), value: 'off' },
+        { label: 'AAC 128k', value: 'aac 128' },
+        { label: 'AAC 320k', value: 'aac 320' }
+      ]
+    },
     networkConfigValid () {
       if (this.config.httpProxyMode !== 'manual') return true
       const port = Number(this.config.httpProxyPort)
@@ -150,11 +155,11 @@ export default {
     },
     async checkAndAddFolder () {
       if (!this.folder.name || !this.folder.path) {
-        this.showWarnNotif('请填写目录名称和绝对路径')
+        this.showWarnNotif(t('setup.folderRequired'))
         return
       }
       if (this.config.rootFolders.some(item => item.name === this.folder.name)) {
-        this.showWarnNotif('目录名称不能重复')
+        this.showWarnNotif(t('setup.duplicateFolder'))
         return
       }
       this.folderChecking = true
@@ -184,8 +189,8 @@ export default {
       }
     },
     networkResultText (result) {
-      if (result.ok) return `HTTP ${result.status}，${result.durationMs} ms`
-      return `${result.error || '连接失败'}，${result.durationMs} ms`
+      if (result.ok) return t('setup.networkSuccess', { status: result.status, duration: result.durationMs })
+      return t('setup.networkFailure', { error: result.error || t('setup.connectionFailed'), duration: result.durationMs })
     },
     async completeSetup () {
       this.saving = true

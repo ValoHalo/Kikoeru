@@ -6,6 +6,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import { mapState, mapMutations, mapGetters } from 'vuex'
 import { debounce } from 'quasar';
 import { readAccentColor } from '../themeColor'
@@ -42,7 +43,6 @@ export default {
       isFirefox: navigator.userAgent.toLowerCase().includes('firefox'),
       isVideoCanPlay: false, // 用以记录video能否播放并进入画中画模式，如果用户操作太快，此时video还没有准备好，需要延迟到video canplay事件发生后才能进入画中画状态
       pixelRatio: window.devicePixelRatio,
-
 
       pipWindow: null,
     }
@@ -248,18 +248,18 @@ export default {
     },
 
     showUserPrompt() {
-      let msg = "请点击‘打开’按钮确认显示桌面歌词，或者点击‘取消’关闭桌面歌词。（请注意，桌面歌词打开后，原先网页内的歌词就会被隐藏掉）"
-      let okMsg = "请继续"
+      let msg = t('pIPLyrics.openPrompt')
+      let okMsg = t('pIPLyrics.continue')
       if (this.requiresManualPIP()) {
-        msg = "当前浏览器无法由网页直接开启画中画。请在10秒内通过页面顶部出现的视频控件手动开启画中画；如果错过，可以关闭并重新打开桌面歌词。"
-        okMsg = "好的"
+        msg = t('pIPLyrics.manualPipPrompt')
+        okMsg = t('pIPLyrics.ok')
       }
 
       this.$q.dialog({
-        title: '桌面歌词',
+        title: t('pIPLyrics.title'),
         message: msg,
         ok: okMsg,
-        cancel: "关闭桌面歌词",
+        cancel: t('pIPLyrics.close'),
         persistent: false
       }).onOk(async () => {
         this.openPIPVideoMode()
@@ -297,7 +297,7 @@ export default {
       if (this.isVideoCanPlay) {
         this.showUserPrompt() 
       } else {
-        this.$q.notify({message: "桌面歌词打开失败，请播放音频5秒后再次尝试打开", timeout: 500})
+        this.$q.notify({message: t('pIPLyrics.failed'), timeout: 500})
       }
     },
 

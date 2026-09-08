@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 
 const express = require("express");
 const { requireAdministrator } = require("../auth/accessControl");
@@ -30,7 +31,7 @@ router.post("/download", (_req, res) => {
 
 router.delete("/download", (_req, res) => {
     if (!updateManager.cancelDownload()) {
-        res.status(409).send({ error: "当前没有正在进行的更新下载" });
+        res.status(409).send({ error: t('update.noDownload') });
         return;
     }
     res.status(204).end();

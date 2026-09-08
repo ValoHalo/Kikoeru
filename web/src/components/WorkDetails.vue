@@ -16,7 +16,7 @@
           <router-link :to="`/works?circleId=${metadata.circle.id}`">
             {{metadata.circle.name}}
           </router-link>
-          <span v-if="metadata.archived_at" class="work-archived"><q-icon name="archive" size="14px" /> 已归档</span>
+          <span v-if="metadata.archived_at" class="work-archived"><q-icon name="archive" size="14px" />{{ $t('workDetails.archived') }}</span>
         </div>
 
         <!-- 标题 -->
@@ -30,12 +30,12 @@
 
       <div class="work-facts">
         <div class="work-community-rating">
-          <span class="work-field-label">作品评分</span>
+          <span class="work-field-label">{{ $t('workDetails.workRating') }}</span>
           <div class="work-rating-value">
             <span class="work-score">{{metadata.rate_average_2dp}}</span>
             <q-rating
               :model-value="Number(metadata.rate_average_2dp) || 0"
-              aria-label="作品评分"
+              :aria-label="$t('workDetails.workRating')"
               readonly
               size="18px"
               :color="$q.dark.isActive ? 'amber' : 'orange-10'"
@@ -46,9 +46,9 @@
 
             <!-- 评价分布明细 -->
             <q-tooltip v-if=metadata.rate_count_detail class="text-subtitle1">
-              <div>平均: {{metadata.rate_average_2dp}}</div>
+              <div>{{ $t('workDetails.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
               <div v-for="(rate, index) in sortedRatings" :key=index class="row items-center">
-                <div class="col"> {{rate.review_point}}星 </div>
+                <div class="col"> {{ $t('workDetails.stars', { count: rate.review_point }) }}</div>
 
                 <!-- 评价占比 -->
                 <q-linear-progress
@@ -64,13 +64,13 @@
             </q-tooltip>
           </div>
 
-          <span class="work-muted work-fact-note">{{metadata.rate_count}} 个评价 · {{metadata.review_count}} 条评论</span>
+          <span class="work-muted work-fact-note">{{ $t('workDetails.reviewCounts', { rate_count: metadata.rate_count, review_count: metadata.review_count }) }}</span>
         </div>
         <div class="work-commerce">
-          <span class="work-field-label">售价</span>
-          <span class="work-price">{{metadata.price}} <span class="work-muted">日元</span></span>
+          <span class="work-field-label">{{ $t('workDetails.price') }}</span>
+          <span class="work-price">{{metadata.price}} <span class="work-muted">{{ $t('workDetails.yen') }}</span></span>
           <div class="work-fact-note work-store-row">
-            <span class="work-muted">售出 {{metadata.dl_count}}</span>
+            <span class="work-muted">{{ $t('workDetails.sales', { count: metadata.dl_count }) }}</span>
             <a v-if="!dlsiteCode.startsWith('CC')" class="work-store" :href="`https://www.dlsite.com/home/work/=/product_id/${dlsiteCode}.html`" rel="noreferrer noopener" target="_blank">DLsite <q-icon name="open_in_new" size="13px" /></a>
           </div>
         </div>
@@ -78,7 +78,7 @@
 
       <!-- 声优 -->
       <div v-if="metadata.vas && metadata.vas.length" class="work-detail-row">
-        <span class="work-field-label">声优</span>
+        <span class="work-field-label">{{ $t('common.voiceActors') }}</span>
         <div class="work-facets work-voices">
           <router-link
             v-for="(va, index) in metadata.vas"
@@ -94,7 +94,7 @@
 
       <!-- 标签 -->
       <div class="work-detail-row" v-if="showTags && metadata.tags && metadata.tags.length">
-        <span class="work-field-label">标签</span>
+        <span class="work-field-label">{{ $t('common.tags') }}</span>
         <div class="work-facets work-tags">
           <router-link
             v-for="(tag, index) in metadata.tags"
@@ -112,7 +112,7 @@
 
       <div class="work-actions">
         <div class="work-progress">
-          <span id="work-progress-label" class="work-field-label">收听状态</span>
+          <span id="work-progress-label" class="work-field-label">{{ $t('workDetails.listeningStatus') }}</span>
           <q-btn-toggle
             :model-value="progress"
             @update:model-value="setProgress"
@@ -127,7 +127,7 @@
 
         <div class="work-personal-tools">
           <div class="work-personal-rating">
-          <span id="work-rating-label" class="work-field-label">我的评分</span>
+          <span id="work-rating-label" class="work-field-label">{{ $t('workDetails.myRating') }}</span>
           <q-rating
             v-model="rating"
             @update:model-value="setRating"
@@ -141,18 +141,18 @@
         </div>
 
           <div class="work-tools-group">
-            <span class="work-field-label">作品操作</span>
+            <span class="work-field-label">{{ $t('workDetails.actions') }}</span>
             <div class="work-tools">
           <q-btn
             v-if="metadata.state && playWorkId !== metadata.id"
             flat
             round
             icon="history"
-            aria-label="恢复播放进度"
+            :aria-label="$t('workDetails.resume')"
             @click="resumeThisHistroy"
-          ><q-tooltip>恢复播放进度</q-tooltip></q-btn>
-          <q-btn flat round icon="rate_review" aria-label="写评论" @click="showReviewDialog = true">
-            <q-tooltip>写评论</q-tooltip>
+          ><q-tooltip>{{ $t('workDetails.resume') }}</q-tooltip></q-btn>
+          <q-btn flat round icon="rate_review" :aria-label="$t('workDetails.writeReview')" @click="showReviewDialog = true">
+            <q-tooltip>{{ $t('workDetails.writeReview') }}</q-tooltip>
           </q-btn>
 
           <LibraryActions
@@ -164,22 +164,22 @@
             @changed="$emit('reset')"
           />
 
-          <q-btn flat round icon="more_horiz" aria-label="更多作品操作">
-            <q-tooltip>更多作品操作</q-tooltip>
+          <q-btn flat round icon="more_horiz" :aria-label="$t('workDetails.moreActions')">
+            <q-tooltip>{{ $t('workDetails.moreActions') }}</q-tooltip>
             <q-menu anchor="bottom right" self="top right">
               <q-list class="work-manage-menu">
                 <q-item v-if="isAdministrator" clickable v-close-popup @click="showEditMetaDialog = true">
                   <q-item-section avatar><q-icon name="edit" /></q-item-section>
-                  <q-item-section>修改作品信息</q-item-section>
+                  <q-item-section>{{ $t('workDetails.editMetadata') }}</q-item-section>
                 </q-item>
                 <q-item clickable v-close-popup @click="scanWorkFile">
                   <q-item-section avatar><q-icon name="sync" /></q-item-section>
-                  <q-item-section>扫描本地文件</q-item-section>
+                  <q-item-section>{{ $t('workDetails.scanFiles') }}</q-item-section>
                 </q-item>
                 <q-separator v-if="metadata.state" class="q-my-xs" />
                 <q-item v-if="metadata.state" clickable v-close-popup class="work-danger" @click="clearThisHistroy">
                   <q-item-section avatar><q-icon name="delete_sweep" /></q-item-section>
-                  <q-item-section>删除播放记录</q-item-section>
+                  <q-item-section>{{ $t('workDetails.deleteHistory') }}</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
@@ -202,6 +202,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import CoverSFW from 'components/CoverSFW.vue'
 import WriteReview from './WriteReview.vue'
 import EditMeta from './EditMeta.vue'
@@ -233,13 +234,6 @@ export default {
     return {
       rating: 0,
       progress: '',
-      progressOptions: [
-        { label: '想听', value: 'marked' },
-        { label: '在听', value: 'listening' },
-        { label: '听过', value: 'listened' },
-        { label: '重听', value: 'replay' },
-        { label: '搁置', value: 'postponed' }
-      ],
       showReviewDialog: false,
       showEditMetaDialog: false,
       showTags: true
@@ -247,13 +241,21 @@ export default {
   },
 
   computed: {
+    progressOptions () {
+      return [
+        { label: t('workDetails.marked'), value: 'marked' },
+        { label: t('workDetails.listening'), value: 'listening' },
+        { label: t('workDetails.listened'), value: 'listened' },
+        { label: t('workDetails.replay'), value: 'replay' },
+        { label: t('workDetails.postponed'), value: 'postponed' }
+      ]
+    },
     sortedRatings: function() {
       function compare(a, b) {
         return (a.review_point > b.review_point) ? -1 : 1;
       }
       return this.metadata.rate_count_detail.slice().sort(compare);
     },
-    
     dlsiteCode() {
       return idNumberToCode(this.metadata.id)
     },
@@ -352,17 +354,17 @@ export default {
 
     clearThisHistroy() {
       this.$q.dialog({
-        title: '注意',
-        message: '确定要删除这个作品的播放历史吗？',
-        cancel: "取消",
-        ok: "确定"
+        title: t('workDetails.notice'),
+        message: t('workDetails.deleteHistoryPrompt'),
+        cancel: t('common.cancel'),
+        ok: t('common.ok')
       }).onOk(async () => {
         this.$axios.delete('/api/histroy', { data: { work_id: this.metadata.id } })
           .then((_) => {
-            this.$q.notify("删除历史成功")
+            this.$q.notify(t('workDetails.historyDeleted'))
           })
           .catch((err) => {
-            this.$q.notify("删除历史失败：", err.message)
+            this.$q.notify(t('workDetails.deleteHistoryFailed'), err.message)
             console.error(err)
           })
       })

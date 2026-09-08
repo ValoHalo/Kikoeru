@@ -1,20 +1,20 @@
 <template>
   <q-card style="width: 70vw; max-width: 760px; min-width: 320px">
     <q-card-section class="q-pb-sm">
-      <div class="text-h6">修改作品信息</div>
+      <div class="text-h6">{{ $t('editMeta.title') }}</div>
     </q-card-section>
 
     <q-card-section class="q-pt-none">
       <q-input
         v-model="editTitle"
         filled
-        label="编辑标题"
+        :label="$t('editMeta.editTitle')"
         :disable="saving"
       />
     </q-card-section>
 
     <q-card-section class="q-pt-none">
-      <div class="text-caption text-grey q-mb-xs">社团</div>
+      <div class="text-caption text-grey q-mb-xs">{{ $t('common.circles') }}</div>
       <q-chip size="md" color="primary" text-color="white" class="shadow-4">
         {{ editCircle.name }}
       </q-chip>
@@ -24,14 +24,14 @@
         icon="swap_horiz"
         size="sm"
         class="q-ml-sm"
-        aria-label="替换社团"
+        :aria-label="$t('editMeta.replaceCircle')"
         :disable="saving"
         @click="openCandidateDialog('circles')"
       />
     </q-card-section>
 
     <q-card-section class="q-pt-none">
-      <div class="text-caption text-grey q-mb-xs">标签</div>
+      <div class="text-caption text-grey q-mb-xs">{{ $t('common.tags') }}</div>
       <q-chip
         v-for="(tag, index) in editTags"
         :key="`${tag.id}-${tag.name}`"
@@ -51,14 +51,14 @@
         icon="add"
         size="sm"
         class="q-ml-sm"
-        aria-label="添加标签"
+        :aria-label="$t('editMeta.addTag')"
         :disable="saving"
         @click="openCandidateDialog('tags')"
       />
     </q-card-section>
 
     <q-card-section class="q-pt-none">
-      <div class="text-caption text-grey q-mb-xs">声优</div>
+      <div class="text-caption text-grey q-mb-xs">{{ $t('common.voiceActors') }}</div>
       <q-chip
         v-for="(va, index) in editVas"
         :key="`${va.id}-${va.name}`"
@@ -80,28 +80,28 @@
         icon="add"
         size="sm"
         class="q-ml-sm"
-        aria-label="添加声优"
+        :aria-label="$t('editMeta.addVoiceActor')"
         :disable="saving"
         @click="openCandidateDialog('vas')"
       />
     </q-card-section>
 
     <q-card-actions align="right">
-      <q-btn flat label="取消" color="grey" :disable="saving" v-close-popup />
-      <q-btn label="确定" color="primary" :loading="saving" @click="confirmChange" />
+      <q-btn flat :label="$t('common.cancel')" color="grey" :disable="saving" v-close-popup />
+      <q-btn :label="$t('common.ok')" color="primary" :loading="saving" @click="confirmChange" />
     </q-card-actions>
 
     <q-dialog v-model="showCandidateDialog">
       <q-card style="width: 70vw; max-width: 680px">
         <q-card-section>
           <div class="text-h6">{{ searchTitle }}</div>
-          <q-input v-model="searchCandidate" label="搜索" autofocus clearable>
+          <q-input v-model="searchCandidate" :label="$t('common.search')" autofocus clearable>
             <template v-slot:append>
               <q-btn
                 v-if="canAddCustomCandidate"
                 flat
                 dense
-                label="增加自定义"
+                :label="$t('editMeta.addCustom')"
                 @click="chooseCandidate({ id: 0, name: normalizedSearchCandidate })"
               />
             </template>
@@ -126,7 +126,7 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="取消" color="negative" v-close-popup />
+          <q-btn flat :label="$t('common.cancel')" color="negative" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -134,6 +134,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import NotifyMixin from '../mixins/Notification.js'
 import { ServerApi } from 'src/utils'
 
@@ -175,12 +176,14 @@ export default {
         circles: []
       },
       showCandidateType: 'tags',
-      searchTitle: '',
       searchCandidate: ''
     }
   },
 
   computed: {
+    searchTitle () {
+      return this.showCandidateType === 'circles' ? t('editMeta.replaceCircle') : t('editMeta.addCandidate', { value: this.candidateLabel(this.showCandidateType) })
+    },
     normalizedSearchCandidate () {
       return String(this.searchCandidate || '').trim()
     },
@@ -223,29 +226,28 @@ export default {
         if (!result.error) {
           this.candidates[key] = result.value
         } else {
-          this.showErrNotif(`加载${this.candidateLabel(key)}候选项失败`)
+          this.showErrNotif(t('editMeta.loadCandidatesFailed', { value: this.candidateLabel(key) }))
         }
       })
     },
 
     candidateLabel (type) {
       return {
-        circles: '社团',
-        tags: '标签',
-        vas: '声优'
-      }[type] || '元数据'
+        circles: t('common.circles'),
+        tags: t('common.tags'),
+        vas: t('common.voiceActors')
+      }[type] || t('common.metadata')
     },
 
     openCandidateDialog (type) {
       this.showCandidateType = type
-      this.searchTitle = type === 'circles' ? '替换社团' : `添加${this.candidateLabel(type)}`
       this.searchCandidate = ''
       this.showCandidateDialog = true
     },
 
     removeVaAt (index) {
       if (this.editVas.length <= 1) {
-        this.showErrNotif('声优至少得有一个')
+        this.showErrNotif(t('editMeta.voiceActorRequired'))
         return
       }
       this.editVas.splice(index, 1)
@@ -262,7 +264,7 @@ export default {
       } else {
         const target = this.showCandidateType === 'vas' ? this.editVas : this.editTags
         if (target.some(existing => existing.name === item.name)) {
-          this.showErrNotif('项目已存在，无需重复添加')
+          this.showErrNotif(t('editMeta.alreadyExists'))
           return
         }
         target.push(item)
@@ -273,11 +275,11 @@ export default {
     async confirmChange () {
       const title = this.editTitle.trim()
       if (!title) {
-        this.showErrNotif('标题不能为空')
+        this.showErrNotif(t('editMeta.titleRequired'))
         return
       }
       if (!this.editCircle.name) {
-        this.showErrNotif('请选择社团')
+        this.showErrNotif(t('editMeta.circleRequired'))
         return
       }
 
@@ -289,14 +291,14 @@ export default {
           vas: cloneList(this.editVas),
           circle: { ...this.editCircle }
         })
-        if (!result.success) throw new Error(result.message || '服务器未确认修改成功')
-        this.showSuccNotif('作品信息修改成功')
+        if (!result.success) throw new Error(result.message || t('editMeta.saveUnconfirmed'))
+        this.showSuccNotif(t('editMeta.saved'))
         this.$emit('saved')
       } catch (error) {
         const message = error.response && error.response.data
           ? error.response.data.error || error.response.data.message
           : error.message
-        this.showErrNotif(`作品信息修改失败: ${message || error}`)
+        this.showErrNotif(t('editMeta.saveFailed', { value: message || error }))
       } finally {
         this.saving = false
       }

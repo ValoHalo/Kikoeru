@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -46,7 +47,7 @@ const validate_1 = require("./utils/validate");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
 const { prepareWorks } = require('./utils/workVisibility');
-router.get('/', (0, express_validator_1.query)('page').optional({ nullable: true }).isInt(), (0, express_validator_1.query)('sort').optional({ nullable: true }).isIn(['desc', 'asc']), async (req, res) => {
+router.get('/', (0, express_validator_1.query)('page', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt(), (0, express_validator_1.query)('sort', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isIn(['desc', 'asc']), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const currentPage = parseInt(req.query.page) || 1;
@@ -73,29 +74,29 @@ router.get('/', (0, express_validator_1.query)('page').optional({ nullable: true
         });
     }
     catch (err) {
-        res.status(500).send({ error: '查询过程中出错' });
+        res.status(500).send({ error: t('play_histroy.queryFailed') });
         console.error(err);
     }
 });
-router.put('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.body)('work_id').isInt(), (0, express_validator_1.body)('state').isObject(), (req, res) => {
+router.put('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.body)('work_id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.body)('state', (_value, { path }) => t('validation.invalidValue', { field: path })).isObject(), (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
     db.updatePlayHistroy(username, Number(req.body.work_id), JSON.stringify(req.body.state))
         .then(() => {
-        res.send({ message: '更新历史成功' });
+        res.send({ message: t('play_histroy.saved') });
     }).catch((err) => {
-        res.status(500).send({ error: '更新播放历史失败，服务器错误' });
+        res.status(500).send({ error: t('play_histroy.saveFailed') });
         console.error(err);
     });
 });
-router.delete('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.body)('work_id').isInt(), async (req, res, next) => {
+router.delete('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.body)('work_id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
     try {
         await db.deletePlayHistroy(username, req.body.work_id);
-        res.send({ message: '删除历史记录成功' });
+        res.send({ message: t('play_histroy.deleted') });
     }
     catch (err) {
         console.error(err);

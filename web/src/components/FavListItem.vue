@@ -58,7 +58,7 @@
 
         <div v-if="mode === 'histroy'" class="full-width">
           <div class="full-width">
-            <q-btn color="primary" label="从历史播放"  class="full-width" @click="playHistroy(metadata.id, metadata.state)"/>
+            <q-btn color="primary" :label="$t('favListItem.resume')"  class="full-width" @click="playHistroy(metadata.id, metadata.state)"/>
           </div>
 
           <!--
@@ -71,7 +71,7 @@
           -->
 
           <div>
-            <span class="text-primary">进度：</span>
+            <span class="text-primary">{{ $t('favListItem.progress') }}</span>
             <q-badge color="purple">{{ metadata.state.index+1 }} / {{ metadata.state.queue.length }}</q-badge>
             <q-badge color="blue">{{ humanReadableSeconds(metadata.state.seconds) }}</q-badge>
             <span class="text-grey">
@@ -93,18 +93,18 @@
             text-color="black"
             class="q-pa-sm"
             :options="[
-              {label: '想听', value: 'marked'},
-              {label: '在听', value: 'listening'},
-              {label: '听过', value: 'listened'},
-              {label: '重听', value: 'replay'},
-              {label: '搁置', value: 'postponed'}
+              {label: $t('favListItem.marked'), value: 'marked'},
+              {label: $t('favListItem.listening'), value: 'listening'},
+              {label: $t('favListItem.listened'), value: 'listened'},
+              {label: $t('favListItem.replay'), value: 'replay'},
+              {label: $t('favListItem.postponed'), value: 'postponed'}
             ]"
           />
           </q-item-label>
       </q-item-section>
 
       <q-item-section side top>
-        <q-badge v-if="metadata.archived_at" color="grey-7" label="已归档" class="q-mb-xs" />
+        <q-badge v-if="metadata.archived_at" color="grey-7" :label="$t('favListItem.archived')" class="q-mb-xs" />
         <LibraryActions :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('reset')" />
       </q-item-section>
 
@@ -114,6 +114,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import WriteReview from './WriteReview.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import LibraryActions from './LibraryActions.vue'
@@ -177,9 +178,9 @@ export default {
       const sec = Math.floor(seconds) % 60
 
       let str = ""
-      if (hour > 0) str += `${hour}小时`
-      if (minute > 0) str += `${minute}分钟`
-      str += `${sec}秒`
+      if (hour > 0) str += t('favListItem.hours', { count: hour })
+      if (minute > 0) str += t('favListItem.minutes', { count: minute })
+      str += t('favListItem.seconds', { count: sec })
       return str
     },
 

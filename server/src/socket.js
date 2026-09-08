@@ -1,4 +1,5 @@
 "use strict";
+const { i18n } = require('./i18n');
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -13,13 +14,17 @@ const socket_io_1 = __importDefault(require("socket.io"));
 const child_process_1 = __importDefault(require("child_process"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const runtimeState = require("./runtimeState");
+function socketMessage(socket, key) {
+    const locale = typeof socket.handshake.query.locale === 'string' ? socket.handshake.query.locale : 'zh-CN';
+    return i18n.getFixedT(i18n.hasResourceBundle(locale, 'translation') ? locale : 'zh-CN')(key);
+}
 function initSocket(server) {
     const io = (0, socket_io_1.default)(server);
     if (config_1.config.auth) {
         io.use((socket, next) => {
             const token = (0, token_1.getToken)(socket.request);
             if (!token) {
-                next(new Error('管理后台需要登录.'));
+                next(new Error(socketMessage(socket, 'socket.loginRequired')));
                 return;
             }
             jsonwebtoken_1.default.verify(token, config_1.config.jwtsecret, {
@@ -28,7 +33,7 @@ function initSocket(server) {
                 algorithms: ['HS256'],
             }, (err, payload) => {
                 if (err || !payload) {
-                    next(new Error('管理后台登录已失效.'));
+                    next(new Error(socketMessage(socket, 'socket.loginExpired')));
                     return;
                 }
                 socket.request.user = {
@@ -44,12 +49,12 @@ function initSocket(server) {
             next();
             return;
         }
-        next(new Error('管理后台需要管理员权限.'));
+        next(new Error(socketMessage(socket, 'socket.adminRequired')));
     });
     let scanner = null;
     io.on('connection', function (socket) {
         socket.emit('success', {
-            message: '成功登录管理后台.',
+            message: socketMessage(socket, 'socket.connected'),
             user: socket.request.user,
             auth: config_1.config.auth,
             canManage: true,

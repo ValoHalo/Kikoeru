@@ -1,10 +1,12 @@
 import axios from 'axios'
 import { defineBoot } from '#q-app/wrappers'
 import store from '../store'
+import { i18n } from '../i18n'
 
 axios.defaults.headers.common['Content-Type'] = 'application/json'
 
 axios.interceptors.request.use(config => {
+  if (config.url.startsWith('/api/')) config.headers['Accept-Language'] = i18n.global.locale.value
   if (config.url.startsWith('/api/') && (config.method === 'get' || config.url.endsWith('/items/order')) && store.getters['AudioPlayer/sfwOnly']) {
     config.params = { ...config.params, nsfw: 1 }
   }

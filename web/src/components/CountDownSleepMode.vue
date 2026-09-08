@@ -3,10 +3,10 @@
     <q-card class="countdown-card">
       <q-card-section class="row items-center justify-between">
         <div>
-          <div class="text-subtitle1 text-weight-medium">睡眠倒计时</div>
-          <div class="text-caption text-grey-7">倒计时结束后暂停播放。</div>
+          <div class="text-subtitle1 text-weight-medium">{{ $t('countDownSleepMode.title') }}</div>
+          <div class="text-caption text-grey-7">{{ $t('countDownSleepMode.description') }}</div>
         </div>
-        <q-btn flat round dense icon="close" aria-label="关闭" v-close-popup />
+        <q-btn flat round dense icon="close" :aria-label="$t('common.close')" v-close-popup />
       </q-card-section>
 
       <q-separator />
@@ -20,23 +20,24 @@
           toggle-color="primary"
           :options="presetOptions"
         />
-        <q-input v-model.number="minutes" filled type="number" min="1" step="1" label="分钟数" suffix="分钟" />
+        <q-input v-model.number="minutes" filled type="number" min="1" step="1" :label="$t('countDownSleepMode.minutesLabel')" :suffix="$t('countDownSleepMode.minutes')" />
         <div v-if="sleepMode && numericSleepTime" class="countdown-status">
           <q-icon name="hourglass_bottom" color="primary" size="20px" />
-          <span>还剩 {{ remainingLabel }}</span>
+          <span>{{ $t('countDownSleepMode.remaining', { remainingLabel: remainingLabel }) }}</span>
         </div>
       </q-card-section>
 
       <q-card-actions align="between">
-        <q-btn v-if="sleepMode" flat no-caps label="取消倒计时" color="negative" @click="clearSleepTimer" v-close-popup />
+        <q-btn v-if="sleepMode" flat no-caps :label="$t('countDownSleepMode.cancel')" color="negative" @click="clearSleepTimer" v-close-popup />
         <q-space />
-        <q-btn unelevated no-caps :label="sleepMode ? '重新倒计时' : '开始倒计时'" icon="bedtime" color="primary" @click="setSleepTimer" />
+        <q-btn unelevated no-caps :label="sleepMode ? $t('countDownSleepMode.restart') : $t('countDownSleepMode.start')" icon="bedtime" color="primary" @click="setSleepTimer" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script>
+import { t } from '../i18n'
 import { mapState, mapMutations } from 'vuex'
 
 export default {
@@ -54,16 +55,18 @@ export default {
       minutes: 30,
       remainingMs: 0,
       timerId: null,
-      presetOptions: [
-        { label: '15 分钟', value: 15 },
-        { label: '30 分钟', value: 30 },
-        { label: '60 分钟', value: 60 },
-        { label: '90 分钟', value: 90 },
-      ],
     }
   },
 
   computed: {
+    presetOptions () {
+      return [
+        { label: t('countDownSleepMode.preset15'), value: 15 },
+        { label: t('countDownSleepMode.preset30'), value: 30 },
+        { label: t('countDownSleepMode.preset60'), value: 60 },
+        { label: t('countDownSleepMode.preset90'), value: 90 },
+      ]
+    },
     ...mapState('AudioPlayer', ['sleepTime', 'sleepMode']),
     numericSleepTime () {
       return typeof this.sleepTime === 'number' && Number.isFinite(this.sleepTime)
@@ -74,8 +77,8 @@ export default {
       const minutes = Math.floor((totalSeconds % 3600) / 60)
       const seconds = totalSeconds % 60
       return hours > 0
-        ? `${hours} 小时 ${minutes} 分 ${seconds} 秒`
-        : `${minutes} 分 ${seconds} 秒`
+        ? t('countDownSleepMode.hoursRemaining', { hours: hours, count: minutes, seconds: seconds })
+        : t('countDownSleepMode.minutesRemaining', { count: minutes, seconds: seconds })
     },
   },
 
@@ -105,7 +108,7 @@ export default {
     setSleepTimer () {
       const minutes = Number(this.minutes)
       if (!Number.isFinite(minutes) || minutes <= 0) {
-        this.$q.notify({ message: '分钟数必须大于 0', color: 'negative', icon: 'error', timeout: 2000 })
+        this.$q.notify({ message: t('countDownSleepMode.invalidMinutes'), color: 'negative', icon: 'error', timeout: 2000 })
         return
       }
       const deadline = Date.now() + Math.round(minutes * 60000)
@@ -116,14 +119,14 @@ export default {
       this.$emit('update:modelValue', false)
       const stopAt = new Date(deadline)
       const stopAtLabel = `${String(stopAt.getHours()).padStart(2, '0')}:${String(stopAt.getMinutes()).padStart(2, '0')}`
-      this.$q.notify({ message: `${minutes} 分钟后停止播放（${stopAtLabel}）`, color: 'primary', icon: 'bedtime', timeout: 3000 })
+      this.$q.notify({ message: t('countDownSleepMode.scheduled', { count: minutes, stopAtLabel: stopAtLabel }), color: 'primary', icon: 'bedtime', timeout: 3000 })
     },
     clearSleepTimer () {
       this.CLEAR_SLEEP_MODE()
       this.$q.sessionStorage.set('sleepTime', null)
       this.$q.sessionStorage.set('sleepMode', false)
       this.syncTimer()
-      this.$q.notify({ message: '已关闭睡眠定时', color: 'primary', icon: 'bedtime', timeout: 2000 })
+      this.$q.notify({ message: t('countDownSleepMode.disabled'), color: 'primary', icon: 'bedtime', timeout: 2000 })
     },
     syncTimer () {
       this.stopTicker()

@@ -3,7 +3,7 @@
     <div class="work-tree-toolbar">
       <q-breadcrumbs gutter="xs" class="work-tree-breadcrumbs">
         <q-breadcrumbs-el>
-          <q-btn no-caps flat dense size="md" icon="folder" label="ROOT" @click="path = []" />
+          <q-btn no-caps flat dense size="md" icon="folder" :label="$t('workTree.root')" @click="path = []" />
         </q-breadcrumbs-el>
 
         <q-breadcrumbs-el v-for="(folderName, index) in path" :key="index" class="cursor-pointer">
@@ -11,21 +11,21 @@
         </q-breadcrumbs-el>
       </q-breadcrumbs>
 
-      <q-btn flat round class="work-tree-playlist" icon="playlist_add" :disable="allAudioTracks.length === 0" aria-label="将整个作品加入已保存列表" @click="openPlaylistPicker(allAudioTracks)"><q-tooltip>将整个作品加入已保存列表</q-tooltip></q-btn>
+      <q-btn flat round class="work-tree-playlist" icon="playlist_add" :disable="allAudioTracks.length === 0" :aria-label="$t('workTree.addWorkToPlaylist')" @click="openPlaylistPicker(allAudioTracks)"><q-tooltip>{{ $t('workTree.addWorkToPlaylist') }}</q-tooltip></q-btn>
     </div>
 
     <q-dialog v-model="showPlaylistPicker">
       <q-card class="playlist-picker-dialog">
-        <q-card-section><div class="text-h6">加入已保存列表</div><div class="text-caption text-grey-7">{{ pendingPlaylistTracks.length }} 首曲目</div></q-card-section>
+        <q-card-section><div class="text-h6">{{ $t('workTree.addToPlaylist') }}</div><div class="text-caption text-grey-7">{{ $t('workTree.trackCount', { count: pendingPlaylistTracks.length }) }}</div></q-card-section>
         <q-list v-if="savedPlaylists.length" separator bordered class="scroll" style="max-height: 42vh">
-          <q-item v-for="playlist in savedPlaylists" :key="playlist.id" clickable v-ripple @click="addPendingToPlaylist(playlist.id)"><q-item-section avatar><q-icon name="library_music" /></q-item-section><q-item-section><q-item-label>{{ playlist.name }}</q-item-label><q-item-label caption>{{ playlist.item_count }} 首</q-item-label></q-item-section><q-item-section side><q-icon name="add" /></q-item-section></q-item>
+          <q-item v-for="playlist in savedPlaylists" :key="playlist.id" clickable v-ripple @click="addPendingToPlaylist(playlist.id)"><q-item-section avatar><q-icon name="library_music" /></q-item-section><q-item-section><q-item-label>{{ playlist.name }}</q-item-label><q-item-label caption>{{ $t('workTree.playlistTrackCount', { count: playlist.item_count }) }}</q-item-label></q-item-section><q-item-section side><q-icon name="add" /></q-item-section></q-item>
         </q-list>
-        <q-card-section v-else-if="!loadingPlaylists" class="text-grey text-center">还没有保存的播放列表</q-card-section>
+        <q-card-section v-else-if="!loadingPlaylists" class="text-grey text-center">{{ $t('workTree.noPlaylists') }}</q-card-section>
         <q-separator />
         <q-form @submit.prevent="createPlaylistFromPending">
-          <q-card-section><q-input v-model.trim="newPlaylistName" outlined dense label="新播放列表名称" maxlength="80" :rules="[value => Boolean(value) || '请输入名称']"><template #append><q-btn flat round dense icon="add" type="submit" :loading="addingToPlaylist" aria-label="新建并加入" /></template></q-input></q-card-section>
+          <q-card-section><q-input v-model.trim="newPlaylistName" outlined dense :label="$t('workTree.newPlaylistName')" maxlength="80" :rules="[value => Boolean(value) || $t('common.nameRequired')]"><template #append><q-btn flat round dense icon="add" type="submit" :loading="addingToPlaylist" :aria-label="$t('workTree.createAndAdd')" /></template></q-input></q-card-section>
         </q-form>
-        <q-card-actions align="right"><q-btn flat label="取消" v-close-popup /></q-card-actions>
+        <q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /></q-card-actions>
       </q-card>
     </q-dialog>
 
@@ -50,11 +50,11 @@
               v-if="isAdministrator"
               outline
               class="q-mr-sm"
-              label="编辑作为封面"
+              :label="$t('workTree.editCover')"
               @click="editImg(preview_img_list[preview_img_idx])"
             />
             <div v-if="playWorkId > 0" class="col-auto">
-              <q-btn outline @click="setVisualPlayerCover(preview_img_list[preview_img_idx])">用作可视化封面</q-btn>
+              <q-btn outline @click="setVisualPlayerCover(preview_img_list[preview_img_idx])">{{ $t('workTree.visualizerCover') }}</q-btn>
             </div>
           </div>
         </q-card-section>
@@ -64,9 +64,9 @@
         </q-card-section>
 
         <q-card-actions align="around">
-          <q-btn flat label="上一个" color="primary" @click="changePreviewImg(false)" />
-          <q-btn flat label="关闭" color="negative" v-close-popup />
-          <q-btn flat label="下一个" color="primary" @click="changePreviewImg(true)" />
+          <q-btn flat :label="$t('workTree.previous')" color="primary" @click="changePreviewImg(false)" />
+          <q-btn flat :label="$t('common.close')" color="negative" v-close-popup />
+          <q-btn flat :label="$t('workTree.next')" color="primary" @click="changePreviewImg(true)" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -95,7 +95,7 @@
 
           <q-item-section>
             <q-item-label>{{ item.title }}</q-item-label>
-            <q-item-label v-if="item.children" caption lines="1">{{ `${visibleFiles(item.children).length} 项目` }}</q-item-label>
+            <q-item-label v-if="item.children" caption lines="1">{{ $t('workTree.itemCount', { count: visibleFiles(item.children).length }) }}</q-item-label>
 
             <!--音频文件时长-->
             <q-item-label
@@ -119,23 +119,23 @@
           >
             <q-list separator>
               <q-item clickable @click="addToQueue(item)" v-if="item.type === 'audio'">
-                <q-item-section>加入当前队列</q-item-section>
+                <q-item-section>{{ $t('workTree.addToQueue') }}</q-item-section>
               </q-item>
 
               <q-item clickable @click="playNext(item)" v-if="item.type === 'audio'">
-                <q-item-section>下一曲播放</q-item-section>
+                <q-item-section>{{ $t('workTree.playNext') }}</q-item-section>
               </q-item>
 
               <q-item clickable @click="openPlaylistPicker(item.type === 'folder' ? collectAudioTracks(item.children) : [item])" v-if="item.type === 'folder' || item.type === 'audio'">
-                <q-item-section>加入已保存列表</q-item-section>
+                <q-item-section>{{ $t('workTree.addToPlaylist') }}</q-item-section>
               </q-item>
 
               <q-item clickable @click="editImg(item)" v-if="item.type === 'image' && isAdministrator">
-                <q-item-section>编辑作为封面</q-item-section>
+                <q-item-section>{{ $t('workTree.editCover') }}</q-item-section>
               </q-item>
 
               <q-item clickable @click="download(item)" v-if="item.type !== 'folder'">
-                <q-item-section>下载文件</q-item-section>
+                <q-item-section>{{ $t('workTree.download') }}</q-item-section>
               </q-item>
 
             </q-list>
@@ -147,6 +147,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import ImageEditor from './ImageEditor.vue'
 import { mapState, mapGetters } from 'vuex'
 import { formatSeconds } from '../utils'
@@ -288,7 +289,7 @@ export default {
         const response = await this.$axios.get('/api/playlists')
         this.savedPlaylists = response.data.playlists || []
       } catch (error) {
-        this.showErrNotif(this.playlistError(error, '读取播放列表失败'))
+        this.showErrNotif(this.playlistError(error, t('workTree.loadPlaylistsFailed')))
       } finally {
         this.loadingPlaylists = false
       }
@@ -300,9 +301,9 @@ export default {
       try {
         await this.$axios.post(`/api/playlists/${playlistId}/items`, { items: this.pendingPlaylistTracks.map(track => this.playlistItemFromTrack(track)) })
         this.showPlaylistPicker = false
-        this.showSuccNotif(`已加入 ${this.pendingPlaylistTracks.length} 首曲目`)
+        this.showSuccNotif(t('workTree.tracksAdded', { count: this.pendingPlaylistTracks.length }))
       } catch (error) {
-        this.showErrNotif(this.playlistError(error, '加入播放列表失败'))
+        this.showErrNotif(this.playlistError(error, t('workTree.addFailed')))
       } finally {
         this.addingToPlaylist = false
       }
@@ -314,9 +315,9 @@ export default {
       try {
         await this.$axios.post('/api/playlists', { name: this.newPlaylistName, items: this.pendingPlaylistTracks.map(track => this.playlistItemFromTrack(track)) })
         this.showPlaylistPicker = false
-        this.showSuccNotif('播放列表已创建')
+        this.showSuccNotif(t('workTree.playlistCreated'))
       } catch (error) {
-        this.showErrNotif(this.playlistError(error, '创建播放列表失败'))
+        this.showErrNotif(this.playlistError(error, t('workTree.createFailed')))
       } finally {
         this.addingToPlaylist = false
       }
@@ -398,9 +399,9 @@ export default {
       const urlWithoutToken = imgFile.mediaDownloadUrl ? `${imgFile.mediaDownloadUrl}` : `/api/media/download/${imgFile.hash}`;
       this.$store.commit('AudioPlayer/SET_VISUAL_PLAYER_COVER_URL', urlWithoutToken);
       this.$q.notify({
-        message: "封面设置成功",
+        message: t('workTree.coverSaved'),
         actions: [
-          { label: "前往大屏页面",
+          { label: t('workTree.openFullscreen'),
             handler: () => {
               // this.$router.push(`/fullScreenPlayer/${this.playWorkId}`)
               this.$router.push(`/fullScreenPlayer`)

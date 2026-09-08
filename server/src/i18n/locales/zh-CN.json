@@ -1,0 +1,170 @@
+{
+  "validation": {
+    "invalidValue": "字段 {field} 的值无效"
+  },
+  "auth": {
+    "usernameLength": "用户名长度至少为 5",
+    "passwordLength": "密码长度至少为 5",
+    "invalidCredentials": "用户名或密码错误.",
+    "serverError": "服务器错误"
+  },
+  "config": {
+    "githubReleases": "GitHub Releases",
+    "dlsiteMetadata": "DLsite 元数据",
+    "dlsiteImages": "DLsite 图片 CDN",
+    "metadataService": "Kikoeru 元数据服务",
+    "proxyPortInvalid": "手动代理端口必须是 1 到 65535 之间的整数",
+    "folderAbsolute": "媒体目录必须使用绝对路径",
+    "folderNotDirectory": "媒体目录路径不是文件夹",
+    "folderNameRequired": "请填写媒体目录名称",
+    "folderCheckFailed": "媒体目录检查失败：{value}",
+    "folderRequired": "请至少添加一个媒体目录",
+    "folderNameDuplicate": "媒体目录名称不能为空或重复",
+    "setupSaved": "初始化设置已保存",
+    "setupFailed": "保存初始化设置失败：{value}",
+    "savedWithTags": "保存成功，已根据 tagLanguage={newTagLanguage} 更新 {count} 个标签名称.",
+    "saved": "保存成功.",
+    "adminWriteRequired": "只有 admin 账号能修改配置文件.",
+    "tagsRefreshed": "已根据 tagLanguage={tagLanguage} 刷新 {count} 个标签名称.",
+    "adminReadRequired": "只有 admin 账号能读取管理配置文件."
+  },
+  "credentials": {
+    "usernameLength": "用户名长度至少为 5",
+    "passwordLength": "密码长度至少为 5",
+    "groupInvalid": "用户组名称必须为 ['user', 'guest'] 的一个.",
+    "userCreated": "用户 {name} 创建成功.",
+    "userExists": "用户 {name} 已存在.",
+    "adminCreateRequired": "只有 admin 账号能创建新用户.",
+    "passwordChanged": "密码修改成功.",
+    "usernameInvalid": "用户名错误.",
+    "ownPasswordOnly": "只能修改自己账号的密码.",
+    "deleted": "删除成功.",
+    "adminCannotDelete": "不能删除内置的管理员账号.",
+    "adminDeleteRequired": "只有 admin 账号能删除用户.",
+    "adminReadRequired": "只有 admin 账号能浏览用户."
+  },
+  "edit": {
+    "coverMissing": "原始封面不存在",
+    "metadataFailed": "修改作品meta失败：{message}",
+    "jpegRequired": "图像文件非jpeg，无法保存自定义封面，目前只支持jpeg格式的封面"
+  },
+  "library": {
+    "workMissing": "作品不存在",
+    "archived": "作品已归档",
+    "duplicateName": "分组名称已存在",
+    "createFailed": "创建作品分组失败",
+    "collectionMissing": "作品分组不存在",
+    "renamed": "作品分组已重命名",
+    "renameFailed": "重命名作品分组失败",
+    "added": "已加入 {count} 个作品",
+    "alreadyAdded": "所选作品已在分组中",
+    "orderMismatch": "作品分组不存在，或作品顺序与服务器不一致",
+    "orderSaved": "作品顺序已保存"
+  },
+  "media": {
+    "unsupportedType": "不支持的媒体类型",
+    "pretranscodeReady": "预转码已就绪",
+    "pretranscodeStarted": "预转码已开始",
+    "pretranscodeRunning": "预转码正在进行",
+    "folderMissing": "找不到文件夹: \"{root_folder}\"，请尝试重启服务器或重新扫描.",
+    "lyricsFound": "找到歌词文件",
+    "invalidLyricsPath": "只能保存vtt格式的歌词文件，当前保存路径格式无效{writePath}",
+    "lyricsArrayRequired": "歌词内容必须是数组.",
+    "workMissing": "找不到作品: {work_id}",
+    "noLyrics": "不存在歌词文件",
+    "bitrateInvalid": "仅支持 128 或 320 kbps 的转码码率.",
+    "unknownError": "未知错误",
+    "sourceUnreadable": "源音频文件不存在或不可读: {filePath}",
+    "sourceNotFile": "源音频路径不是文件: {filePath}",
+    "sourceChanged": "源音频文件在媒体处理期间发生了变化: {filePath}",
+    "missingWork": "找不到作品: {workId}",
+    "missingTrack": "找不到音轨: {hashIndex}",
+    "transcodeOutputMissing": "转码完成，但未生成临时输出文件.",
+    "finalOutputMissing": "转码完成，但最终输出文件不存在.",
+    "queueFull": "媒体处理队列已满，请稍后重试."
+  },
+  "metadata": {
+    "unavailable": "当前内容显示设置下无可用作品",
+    "filesFailed": "获取文件列表失败，请检查文件是否存在或重新扫描清理",
+    "folderMissing": "找不到文件夹: \"{root_folder}\"，请尝试重启服务器或重新扫描.",
+    "serverError": "服务器错误",
+    "circleMissing": "社团{id}不存在",
+    "tagMissing": "标签{id}不存在",
+    "voiceActorMissing": "声优{id}不存在",
+    "queryFailed": "查询过程中出错",
+    "scanFolderMissing": "扫描作品文件失败，没有找到rootFolder: {root_folder}",
+    "scanFailed": "刷新作品本地文件失败：{message}",
+    "renameFolderFailed": "修复乱码文件夹出现错误{message}",
+    "encodingFailed": "修复乱码问题失败：{message}",
+    "workMissing": "作品 id={work_id} 不存在",
+    "workDeleted": "作品 \"{title}\" 已删除",
+    "deleteFailed": "删除作品失败：{message}",
+    "fileInfoFailed": "获取文件信息失败：{message}"
+  },
+  "playlist": {
+    "duplicateName": "播放列表名称已存在",
+    "saveFailed": "保存播放列表失败",
+    "missing": "播放列表不存在",
+    "renamed": "播放列表已重命名",
+    "renameFailed": "重命名播放列表失败",
+    "tracksAdded": "曲目已加入播放列表",
+    "trackMissing": "播放列表或曲目不存在",
+    "orderMismatch": "播放列表不存在，或曲目顺序与服务器不一致",
+    "orderSaved": "曲目顺序已保存"
+  },
+  "play_histroy": {
+    "queryFailed": "查询过程中出错",
+    "saved": "更新历史成功",
+    "saveFailed": "更新播放历史失败，服务器错误",
+    "deleted": "删除历史记录成功"
+  },
+  "review": {
+    "queryFailed": "查询过程中出错",
+    "progressSaved": "更新进度成功",
+    "saved": "评价成功",
+    "saveFailed": "评价失败，服务器错误",
+    "deleted": "删除标记成功"
+  },
+  "scanFailures": {
+    "cleared": "已清除 {count} 条失败记录"
+  },
+  "update": {
+    "noDownload": "当前没有正在进行的更新下载"
+  },
+  "version": {
+    "scanRecommended": "新版解决了旧版扫描时将かの仔和こっこ识别为同一个人的问题，建议进行扫描以自动修复这一问题"
+  },
+  "accessControl": {
+    "adminRequired": "只有管理员可以执行该操作.",
+    "writeDisabled": "危险写操作已禁用；请启用鉴权，或显式允许未鉴权写操作.",
+    "loginRequired": "该写操作要求登录，或由管理员显式允许未鉴权写入."
+  },
+  "app": {
+    "schemaMissing": "数据库结构尚未建立，请先执行扫描.",
+    "databaseError": "数据库错误.",
+    "serverError": "服务器错误"
+  },
+  "socket": {
+    "loginRequired": "管理后台需要登录.",
+    "loginExpired": "管理后台登录已失效.",
+    "adminRequired": "管理后台需要管理员权限.",
+    "connected": "成功登录管理后台."
+  },
+  "updateManager": {
+    "versionInvalid": "GitHub Release 的版本号格式无效",
+    "updateContainer": "容器版本需要通过 Docker 或 Podman 更新镜像",
+    "updateSource": "源码运行模式请通过 Git 更新或下载新的发行包",
+    "useLauncher": "请通过发行包中的启动脚本运行 Kikoeru",
+    "externalDatabase": "使用外部数据库时需要手动完成应用更新",
+    "downloadContainer": "容器版本通过 Docker 或 Podman 拉取新镜像",
+    "releaseMissing": "GitHub Release 没有返回有效版本",
+    "alreadyLatest": "当前已经是最新版本",
+    "assetMissing": "当前系统没有可用的更新包",
+    "checksumMissing": "GitHub Release 没有提供可校验的 SHA-256",
+    "checksumMismatch": "更新包 SHA-256 校验失败",
+    "sizeMismatch": "更新包大小与 GitHub Release 不一致",
+    "cancelled": "下载已取消",
+    "scannerRunning": "扫描任务运行中，请等待扫描完成后再安装更新",
+    "downloadIncomplete": "更新包尚未下载完成"
+  }
+}

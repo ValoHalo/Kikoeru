@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 
 const crypto = require("node:crypto");
 const fs = require("node:fs");
@@ -89,7 +90,7 @@ function removeFile(filePath) {
 
 function sanitizeVersion(tagName) {
     if (!/^v?[0-9A-Za-z][0-9A-Za-z._-]*$/.test(String(tagName || ""))) {
-        throw new Error("GitHub Release 的版本号格式无效");
+        throw new Error(t('updateManager.versionInvalid'));
     }
     return String(tagName);
 }
@@ -112,22 +113,22 @@ function restorePersistedState() {
 function installSupport() {
     const installKind = detectInstallKind();
     if (installKind === "container")
-        return { supported: false, reason: "容器版本需要通过 Docker 或 Podman 更新镜像" };
+        return { supported: false, reason: t('updateManager.updateContainer') };
     if (installKind === "source")
-        return { supported: false, reason: "源码运行模式请通过 Git 更新或下载新的发行包" };
+        return { supported: false, reason: t('updateManager.updateSource') };
     if (process.env.KIKOERU_UPDATE_SUPERVISOR !== "1")
-        return { supported: false, reason: "请通过发行包中的启动脚本运行 Kikoeru" };
+        return { supported: false, reason: t('updateManager.useLauncher') };
     if (!String(config.sqliteType || "").includes("sqlite"))
-        return { supported: false, reason: "使用外部数据库时需要手动完成应用更新" };
+        return { supported: false, reason: t('updateManager.externalDatabase') };
     return { supported: true, reason: null };
 }
 
 function downloadSupport() {
     const installKind = detectInstallKind();
     if (installKind === "container")
-        return { supported: false, reason: "容器版本通过 Docker 或 Podman 拉取新镜像" };
+        return { supported: false, reason: t('updateManager.downloadContainer') };
     if (installKind === "source")
-        return { supported: false, reason: "源码运行模式请通过 Git 更新或下载新的发行包" };
+        return { supported: false, reason: t('updateManager.updateSource') };
     return { supported: true, reason: null };
 }
 
@@ -195,7 +196,7 @@ async function fetchLatestRelease() {
         ? response.data.find(item => item && !item.draft)
         : response.data;
     if (!release || !release.tag_name)
-        throw new Error("GitHub Release 没有返回有效版本");
+        throw new Error(t('updateManager.releaseMissing'));
     return release;
 }
 
@@ -226,7 +227,7 @@ async function downloadUpdate() {
     if (!latestRelease)
         await checkForUpdates({ force: true });
     if (!isUpstreamUpdateAvailable(latestRelease.tag_name, packageJson.version))
-        throw new Error("当前已经是最新版本");
+        throw new Error(t('updateManager.alreadyLatest'));
 
     const download = downloadSupport();
     if (!download.supported)
@@ -234,10 +235,10 @@ async function downloadUpdate() {
     const installKind = detectInstallKind();
     const asset = selectReleaseAsset(latestRelease, installKind);
     if (!asset)
-        throw new Error("当前系统没有可用的更新包");
+        throw new Error(t('updateManager.assetMissing'));
     const expectedDigest = parseSha256Digest(asset.digest);
     if (!expectedDigest)
-        throw new Error("GitHub Release 没有提供可校验的 SHA-256");
+        throw new Error(t('updateManager.checksumMissing'));
 
     const targetVersion = sanitizeVersion(latestRelease.tag_name);
     const targetFolder = path.join(updatesRoot, targetVersion);
@@ -276,9 +277,9 @@ async function downloadUpdate() {
         await pipeline(response.data, progress, fs.createWriteStream(partialPath));
         const actualDigest = hash.digest("hex");
         if (actualDigest !== expectedDigest)
-            throw new Error("更新包 SHA-256 校验失败");
+            throw new Error(t('updateManager.checksumMismatch'));
         if (asset.size && state.downloadedBytes !== Number(asset.size))
-            throw new Error("更新包大小与 GitHub Release 不一致");
+            throw new Error(t('updateManager.sizeMismatch'));
         removeFile(packagePath);
         fs.renameSync(partialPath, packagePath);
         state = {
@@ -295,7 +296,7 @@ async function downloadUpdate() {
     catch (error) {
         removeFile(partialPath);
         state.phase = "error";
-        state.error = error.name === "CanceledError" ? "下载已取消" : error.message || String(error);
+        state.error = error.name === "CanceledError" ? t('updateManager.cancelled') : error.message || String(error);
         throw new Error(state.error);
     }
     finally {
@@ -334,9 +335,9 @@ async function requestInstall() {
     if (!support.supported)
         throw new Error(support.reason);
     if (runtimeState.scannerActive)
-        throw new Error("扫描任务运行中，请等待扫描完成后再安装更新");
+        throw new Error(t('updateManager.scannerRunning'));
     if (state.phase !== "ready" || !state.packagePath || !fs.existsSync(state.packagePath))
-        throw new Error("更新包尚未下载完成");
+        throw new Error(t('updateManager.downloadIncomplete'));
 
     await prepareDatabaseForUpdate();
     const marker = {

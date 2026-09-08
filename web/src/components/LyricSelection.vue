@@ -2,10 +2,10 @@
   <q-card class="lyric-selection">
     <q-card-section class="row no-wrap items-start lyric-header">
       <div class="col lyric-header-copy">
-        <div class="text-h5">歌词选择</div>
-        <div class="text-caption text-grey-7 ellipsis">{{ currentPlayingFile.title || '尚未选择曲目' }}</div>
+        <div class="text-h5">{{ $t('lyricSelection.title') }}</div>
+        <div class="text-caption text-grey-7 ellipsis">{{ currentPlayingFile.title || $t('lyricSelection.noTrack') }}</div>
       </div>
-      <q-btn v-close-popup flat round class="col-auto" icon="close" aria-label="关闭歌词选择" @click="isEditingLyrics = false" />
+      <q-btn v-close-popup flat round class="col-auto" icon="close" :aria-label="$t('lyricSelection.close')" @click="isEditingLyrics = false" />
     </q-card-section>
 
     <q-separator />
@@ -15,18 +15,18 @@
         v-if="isAdministrator"
         color="primary"
         :icon="isEditingLyrics ? 'edit_off' : 'edit'"
-        :label="$q.screen.lt.sm ? undefined : (isEditingLyrics ? '退出编辑' : '编辑歌词')"
+        :label="$q.screen.lt.sm ? undefined : (isEditingLyrics ? $t('lyricSelection.exitEdit') : $t('lyricSelection.edit'))"
         :round="$q.screen.lt.sm"
-        :aria-label="isEditingLyrics ? '退出歌词编辑' : '编辑歌词'"
+        :aria-label="isEditingLyrics ? $t('lyricSelection.exitEditing') : $t('lyricSelection.edit')"
         @click="isEditingLyrics = !isEditingLyrics"
       />
       <q-btn
         v-if="isEditingLyrics"
         color="warning"
         icon="save"
-        :label="$q.screen.lt.sm ? undefined : '保存歌词'"
+        :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.save')"
         :round="$q.screen.lt.sm"
-        aria-label="保存歌词"
+        :aria-label="$t('lyricSelection.save')"
         :disable="!isAdministrator || lyricLines.length === 0"
         :loading="saving"
         @click="saveLyrics"
@@ -35,9 +35,9 @@
         v-if="!isEditingLyrics"
         color="secondary"
         icon="library_music"
-        :label="$q.screen.lt.sm ? undefined : '选择其他歌词'"
+        :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.selectOther')"
         :round="$q.screen.lt.sm"
-        aria-label="选择其他歌词"
+        :aria-label="$t('lyricSelection.selectOther')"
         :disable="!currentPlayingFile.hash"
         :loading="loadingOptions"
         @click="fetchOtherLyricFiles"
@@ -46,9 +46,9 @@
         v-if="!isEditingLyrics"
         color="negative"
         icon="subtitles_off"
-        :label="$q.screen.lt.sm ? undefined : '关闭歌词'"
+        :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.disable')"
         :round="$q.screen.lt.sm"
-        aria-label="关闭歌词"
+        :aria-label="$t('lyricSelection.disable')"
         :disable="!hasLyric"
         @click="closeLyric"
       />
@@ -56,9 +56,9 @@
         v-if="!isEditingLyrics"
         color="primary"
         icon="my_location"
-        :label="$q.screen.lt.sm ? undefined : '转到当前段落'"
+        :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.currentLine')"
         :round="$q.screen.lt.sm"
-        aria-label="转到当前段落"
+        :aria-label="$t('lyricSelection.currentLine')"
         @click="showCurrentLyric"
       />
       <q-btn
@@ -66,24 +66,20 @@
         outline
         color="primary"
         icon="timer"
-        :label="$q.screen.lt.sm ? undefined : '以当前播放位置设置本行结束时间'"
+        :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.setLineEnd')"
         :round="$q.screen.lt.sm"
-        aria-label="以当前播放位置设置本行结束时间"
+        :aria-label="$t('lyricSelection.setLineEnd')"
         :disable="!isAdministrator || lyricLines.length === 0"
         @click="setCurrentLineEndTime"
       />
-      <q-toggle v-if="!isEditingLyrics" class="lyric-auto-track" v-model="autoTrackCurrentLine" label="自动跟踪当前歌词" />
-      <div v-if="!isAdministrator" class="text-caption text-grey-7">
-        当前用户可查看和切换歌词；编辑及保存需要管理员权限。
-      </div>
+      <q-toggle v-if="!isEditingLyrics" class="lyric-auto-track" v-model="autoTrackCurrentLine" :label="$t('lyricSelection.autoFollow')" />
+      <div v-if="!isAdministrator" class="text-caption text-grey-7">{{ $t('lyricSelection.permissionHint') }}</div>
     </q-card-section>
 
     <q-separator />
 
     <q-card-section class="lyric-list-container">
-      <div v-if="lyricLines.length === 0" class="text-grey-7 text-center q-pa-xl">
-        当前曲目没有已加载的歌词。可点击“选择其他歌词”查看候选文件。
-      </div>
+      <div v-if="lyricLines.length === 0" class="text-grey-7 text-center q-pa-xl">{{ $t('lyricSelection.noLyrics') }}</div>
       <q-list v-else separator class="scroll lyric-list">
         <q-item
           v-for="(line, index) in lyricLines"
@@ -99,8 +95,7 @@
             <q-chip size="sm" color="primary" text-color="white">
               {{ formatSeconds(line.time / 1000, true) }}
             </q-chip>
-            <div v-if="hasExplicitEnd(line)" class="text-caption">
-              至 {{ formatSeconds(line.timeEnd / 1000, true) }}
+            <div v-if="hasExplicitEnd(line)" class="text-caption">{{ $t('lyricSelection.until', { value: formatSeconds(line.timeEnd / 1000, true) }) }}
             </div>
           </q-item-section>
 
@@ -113,7 +108,7 @@
           <q-item-section v-if="isAdministrator && isEditingLyrics" side>
             <div class="row no-wrap q-gutter-xs">
               <q-btn flat round dense icon="edit" color="primary" @click.stop="openLineEditor(index)">
-                <q-tooltip>编辑文字和时间</q-tooltip>
+                <q-tooltip>{{ $t('lyricSelection.editLine') }}</q-tooltip>
               </q-btn>
               <q-btn
                 v-if="!line.deleted"
@@ -124,7 +119,7 @@
                 color="negative"
                 @click.stop="deleteLyricLine(index)"
               >
-                <q-tooltip>删除此行（保存后生效）</q-tooltip>
+                <q-tooltip>{{ $t('lyricSelection.deleteLine') }}</q-tooltip>
               </q-btn>
               <q-btn
                 v-else
@@ -135,7 +130,7 @@
                 color="positive"
                 @click.stop="recoverDeletedLyricLine(index)"
               >
-                <q-tooltip>恢复此行</q-tooltip>
+                <q-tooltip>{{ $t('lyricSelection.restoreLine') }}</q-tooltip>
               </q-btn>
             </div>
           </q-item-section>
@@ -146,14 +141,12 @@
     <q-dialog v-model="openLyricFileSelection">
       <q-card class="lyric-option-card">
         <q-card-section class="row items-center justify-between">
-          <div class="text-h5">选择其他歌词文件</div>
+          <div class="text-h5">{{ $t('lyricSelection.selectFile') }}</div>
           <q-btn v-close-popup flat round icon="close" />
         </q-card-section>
         <q-separator />
         <q-card-section>
-          <div v-if="lyricOptionList.length === 0" class="text-grey-7 text-center q-pa-lg">
-            没有找到候选歌词。
-          </div>
+          <div v-if="lyricOptionList.length === 0" class="text-grey-7 text-center q-pa-lg">{{ $t('lyricSelection.noCandidates') }}</div>
           <q-list v-else separator class="scroll lyric-option-list">
             <q-item
               v-for="(option, index) in lyricOptionList"
@@ -164,12 +157,12 @@
             >
               <q-item-section>
                 <q-item-label>{{ option.title }}</q-item-label>
-                <q-item-label caption lines="2">{{ option.subtitle || '作品根目录' }}</q-item-label>
+                <q-item-label caption lines="2">{{ option.subtitle || $t('lyricSelection.workRoot') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <div class="row items-center q-gutter-xs">
                   <q-chip dense color="primary" text-color="white">{{ subtitleLanguageLabel(option.language) }}</q-chip>
-                  <q-chip dense outline color="grey-7">匹配 {{ formatMatchLevel(option.matchLevel) }}</q-chip>
+                  <q-chip dense outline color="grey-7">{{ $t('lyricSelection.match', { value: formatMatchLevel(option.matchLevel) }) }}</q-chip>
                 </div>
               </q-item-section>
             </q-item>
@@ -180,16 +173,16 @@
 
     <q-dialog v-model="openEditor">
       <q-card class="lyric-editor-card">
-        <q-card-section class="text-h6">编辑歌词行</q-card-section>
+        <q-card-section class="text-h6">{{ $t('lyricSelection.editLineTitle') }}</q-card-section>
         <q-card-section class="q-gutter-md">
-          <q-input v-model="editLyricText" outlined autogrow label="歌词文字" />
+          <q-input v-model="editLyricText" outlined autogrow :label="$t('lyricSelection.text')" />
           <q-input
             v-model.number="editStartSeconds"
             outlined
             type="number"
             step="0.001"
             min="0"
-            label="开始时间（秒）"
+            :label="$t('lyricSelection.startTime')"
           />
           <q-input
             v-model.number="editEndSeconds"
@@ -198,12 +191,12 @@
             step="0.001"
             min="0"
             clearable
-            label="结束时间（秒，留空则自动衔接下一行）"
+            :label="$t('lyricSelection.endTime')"
           />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn v-close-popup flat label="取消" />
-          <q-btn color="primary" label="应用" @click="confirmLyricChange" />
+          <q-btn v-close-popup flat :label="$t('common.cancel')" />
+          <q-btn color="primary" :label="$t('lyricSelection.apply')" @click="confirmLyricChange" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -211,6 +204,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import { mapGetters, mapMutations, mapState } from 'vuex'
 import { formatSeconds, ServerApi } from 'src/utils'
 import NotifyMixin from '../mixins/Notification.js'
@@ -328,11 +322,11 @@ export default {
         ? null
         : Number(this.editEndSeconds)
       if (!Number.isFinite(startSeconds) || startSeconds < 0) {
-        this.showErrNotif('开始时间必须是非负数')
+        this.showErrNotif(t('lyricSelection.invalidStart'))
         return
       }
       if (endSeconds !== null && (!Number.isFinite(endSeconds) || endSeconds < startSeconds)) {
-        this.showErrNotif('结束时间必须不早于开始时间')
+        this.showErrNotif(t('lyricSelection.invalidEnd'))
         return
       }
 
@@ -357,7 +351,7 @@ export default {
       if (!line) return
       const endTime = Math.round(this.currentTime * 1000)
       if (endTime < Number(line.time)) {
-        this.showErrNotif('当前播放位置早于本行开始时间')
+        this.showErrNotif(t('lyricSelection.playbackBeforeStart'))
         return
       }
       line.timeEnd = endTime
@@ -387,13 +381,13 @@ export default {
 
     saveLyrics () {
       if (!this.isAdministrator) {
-        this.showErrNotif('保存歌词需要管理员权限')
+        this.showErrNotif(t('lyricSelection.adminRequired'))
         return
       }
       const defaultPath = this.defaultWritePath()
       this.$q.dialog({
-        title: '保存歌词文件',
-        message: '请输入相对于当前作品根目录的保存路径，必须以 .vtt 结束：',
+        title: t('lyricSelection.saveFile'),
+        message: t('lyricSelection.savePathPrompt'),
         prompt: {
           model: defaultPath,
           isValid: value => typeof value === 'string' && value.toLowerCase().endsWith('.vtt'),
@@ -409,11 +403,11 @@ export default {
             .map(line => ({ ...line }))
             .sort((left, right) => left.time - right.time)
           if (lines.length === 0) {
-            throw new Error('没有可保存的歌词行')
+            throw new Error(t('lyricSelection.noLines'))
           }
           await ServerApi.saveLyric(this.playWorkId, writePath, lines)
           this.SET_LYRIC_LINES(lines)
-          this.showSuccNotif('歌词已保存为 VTT')
+          this.showSuccNotif(t('lyricSelection.saved'))
         } catch (error) {
           this.showErrNotif(this.errorMessage(error))
         } finally {

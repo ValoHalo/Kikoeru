@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
 const path = require("path");
@@ -96,13 +97,13 @@ async function resolveItems(items, sfwOnly = false) {
 }
 
 function playlistItemValidators(optional = false) {
-    const arrayValidator = optional ? body('items').optional() : body('items');
+    const arrayValidator = optional ? body('items', (_value, { path }) => t('validation.invalidValue', { field: path })).optional() : body('items', (_value, { path }) => t('validation.invalidValue', { field: path }));
     return [
         arrayValidator.isArray({ min: optional ? 0 : 1, max: 10000 }),
-        body('items.*.workId').isInt({ min: 1 }),
-        body('items.*.relativePath').isString().isLength({ min: 1, max: 2048 }),
-        body('items.*.title').isString().isLength({ min: 1, max: 512 }),
-        body('items.*.workTitle').optional().isString().isLength({ max: 512 }),
+        body('items.*.workId', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }),
+        body('items.*.relativePath', (_value, { path }) => t('validation.invalidValue', { field: path })).isString().isLength({ min: 1, max: 2048 }),
+        body('items.*.title', (_value, { path }) => t('validation.invalidValue', { field: path })).isString().isLength({ min: 1, max: 512 }),
+        body('items.*.workTitle', (_value, { path }) => t('validation.invalidValue', { field: path })).optional().isString().isLength({ max: 512 }),
     ];
 }
 
@@ -121,7 +122,7 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-router.post('/', requireAuthenticatedWrite, body('name').trim().isLength({ min: 1, max: 80 }), ...playlistItemValidators(false), async (req, res) => {
+router.post('/', requireAuthenticatedWrite, body('name', (_value, { path }) => t('validation.invalidValue', { field: path })).trim().isLength({ min: 1, max: 80 }), ...playlistItemValidators(false), async (req, res) => {
     if (!isValidRequest(req, res))
         return;
     try {
@@ -133,21 +134,21 @@ router.post('/', requireAuthenticatedWrite, body('name').trim().isLength({ min: 
     catch (error) {
         const message = String(error && error.message || error);
         if (/unique|duplicate/i.test(message)) {
-            res.status(409).send({ error: '播放列表名称已存在' });
+            res.status(409).send({ error: t('playlist.duplicateName') });
             return;
         }
         console.error(error);
-        res.status(500).send({ error: '保存播放列表失败' });
+        res.status(500).send({ error: t('playlist.saveFailed') });
     }
 });
 
-router.get('/:id', param('id').isInt({ min: 1 }), async (req, res, next) => {
+router.get('/:id', param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const result = await db.getPlaylist(getRequestUsername(req, config), Number(req.params.id));
         if (!result) {
-            res.status(404).send({ error: '播放列表不存在' });
+            res.status(404).send({ error: t('playlist.missing') });
             return;
         }
         res.send({ playlist: result.playlist, items: await resolveItems(result.items, req.query.nsfw === '1') });
@@ -157,30 +158,30 @@ router.get('/:id', param('id').isInt({ min: 1 }), async (req, res, next) => {
     }
 });
 
-router.patch('/:id', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), body('name').trim().isLength({ min: 1, max: 80 }), async (req, res) => {
+router.patch('/:id', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), body('name', (_value, { path }) => t('validation.invalidValue', { field: path })).trim().isLength({ min: 1, max: 80 }), async (req, res) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const updated = await db.renamePlaylist(getRequestUsername(req, config), Number(req.params.id), req.body.name);
         if (!updated) {
-            res.status(404).send({ error: '播放列表不存在' });
+            res.status(404).send({ error: t('playlist.missing') });
             return;
         }
-        res.send({ message: '播放列表已重命名' });
+        res.send({ message: t('playlist.renamed') });
     }
     catch (error) {
         const message = String(error && error.message || error);
-        res.status(/unique|duplicate/i.test(message) ? 409 : 500).send({ error: /unique|duplicate/i.test(message) ? '播放列表名称已存在' : '重命名播放列表失败' });
+        res.status(/unique|duplicate/i.test(message) ? 409 : 500).send({ error: /unique|duplicate/i.test(message) ? t('playlist.duplicateName') : t('playlist.renameFailed') });
     }
 });
 
-router.delete('/:id', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), async (req, res, next) => {
+router.delete('/:id', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const deleted = await db.deletePlaylist(getRequestUsername(req, config), Number(req.params.id));
         if (!deleted) {
-            res.status(404).send({ error: '播放列表不存在' });
+            res.status(404).send({ error: t('playlist.missing') });
             return;
         }
         res.status(204).end();
@@ -190,29 +191,29 @@ router.delete('/:id', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), 
     }
 });
 
-router.post('/:id/items', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), ...playlistItemValidators(false), async (req, res, next) => {
+router.post('/:id/items', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), ...playlistItemValidators(false), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const added = await db.addPlaylistItems(getRequestUsername(req, config), Number(req.params.id), req.body.items.map(normalizeInputItem));
         if (!added) {
-            res.status(404).send({ error: '播放列表不存在' });
+            res.status(404).send({ error: t('playlist.missing') });
             return;
         }
-        res.status(201).send({ message: '曲目已加入播放列表' });
+        res.status(201).send({ message: t('playlist.tracksAdded') });
     }
     catch (error) {
         next(error);
     }
 });
 
-router.delete('/:id/items/:itemId', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), param('itemId').isInt({ min: 1 }), async (req, res, next) => {
+router.delete('/:id/items/:itemId', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), param('itemId', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const deleted = await db.deletePlaylistItem(getRequestUsername(req, config), Number(req.params.id), Number(req.params.itemId));
         if (!deleted) {
-            res.status(404).send({ error: '播放列表或曲目不存在' });
+            res.status(404).send({ error: t('playlist.trackMissing') });
             return;
         }
         res.status(204).end();
@@ -222,16 +223,16 @@ router.delete('/:id/items/:itemId', requireAuthenticatedWrite, param('id').isInt
     }
 });
 
-router.put('/:id/items/order', requireAuthenticatedWrite, param('id').isInt({ min: 1 }), body('itemIds').isArray({ min: 0, max: 10000 }), body('itemIds.*').isInt({ min: 1 }), async (req, res, next) => {
+router.put('/:id/items/order', requireAuthenticatedWrite, param('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), body('itemIds', (_value, { path }) => t('validation.invalidValue', { field: path })).isArray({ min: 0, max: 10000 }), body('itemIds.*', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res))
         return;
     try {
         const reordered = await db.reorderPlaylistItems(getRequestUsername(req, config), Number(req.params.id), req.body.itemIds, req.query.nsfw === '1');
         if (!reordered) {
-            res.status(400).send({ error: '播放列表不存在，或曲目顺序与服务器不一致' });
+            res.status(400).send({ error: t('playlist.orderMismatch') });
             return;
         }
-        res.send({ message: '曲目顺序已保存' });
+        res.send({ message: t('playlist.orderSaved') });
     }
     catch (error) {
         next(error);

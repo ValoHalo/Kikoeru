@@ -1,7 +1,7 @@
 <template>
   <div v-if="relatedWorks.length > 1" class="q-mt-sm q-px-sm">
     <q-list bordered separator>
-      <q-item-label header>关联作品</q-item-label>
+      <q-item-label header>{{ $t('relatedWorks.title') }}</q-item-label>
       <q-item
         v-for="work in relatedWorks"
         :key="work.id"

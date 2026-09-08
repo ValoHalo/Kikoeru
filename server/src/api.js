@@ -9,6 +9,7 @@ const config_1 = require("./config");
 const utils_1 = require("./auth/utils");
 const token_1 = require("./auth/token");
 function configApiToApp(app) {
+    app.use('/api', require('./i18n').localizeRequest);
     if (config_1.config.auth) {
         app.use('/api', (0, express_jwt_1.default)({
             secret: config_1.config.jwtsecret,

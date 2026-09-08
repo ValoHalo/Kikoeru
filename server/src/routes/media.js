@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -96,7 +97,7 @@ const lufsPersistentCache = new PersistentCache_1.PersistentCache(config_1.confi
         && Array.isArray(data.audioInfo.peakLevels);
 });
 const { sendHiddenCover } = require("./utils/coverVisibility");
-router.get('/stream/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), (req, res, next) => {
+router.get('/stream/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     db.knex('t_work')
@@ -137,12 +138,12 @@ router.get('/stream/:id/:index', (0, express_validator_1.param)('id').isInt(), (
                 .catch(err => next(err));
         }
         else {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
         }
     })
         .catch(err => next(err));
 });
-router.get('/download/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), (req, res, next) => {
+router.get('/download/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     db.knex('t_work')
@@ -171,11 +172,11 @@ router.get('/download/:id/:index', (0, express_validator_1.param)('id').isInt(),
                 .catch(err => next(err));
         }
         else {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
         }
     }).catch(err => next(err));
 });
-router.get('/query-lrc/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), async (req, res, next) => {
+router.get('/query-lrc/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
@@ -187,7 +188,7 @@ router.get('/query-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
             .first();
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (!rootFolder) {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
             return;
         }
         const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
@@ -231,7 +232,7 @@ router.get('/query-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
         next(err);
     }
 });
-router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('hash').isInt(), async (req, res, next) => {
+router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('hash', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
@@ -243,7 +244,7 @@ router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id').isInt(),
             .first();
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (!rootFolder) {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
             return;
         }
         const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
@@ -267,7 +268,7 @@ router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id').isInt(),
         }
         res.send({
             result: true,
-            message: '找到歌词文件',
+            message: t('media.lyricsFound'),
             hash,
             lyricExtension: extension,
             language: (0, subtitleLanguage_1.detectSubtitleLanguage)(fileContent, track.title),
@@ -278,16 +279,16 @@ router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id').isInt(),
         next(e);
     }
 });
-router.post('/save-lrc/:id', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id').isInt(), async (req, res, next) => {
+router.post('/save-lrc/:id', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     const work_id = req.params.id;
     const writePath = req.body.writePath;
     const lyricLines = req.body.lrc;
     if (typeof writePath !== 'string' || !writePath.toLowerCase().endsWith(".vtt")) {
-        res.status(500).send({ error: `只能保存vtt格式的歌词文件，当前保存路径格式无效${writePath}` });
+        res.status(500).send({ error: t('media.invalidLyricsPath', { writePath: writePath }) });
         return;
     }
     if (!Array.isArray(lyricLines)) {
-        res.status(400).send({ error: '歌词内容必须是数组.' });
+        res.status(400).send({ error: t('media.lyricsArrayRequired') });
         return;
     }
     try {
@@ -296,12 +297,12 @@ router.post('/save-lrc/:id', accessControl_1.requireAdministrator, (0, express_v
             .where('id', '=', work_id)
             .first();
         if (!work) {
-            res.status(404).send({ error: `找不到作品: ${work_id}` });
+            res.status(404).send({ error: t('media.workMissing', { work_id: work_id }) });
             return;
         }
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (!rootFolder) {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
             return;
         }
         const absWorkDir = path_1.default.join(rootFolder.path, work.dir);
@@ -333,7 +334,7 @@ router.post('/save-lrc/:id', accessControl_1.requireAdministrator, (0, express_v
         next(e);
     }
 });
-router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), async (req, res, next) => {
+router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
@@ -345,7 +346,7 @@ router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
             .first();
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (!rootFolder) {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
             return;
         }
         const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
@@ -382,7 +383,7 @@ router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
         matchedTracks.sort((left, right) => compareLyricTracks(left, right, req.query.language));
         console.log("[find-lrc] matchedTracks: ", matchedTracks);
         if (matchedTracks.length == 0) {
-            res.send({ result: false, message: '不存在歌词文件', hash: '' });
+            res.send({ result: false, message: t('media.noLyrics'), hash: '' });
             return;
         }
         const bestLrcTrack = matchedTracks[0];
@@ -404,7 +405,7 @@ router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id').isInt()
         }
         res.send({
             result: true,
-            message: '找到歌词文件',
+            message: t('media.lyricsFound'),
             hash: bestLrcTrack.hash,
             lyricExtension: path_1.default.extname(bestLrcTrack.title).toLowerCase(),
             language: bestLrcTrack.language,
@@ -421,7 +422,7 @@ function parseTranscodeBitRate(value) {
     }
     const bitRate = Number(value);
     if (!Number.isInteger(bitRate) || !supportedTranscodeBitRates.has(bitRate)) {
-        const error = new Error('仅支持 128 或 320 kbps 的转码码率.');
+        const error = new Error(t('media.bitrateInvalid'));
         error.code = 'UNSUPPORTED_TRANSCODE_BIT_RATE';
         error.status = 400;
         throw error;
@@ -447,7 +448,7 @@ function getErrorMessage(error) {
     if (error instanceof Error && error.message) {
         return error.message;
     }
-    return String(error || '未知错误');
+    return String(error || t('media.unknownError'));
 }
 function normalizeFingerprintPath(filePath) {
     const normalizedPath = path_1.default.resolve(filePath);
@@ -467,13 +468,13 @@ async function getSourceFingerprint(filePath) {
         stat = await fs_1.default.promises.stat(filePath);
     }
     catch (cause) {
-        const error = new Error(`源音频文件不存在或不可读: ${filePath}`);
+        const error = new Error(t('media.sourceUnreadable', { filePath: filePath }));
         error.code = 'SOURCE_MEDIA_UNAVAILABLE';
         error.cause = cause;
         throw error;
     }
     if (!stat.isFile()) {
-        const error = new Error(`源音频路径不是文件: ${filePath}`);
+        const error = new Error(t('media.sourceNotFile', { filePath: filePath }));
         error.code = 'SOURCE_MEDIA_UNAVAILABLE';
         throw error;
     }
@@ -495,7 +496,7 @@ function sourceFingerprintsEqual(left, right) {
 async function assertSourceFingerprintCurrent(filePath, expectedFingerprint) {
     const currentFingerprint = await getSourceFingerprint(filePath);
     if (!sourceFingerprintsEqual(currentFingerprint, expectedFingerprint)) {
-        const error = new Error(`源音频文件在媒体处理期间发生了变化: ${filePath}`);
+        const error = new Error(t('media.sourceChanged', { filePath: filePath }));
         error.code = 'SOURCE_MEDIA_CHANGED';
         throw error;
     }
@@ -594,21 +595,21 @@ async function resolveTranscodeSource(workId, hashIndex) {
         .where('id', '=', workId)
         .first();
     if (!work) {
-        throw createUnavailableSourceError(`找不到作品: ${workId}`);
+        throw createUnavailableSourceError(t('media.missingWork', { workId: workId }));
     }
     const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
     if (!rootFolder) {
-        throw createUnavailableSourceError(`找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.`);
+        throw createUnavailableSourceError(t('media.folderMissing', { root_folder: work.root_folder }));
     }
     const tracks = await (0, utils_1.getTrackList)(workId, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
     const track = tracks[hashIndex];
     if (!track) {
-        throw createUnavailableSourceError(`找不到音轨: ${hashIndex}`);
+        throw createUnavailableSourceError(t('media.missingTrack', { hashIndex: hashIndex }));
     }
     const fileFullPath = path_1.default.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
     const extName = path_1.default.extname(fileFullPath).toLocaleLowerCase();
     if (!utils_1.supportedMediaExtList.includes(extName)) {
-        throw new Error(`Unsupported media type`);
+        throw new Error(t('media.unsupportedType'));
     }
     return {
         fileFullPath,
@@ -638,7 +639,7 @@ async function doTranscodeOrReadFromCache(workId, hashIndex, targetBitRate, read
     try {
         await audioProcessor.convertAudioToM4a(source.fileFullPath, transcodeTempPath, targetBitRate, onProgress);
         if (!fs_1.default.existsSync(transcodeTempPath)) {
-            throw new Error('转码完成，但未生成临时输出文件.');
+            throw new Error(t('media.transcodeOutputMissing'));
         }
         await assertSourceFingerprintCurrent(source.fileFullPath, source.sourceFingerprint);
         if (readValidatedTranscodeCache(transcodePath, source.sourceFingerprint)) {
@@ -654,7 +655,7 @@ async function doTranscodeOrReadFromCache(workId, hashIndex, targetBitRate, read
             throw error;
         }
         if (!fs_1.default.existsSync(transcodePath)) {
-            throw new Error('转码完成，但最终输出文件不存在.');
+            throw new Error(t('media.finalOutputMissing'));
         }
         scheduleTranscodeCacheCleanup();
         return transcodePath;
@@ -802,12 +803,12 @@ function sendTaskQueueFull(res, error) {
         return false;
     }
     res.status(503).send({
-        error: '媒体处理队列已满，请稍后重试.',
+        error: t('media.queueFull'),
         code: error.code,
     });
     return true;
 }
-router.get('/transcode/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), async (req, res, next) => {
+router.get('/transcode/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const workId = parseInt(req.params.id);
@@ -826,7 +827,7 @@ router.get('/transcode/:id/:index', (0, express_validator_1.param)('id').isInt()
         next(err);
     }
 });
-router.get('/pre-transcode/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), async (req, res) => {
+router.get('/pre-transcode/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const workId = parseInt(req.params.id);
@@ -836,7 +837,7 @@ router.get('/pre-transcode/:id/:index', (0, express_validator_1.param)('id').isI
         return;
     res.send(await getTranscodeStatusResponse(workId, hashIndex, targetBitRate));
 });
-router.post('/pre-transcode/:id/:index', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('index').isInt(), async (req, res, next) => {
+router.post('/pre-transcode/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const workId = parseInt(req.params.id);
@@ -848,7 +849,7 @@ router.post('/pre-transcode/:id/:index', (0, express_validator_1.param)('id').is
         const currentStatus = await getTranscodeStatusResponse(workId, hashIndex, targetBitRate);
         if (currentStatus.ready) {
             res.send(Object.assign({
-                message: 'pre-transcode already ready',
+                message: t('media.pretranscodeReady'),
                 alreadyTranscoding: false,
             }, currentStatus));
             return;
@@ -860,7 +861,7 @@ router.post('/pre-transcode/:id/:index', (0, express_validator_1.param)('id').is
             return;
         }
         res.send(Object.assign({
-            message: task.started ? 'pre-transcode started' : 'pre-transcode already running',
+            message: task.started ? t('media.pretranscodeStarted') : t('media.pretranscodeRunning'),
             alreadyTranscoding: !task.started,
         }, await getTranscodeStatusResponse(workId, hashIndex, targetBitRate)));
         void task.promise.catch((error) => {
@@ -943,7 +944,7 @@ async function getOrCalculateAudioInfo(fileName) {
     }));
     return loudnormTask.promise;
 }
-router.get('/calculate/loudnorm/:id/:hash', (0, express_validator_1.param)('id').isInt(), (0, express_validator_1.param)('hash').isInt(), async (req, res, next) => {
+router.get('/calculate/loudnorm/:id/:hash', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('hash', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
@@ -955,7 +956,7 @@ router.get('/calculate/loudnorm/:id/:hash', (0, express_validator_1.param)('id')
             .first();
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (!rootFolder) {
-            res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
+            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
             return;
         }
         let fileName = "";

@@ -1,4 +1,5 @@
 "use strict";
+const { t } = require('../i18n');
 
 const express = require("express");
 const db = require("../database/db");
@@ -19,7 +20,7 @@ router.get('/', async (_req, res, next) => {
 router.delete('/', async (_req, res, next) => {
     try {
         const deleted = await db.clearScanFailures();
-        res.send({ message: `已清除 ${deleted} 条失败记录` });
+        res.send({ message: t('scanFailures.cleared', { count: deleted }) });
     }
     catch (error) {
         next(error);

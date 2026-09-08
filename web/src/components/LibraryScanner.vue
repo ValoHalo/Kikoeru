@@ -2,31 +2,31 @@
   <section id="scanner" aria-labelledby="scanner-title" class="settings-section">
     <div class="settings-section__heading">
       <q-icon name="youtube_searched_for" size="22px" />
-      <h2 id="scanner-title">扫描</h2>
+      <h2 id="scanner-title">{{ $t('libraryScanner.title') }}</h2>
     </div>
     <div class="library-scan-actions">
-      <q-btn v-if="state === 'running'" unelevated no-caps class="settings-action-button" color="negative" icon="stop" label="终止扫描" aria-label="终止扫描进程"
+      <q-btn v-if="state === 'running'" unelevated no-caps class="settings-action-button" color="negative" icon="stop" :label="$t('libraryScanner.stop')" :aria-label="$t('libraryScanner.stopProcess')"
         :disable="!(loggedIn || socketConnected)" @click="killScanProceess()" />
-      <q-btn v-else unelevated no-caps class="settings-action-button" color="primary" icon="play_arrow" label="扫描音声库" aria-label="扫描本地音声库"
+      <q-btn v-else unelevated no-caps class="settings-action-button" color="primary" icon="play_arrow" :label="$t('libraryScanner.scan')" :aria-label="$t('libraryScanner.scanLibrary')"
         :disable="!(loggedIn || socketConnected)" @click="performScan()" />
-      <q-btn outline no-caps class="settings-action-button" color="primary" icon="refresh" label="刷新信息" aria-label="刷新音声库信息"
+      <q-btn outline no-caps class="settings-action-button" color="primary" icon="refresh" :label="$t('libraryScanner.refreshMetadata')" :aria-label="$t('libraryScanner.refreshLibrary')"
         :disable="state === 'running' || !(loggedIn || socketConnected)" @click="performUpdate()" />
-      <q-btn outline no-caps class="settings-action-button" color="primary" icon="find_replace" label="扫描文件" aria-label="扫描作品内文件变化"
+      <q-btn outline no-caps class="settings-action-button" color="primary" icon="find_replace" :label="$t('libraryScanner.scanFiles')" :aria-label="$t('libraryScanner.scanChanges')"
         :disable="state === 'running' || !(loggedIn || socketConnected)" @click="performWorkFileScan()" />
-      <q-btn outline no-caps class="settings-action-button" color="primary" icon="replay" label="重试失败项" aria-label="只重试失败项"
+      <q-btn outline no-caps class="settings-action-button" color="primary" icon="replay" :label="$t('libraryScanner.retry')" :aria-label="$t('libraryScanner.retryOnly')"
         :disable="state === 'running' || persistedFailures.length === 0 || !(loggedIn || socketConnected)" @click="retryFailed()" />
-      <q-btn outline no-caps class="settings-action-button settings-action-button--neutral" icon="network_check" label="测试联网" aria-label="测试联网"
+      <q-btn outline no-caps class="settings-action-button settings-action-button--neutral" icon="network_check" :label="$t('libraryScanner.networkTest')" :aria-label="$t('libraryScanner.networkTest')"
         :loading="networkTesting" :disable="state === 'running'" @click="testNetwork()" />
     </div>
 
     <div v-if="persistedFailures.length" class="scanner-status q-mt-md">
       <div class="row items-center justify-between q-pa-md">
         <div>
-          <div class="text-subtitle1">失败历史</div>
-          <div class="text-caption text-grey-7">服务器重启后仍会保留，共 {{ persistedFailures.length }} 项</div>
+          <div class="text-subtitle1">{{ $t('libraryScanner.failureHistory') }}</div>
+          <div class="text-caption text-grey-7">{{ $t('libraryScanner.failureCount', { count: persistedFailures.length }) }}</div>
         </div>
-        <q-btn outline dense class="settings-icon-button" color="negative" icon="delete_sweep" aria-label="清除失败记录" :loading="failureLoading" @click="clearFailures">
-          <q-tooltip>清除全部失败记录</q-tooltip>
+        <q-btn outline dense class="settings-icon-button" color="negative" icon="delete_sweep" :aria-label="$t('libraryScanner.clearFailures')" :loading="failureLoading" @click="clearFailures">
+          <q-tooltip>{{ $t('libraryScanner.clearAllFailures') }}</q-tooltip>
         </q-btn>
       </div>
       <q-separator />
@@ -34,9 +34,9 @@
         <q-expansion-item v-for="failure in persistedFailures" :key="failure.id" icon="error_outline" :label="failure.code" :caption="failure.message">
           <q-item dense>
             <q-item-section>
-              <q-item-label caption>阶段：{{ stageLabel(failure.stage) }}　尝试：{{ failure.attempts }} 次</q-item-label>
-              <q-item-label caption>目录：{{ failure.root_folder }}/{{ failure.relative_dir }}</q-item-label>
-              <q-item-label caption>最近失败：{{ failure.updated_at }}</q-item-label>
+              <q-item-label caption>{{ $t('libraryScanner.failureStage', { value: stageLabel(failure.stage), attempts: failure.attempts }) }}</q-item-label>
+              <q-item-label caption>{{ $t('libraryScanner.failureDirectory', { root_folder: failure.root_folder, relative_dir: failure.relative_dir }) }}</q-item-label>
+              <q-item-label caption>{{ $t('libraryScanner.lastFailure', { updated_at: failure.updated_at }) }}</q-item-label>
             </q-item-section>
           </q-item>
         </q-expansion-item>
@@ -77,10 +77,10 @@
         align="justify"
         narrow-indicator
       >
-        <q-tab name="tasks" icon="hourglass_full" label="处理中">
+        <q-tab name="tasks" icon="hourglass_full" :label="$t('libraryScanner.processing')">
           <q-badge v-show="tasks.length > 0" color="primary" floating>{{tasks.length}}</q-badge>
         </q-tab>
-        <q-tab name="failedTasks" icon="error_outline" label="处理失败">
+        <q-tab name="failedTasks" icon="error_outline" :label="$t('libraryScanner.failed')">
           <q-badge v-show="failedTasks.length > 0" color="red" floating>{{failedTasks.length}}</q-badge>
         </q-tab>
       </q-tabs>
@@ -164,6 +164,7 @@
 </template>
 
 <script>
+import { t } from '../i18n'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {
@@ -231,7 +232,7 @@ export default {
     },
     onSocketConnectError () {
       this.socketConnected = false
-      this.showErrNotif('连接Socket失败')
+      this.showErrNotif(t('libraryScanner.socketFailed'))
     },
     cleanRerun() {
       this.tasks = []
@@ -292,8 +293,8 @@ export default {
         const response = await this.$axios.post('/api/config/admin/network-test')
         const results = response.data.results || []
         const passed = results.filter(item => item.ok).length
-        if (passed === results.length) this.showSuccNotif('联网测试全部通过')
-        else this.showWarnNotif(`联网测试通过 ${passed}/${results.length} 项`)
+        if (passed === results.length) this.showSuccNotif(t('common.networkPassed'))
+        else this.showWarnNotif(t('libraryScanner.networkSummary', { passed: passed, count: results.length }))
       } catch (error) {
         this.showErrNotif((error.response && error.response.data.error) || error.message || error)
       } finally {
@@ -302,7 +303,7 @@ export default {
     },
 
     stageLabel (stage) {
-      return { metadata: '元数据', cover: '封面', filesystem: '文件系统', database: '数据库' }[stage] || stage
+      return { metadata: t('common.metadata'), cover: t('libraryScanner.cover'), filesystem: t('libraryScanner.filesystem'), database: t('libraryScanner.database') }[stage] || stage
     },
 
     killScanProceess () {
@@ -322,11 +323,11 @@ export default {
     allLogs () {
       const resultLogs = this.results.map(res => {
         if (res.result === 'added') {
-          return { level: 'info', message: `[${res.rjcode}] 添加成功! Added: ${res.count}` }
+          return { level: 'info', message: t('libraryScanner.addedLog', { rjcode: res.rjcode, count: res.count }) }
         } else if (res.result === 'updated') {
-          return { level: 'info', message: `[${res.rjcode}] 更新成功! Updated: ${res.count}` }
+          return { level: 'info', message: t('libraryScanner.updatedLog', { rjcode: res.rjcode, count: res.count }) }
         } else {
-          return { level: 'error', message: `[${res.rjcode}] 处理失败! Failed: ${res.count}` }
+          return { level: 'error', message: t('libraryScanner.failedLog', { rjcode: res.rjcode, count: res.count }) }
         }
       })
       return this.mainLogs.concat(resultLogs)

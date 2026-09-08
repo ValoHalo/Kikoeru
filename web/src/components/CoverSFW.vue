@@ -22,9 +22,7 @@
     </div>
 
     <div v-if="lyricList.length > 0" class="absolute-top-right transparent" style="padding: 0px;">
-      <q-chip v-for="lyric in lyricList" :key="lyric" dense square color="green-7" text-color="white" class="q-ma-sm shadow-3">
-        本地歌词
-      </q-chip>
+      <q-chip v-for="lyric in lyricList" :key="lyric" dense square color="green-7" text-color="white" class="q-ma-sm shadow-3">{{ $t('common.localLyrics') }}</q-chip>
     </div>
 
     <!-- 标签 -->
