@@ -229,7 +229,8 @@
     "editLineTitle": "编辑歌词行",
     "text": "歌词文字",
     "startTime": "开始时间（秒）",
-    "endTime": "结束时间（秒，留空则自动衔接下一行）",
+    "endTime": "结束时间（秒）",
+    "endTimeHint": "留空则自动衔接下一行",
     "apply": "应用",
     "invalidStart": "开始时间必须是非负数",
     "invalidEnd": "结束时间必须不早于开始时间",
@@ -838,7 +839,14 @@
       "search": "搜索声优"
     }
   },
+  "network": {
+    "dlsite": "DLsite 元数据",
+    "dlsiteImage": "DLsite 图片 CDN",
+    "metaServer": "Kikoeru 元数据服务",
+    "github": "GitHub Releases"
+  },
   "preferenceOptions": {
+    "off": "关闭",
     "autoSubtitle": "自动匹配",
     "chinese": "中文",
     "japanese": "日语",

@@ -88,9 +88,15 @@ function removeFile(filePath) {
     catch (_) {}
 }
 
+function updateError(key) {
+    const error = new Error(t(key));
+    error.messageKey = key;
+    return error;
+}
+
 function sanitizeVersion(tagName) {
     if (!/^v?[0-9A-Za-z][0-9A-Za-z._-]*$/.test(String(tagName || ""))) {
-        throw new Error(t('updateManager.versionInvalid'));
+        throw updateError('updateManager.versionInvalid');
     }
     return String(tagName);
 }
@@ -113,22 +119,22 @@ function restorePersistedState() {
 function installSupport() {
     const installKind = detectInstallKind();
     if (installKind === "container")
-        return { supported: false, reason: t('updateManager.updateContainer') };
+        return { supported: false, reason: 'updateManager.updateContainer' };
     if (installKind === "source")
-        return { supported: false, reason: t('updateManager.updateSource') };
+        return { supported: false, reason: 'updateManager.updateSource' };
     if (process.env.KIKOERU_UPDATE_SUPERVISOR !== "1")
-        return { supported: false, reason: t('updateManager.useLauncher') };
+        return { supported: false, reason: 'updateManager.useLauncher' };
     if (!String(config.sqliteType || "").includes("sqlite"))
-        return { supported: false, reason: t('updateManager.externalDatabase') };
+        return { supported: false, reason: 'updateManager.externalDatabase' };
     return { supported: true, reason: null };
 }
 
 function downloadSupport() {
     const installKind = detectInstallKind();
     if (installKind === "container")
-        return { supported: false, reason: t('updateManager.downloadContainer') };
+        return { supported: false, reason: 'updateManager.downloadContainer' };
     if (installKind === "source")
-        return { supported: false, reason: t('updateManager.updateSource') };
+        return { supported: false, reason: 'updateManager.updateSource' };
     return { supported: true, reason: null };
 }
 
@@ -159,9 +165,9 @@ function getStatus() {
         currentVersion: packageJson.version,
         installKind,
         installSupported: support.supported,
-        installUnsupportedReason: support.reason,
+        installUnsupportedReason: support.reason ? t(support.reason) : null,
         downloadSupported: download.supported,
-        downloadUnsupportedReason: download.reason,
+        downloadUnsupportedReason: download.reason ? t(download.reason) : null,
         updateAvailable: latestRelease
             ? isUpstreamUpdateAvailable(latestRelease.tag_name, packageJson.version)
             : null,
@@ -171,7 +177,7 @@ function getStatus() {
         downloadedBytes: state.downloadedBytes,
         totalBytes: state.totalBytes,
         targetVersion: state.targetVersion,
-        error: state.error,
+        error: state.error?.messageKey ? t(state.error.messageKey) : state.error?.message || (state.error == null ? null : String(state.error)),
         lastResult: readJson(lastResultPath),
         settings: {
             checkUpdate: Boolean(config.checkUpdate),
@@ -196,7 +202,7 @@ async function fetchLatestRelease() {
         ? response.data.find(item => item && !item.draft)
         : response.data;
     if (!release || !release.tag_name)
-        throw new Error(t('updateManager.releaseMissing'));
+        throw updateError('updateManager.releaseMissing');
     return release;
 }
 
@@ -216,7 +222,7 @@ async function checkForUpdates({ force = false } = {}) {
     catch (error) {
         if (state.phase === "checking")
             state.phase = "error";
-        state.error = error.message || String(error);
+        state.error = error;
         throw error;
     }
 }
@@ -227,18 +233,18 @@ async function downloadUpdate() {
     if (!latestRelease)
         await checkForUpdates({ force: true });
     if (!isUpstreamUpdateAvailable(latestRelease.tag_name, packageJson.version))
-        throw new Error(t('updateManager.alreadyLatest'));
+        throw updateError('updateManager.alreadyLatest');
 
     const download = downloadSupport();
     if (!download.supported)
-        throw new Error(download.reason);
+        throw updateError(download.reason);
     const installKind = detectInstallKind();
     const asset = selectReleaseAsset(latestRelease, installKind);
     if (!asset)
-        throw new Error(t('updateManager.assetMissing'));
+        throw updateError('updateManager.assetMissing');
     const expectedDigest = parseSha256Digest(asset.digest);
     if (!expectedDigest)
-        throw new Error(t('updateManager.checksumMissing'));
+        throw updateError('updateManager.checksumMissing');
 
     const targetVersion = sanitizeVersion(latestRelease.tag_name);
     const targetFolder = path.join(updatesRoot, targetVersion);
@@ -277,9 +283,9 @@ async function downloadUpdate() {
         await pipeline(response.data, progress, fs.createWriteStream(partialPath));
         const actualDigest = hash.digest("hex");
         if (actualDigest !== expectedDigest)
-            throw new Error(t('updateManager.checksumMismatch'));
+            throw updateError('updateManager.checksumMismatch');
         if (asset.size && state.downloadedBytes !== Number(asset.size))
-            throw new Error(t('updateManager.sizeMismatch'));
+            throw updateError('updateManager.sizeMismatch');
         removeFile(packagePath);
         fs.renameSync(partialPath, packagePath);
         state = {
@@ -296,8 +302,8 @@ async function downloadUpdate() {
     catch (error) {
         removeFile(partialPath);
         state.phase = "error";
-        state.error = error.name === "CanceledError" ? t('updateManager.cancelled') : error.message || String(error);
-        throw new Error(state.error);
+        state.error = error.name === "CanceledError" ? updateError('updateManager.cancelled') : error;
+        throw state.error;
     }
     finally {
         downloadController = null;
@@ -310,7 +316,7 @@ function beginDownload() {
     downloadPromise = downloadUpdate()
         .catch((error) => {
         state.phase = "error";
-        state.error = error.message || String(error);
+        state.error = error;
     })
         .finally(() => {
         downloadPromise = null;
@@ -333,11 +339,11 @@ async function prepareDatabaseForUpdate() {
 async function requestInstall() {
     const support = installSupport();
     if (!support.supported)
-        throw new Error(support.reason);
+        throw updateError(support.reason);
     if (runtimeState.scannerActive)
-        throw new Error(t('updateManager.scannerRunning'));
+        throw updateError('updateManager.scannerRunning');
     if (state.phase !== "ready" || !state.packagePath || !fs.existsSync(state.packagePath))
-        throw new Error(t('updateManager.downloadIncomplete'));
+        throw updateError('updateManager.downloadIncomplete');
 
     await prepareDatabaseForUpdate();
     const marker = {

@@ -9,7 +9,6 @@ const { baseCompile } = require('@intlify/message-compiler');
 
 const root = path.resolve(__dirname, '../src');
 const messages = require('../src/i18n/locales/zh-CN.json');
-const parameters = new Map();
 const errors = [];
 const han = /\p{Script=Han}/u;
 
@@ -19,12 +18,12 @@ function children(node) {
         .filter(value => value && typeof value === 'object' && 'type' in value);
 }
 
-function compileMessages(object, prefix = '') {
+function compileMessages(object, locale, parameters = new Map(), prefix = '') {
     for (const [name, value] of Object.entries(object)) {
         const key = prefix ? `${prefix}.${name}` : name;
-        if (typeof value !== 'string') { compileMessages(value, key); continue; }
+        if (typeof value !== 'string') { compileMessages(value, locale, parameters, key); continue; }
         const names = new Set();
-        const { ast } = baseCompile(value, { onError: error => errors.push(`${key}: ${error.message}`) });
+        const { ast } = baseCompile(value, { onError: error => errors.push(`${locale} ${key}: ${error.message}`) });
         const visit = node => {
             if (node.type === 4) names.add(node.key);
             children(node).forEach(visit);
@@ -32,6 +31,7 @@ function compileMessages(object, prefix = '') {
         visit(ast);
         parameters.set(key, names);
     }
+    return parameters;
 }
 
 function checkJs(source, file, expression = false) {
@@ -93,9 +93,21 @@ function visit(directory) {
     }
 }
 
-compileMessages(messages);
+const parameters = compileMessages(messages, 'zh-CN');
+const localeFiles = fs.readdirSync(path.join(root, 'i18n/locales')).filter(file => file.endsWith('.json'));
+for (const file of localeFiles) {
+    if (file === 'zh-CN.json') continue;
+    const translated = compileMessages(JSON.parse(fs.readFileSync(path.join(root, 'i18n/locales', file), 'utf8')), file);
+    for (const key of new Set([...parameters.keys(), ...translated.keys()])) {
+        if (!parameters.has(key)) errors.push(`${file}: unknown message ${key}`);
+        else if (!translated.has(key)) errors.push(`${file}: missing message ${key}`);
+        else if ([...parameters.get(key)].sort().join(',') !== [...translated.get(key)].sort().join(',')) {
+            errors.push(`${file}: parameter mismatch for ${key}`);
+        }
+    }
+}
 visit(root);
 if (errors.length) {
     console.error(errors.join('\n'));
     process.exitCode = 1;
-} else console.log(`UI message checks passed for ${parameters.size} Chinese messages.`);
+} else console.log(`UI message checks passed for ${parameters.size} messages in ${localeFiles.length} locales.`);

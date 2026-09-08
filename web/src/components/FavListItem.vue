@@ -177,11 +177,11 @@ export default {
       const minute = Math.floor(seconds / 60)
       const sec = Math.floor(seconds) % 60
 
-      let str = ""
-      if (hour > 0) str += t('favListItem.hours', { count: hour })
-      if (minute > 0) str += t('favListItem.minutes', { count: minute })
-      str += t('favListItem.seconds', { count: sec })
-      return str
+      const parts = []
+      if (hour > 0) parts.push(t('favListItem.hours', { count: hour }))
+      if (minute > 0) parts.push(t('favListItem.minutes', { count: minute }))
+      parts.push(t('favListItem.seconds', { count: sec }))
+      return parts.join(this.$i18n.locale === 'en' ? ' ' : '')
     },
 
     setMetadata () {

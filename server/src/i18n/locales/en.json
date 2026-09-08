@@ -1,0 +1,174 @@
+{
+  "validation": {
+    "invalidValue": "Invalid value for field {field}"
+  },
+  "auth": {
+    "usernameLength": "Username must be at least 5 characters",
+    "passwordLength": "Password must be at least 5 characters",
+    "invalidCredentials": "Incorrect username or password.",
+    "serverError": "Server error"
+  },
+  "config": {
+    "githubReleases": "GitHub Releases",
+    "dlsiteMetadata": "DLsite metadata",
+    "dlsiteImages": "DLsite image CDN",
+    "metadataService": "Kikoeru metadata service",
+    "proxyPortInvalid": "The manual proxy port must be an integer from 1 to 65535",
+    "folderAbsolute": "The media folder must use an absolute path",
+    "folderNotDirectory": "The media path is not a folder",
+    "folderNameRequired": "Enter a media folder name",
+    "folderCheckFailed": "Failed to check media folder: {value}",
+    "folderRequired": "Add at least one media folder",
+    "folderNameDuplicate": "Media folder names must be non-empty and unique",
+    "setupSaved": "Initial setup saved",
+    "setupFailed": "Failed to save initial setup: {value}",
+    "savedWithTags_one": "Saved. Updated {count} tag name using language {newTagLanguage}.",
+    "savedWithTags_other": "Saved. Updated {count} tag names using language {newTagLanguage}.",
+    "saved": "Saved.",
+    "adminWriteRequired": "Only the admin account can change the configuration file.",
+    "tagsRefreshed_one": "Refreshed {count} tag name using language {tagLanguage}.",
+    "tagsRefreshed_other": "Refreshed {count} tag names using language {tagLanguage}.",
+    "adminReadRequired": "Only the admin account can read the administration configuration file."
+  },
+  "credentials": {
+    "usernameLength": "Username must be at least 5 characters",
+    "passwordLength": "Password must be at least 5 characters",
+    "groupInvalid": "The user group must be 'user' or 'guest'.",
+    "userCreated": "User {name} created.",
+    "userExists": "User {name} already exists.",
+    "adminCreateRequired": "Only the admin account can create users.",
+    "passwordChanged": "Password changed.",
+    "usernameInvalid": "Invalid username.",
+    "ownPasswordOnly": "You can only change your own password.",
+    "deleted": "Deleted.",
+    "adminCannotDelete": "The built-in administrator account cannot be deleted.",
+    "adminDeleteRequired": "Only the admin account can delete users.",
+    "adminReadRequired": "Only the admin account can view users."
+  },
+  "edit": {
+    "coverMissing": "The original cover does not exist",
+    "metadataFailed": "Failed to edit work metadata: {message}",
+    "jpegRequired": "Only JPEG images can be saved as custom covers"
+  },
+  "library": {
+    "workMissing": "Work does not exist",
+    "archived": "Work archived",
+    "duplicateName": "A collection with this name already exists",
+    "createFailed": "Failed to create work collection",
+    "collectionMissing": "Work collection does not exist",
+    "renamed": "Work collection renamed",
+    "renameFailed": "Failed to rename work collection",
+    "added_one": "Added {count} work",
+    "added_other": "Added {count} works",
+    "alreadyAdded": "The selected works are already in this collection",
+    "orderMismatch": "The work collection does not exist, or the work order differs from the server",
+    "orderSaved": "Work order saved"
+  },
+  "media": {
+    "unsupportedType": "Unsupported media type",
+    "pretranscodeReady": "Pre-transcoding is ready",
+    "pretranscodeStarted": "Pre-transcoding started",
+    "pretranscodeRunning": "Pre-transcoding is in progress",
+    "folderMissing": "Folder not found: \"{root_folder}\". Try restarting the server or rescanning.",
+    "lyricsFound": "Lyrics file found",
+    "invalidLyricsPath": "Lyrics can only be saved as VTT. Invalid save path: {writePath}",
+    "lyricsArrayRequired": "Lyrics must be an array.",
+    "workMissing": "Work not found: {work_id}",
+    "noLyrics": "No lyrics file found",
+    "bitrateInvalid": "Only 128 or 320 kbps transcoding is supported.",
+    "unknownError": "Unknown error",
+    "sourceUnreadable": "The source audio file does not exist or cannot be read: {filePath}",
+    "sourceNotFile": "The source audio path is not a file: {filePath}",
+    "sourceChanged": "The source audio file changed during media processing: {filePath}",
+    "missingWork": "Work not found: {workId}",
+    "missingTrack": "Track not found: {hashIndex}",
+    "transcodeOutputMissing": "Transcoding finished, but no temporary output file was created.",
+    "finalOutputMissing": "Transcoding finished, but the final output file is missing.",
+    "queueFull": "The media processing queue is full. Try again later."
+  },
+  "metadata": {
+    "unavailable": "No work is available with the current content display settings",
+    "filesFailed": "Failed to fetch the file list. Check that the files exist or rescan the library.",
+    "folderMissing": "Folder not found: \"{root_folder}\". Try restarting the server or rescanning.",
+    "serverError": "Server error",
+    "circleMissing": "Circle {id} does not exist",
+    "tagMissing": "Tag {id} does not exist",
+    "voiceActorMissing": "Voice actor {id} does not exist",
+    "queryFailed": "An error occurred during the query",
+    "scanFolderMissing": "Failed to scan work files. Root folder not found: {root_folder}",
+    "scanFailed": "Failed to refresh local work files: {message}",
+    "renameFolderFailed": "Failed to correct folder name encoding: {message}",
+    "encodingFailed": "Failed to correct text encoding: {message}",
+    "workMissing": "Work with ID {work_id} does not exist",
+    "workDeleted": "Work \"{title}\" deleted",
+    "deleteFailed": "Failed to delete work: {message}",
+    "fileInfoFailed": "Failed to fetch file information: {message}"
+  },
+  "playlist": {
+    "duplicateName": "A playlist with this name already exists",
+    "saveFailed": "Failed to save playlist",
+    "missing": "Playlist does not exist",
+    "renamed": "Playlist renamed",
+    "renameFailed": "Failed to rename playlist",
+    "tracksAdded": "Tracks added to playlist",
+    "trackMissing": "The playlist or track does not exist",
+    "orderMismatch": "The playlist does not exist, or the track order differs from the server",
+    "orderSaved": "Track order saved"
+  },
+  "play_histroy": {
+    "queryFailed": "An error occurred during the query",
+    "saved": "Playback history saved",
+    "saveFailed": "Failed to save playback history due to a server error",
+    "deleted": "Playback history deleted"
+  },
+  "review": {
+    "queryFailed": "An error occurred during the query",
+    "progressSaved": "Listening progress saved",
+    "saved": "Review saved",
+    "saveFailed": "Failed to save review due to a server error",
+    "deleted": "Rating and listening status removed"
+  },
+  "scanFailures": {
+    "cleared_one": "Cleared {count} failure record",
+    "cleared_other": "Cleared {count} failure records"
+  },
+  "update": {
+    "noDownload": "No update download is in progress"
+  },
+  "version": {
+    "scanRecommended": "Run a library scan to separate the voice actors かの仔 and こっこ, who were previously identified as the same person."
+  },
+  "accessControl": {
+    "adminRequired": "Only administrators can perform this action.",
+    "writeDisabled": "Write operations are disabled. Enable authentication or explicitly allow unauthenticated writes.",
+    "loginRequired": "Log in to perform this action, or ask an administrator to allow unauthenticated writes."
+  },
+  "app": {
+    "schemaMissing": "The database has not been initialized. Run a scan first.",
+    "databaseError": "Database error.",
+    "serverError": "Server error"
+  },
+  "socket": {
+    "loginRequired": "Log in to access administration.",
+    "loginExpired": "Your administration session has expired.",
+    "adminRequired": "Administrator access is required.",
+    "connected": "Connected to administration."
+  },
+  "updateManager": {
+    "versionInvalid": "Invalid version format in GitHub Release",
+    "updateContainer": "Update the container image using Docker or Podman",
+    "updateSource": "Update through Git or download a release package when running from source",
+    "useLauncher": "Run Kikoeru using the startup script in the release package",
+    "externalDatabase": "Application updates must be installed manually when using an external database",
+    "downloadContainer": "Pull the container image using Docker or Podman",
+    "releaseMissing": "GitHub Release did not return a valid version",
+    "alreadyLatest": "Already on the latest version",
+    "assetMissing": "No update package is available for this system",
+    "checksumMissing": "GitHub Release did not provide a verifiable SHA-256 digest",
+    "checksumMismatch": "Update package SHA-256 verification failed",
+    "sizeMismatch": "The update package size does not match GitHub Release",
+    "cancelled": "Download cancelled",
+    "scannerRunning": "A scan is running. Wait for it to finish before installing the update.",
+    "downloadIncomplete": "The update package has not finished downloading"
+  }
+}

@@ -48,7 +48,7 @@ export const sleepTimerOptions = () => [
 ]
 
 export const transcodeOptions = () => [
-  { label: t('common.close'), value: TRANSCODE_OPTIONS.OFF },
+  { label: t('preferenceOptions.off'), value: TRANSCODE_OPTIONS.OFF },
   { label: 'AAC 128k', value: TRANSCODE_OPTIONS.AAC_128 },
   { label: 'AAC 320k', value: TRANSCODE_OPTIONS.AAC_320 },
 ]

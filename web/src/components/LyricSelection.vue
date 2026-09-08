@@ -192,6 +192,7 @@
             min="0"
             clearable
             :label="$t('lyricSelection.endTime')"
+            :hint="$t('lyricSelection.endTimeHint')"
           />
         </q-card-section>
         <q-card-actions align="right">

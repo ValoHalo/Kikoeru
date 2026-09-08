@@ -22,6 +22,24 @@ test("update route exports an Express middleware function", () => {
     assert.equal(typeof updateRouter, "function");
 });
 
+test("cached update errors use the language of each status request", async (context) => {
+    const httpClient = require('../../src/network/httpClient');
+    const { localizeRequest } = require('../../src/i18n');
+    const request = (locale, action) => {
+        let result;
+        localizeRequest({ acceptsLanguages: () => locale }, null, () => { result = action(); });
+        return result;
+    };
+    const network = context.mock.method(httpClient, 'get', async () => ({ data: {} }));
+    await assert.rejects(request('zh-CN', () => updateManager.checkForUpdates({ force: true })), /GitHub Release 没有返回有效版本/);
+    const english = request('en', () => updateManager.getStatus());
+    const chinese = request('zh-CN', () => updateManager.getStatus());
+    assert.equal(english.error, 'GitHub Release did not return a valid version');
+    assert.equal(chinese.error, 'GitHub Release 没有返回有效版本');
+    assert.equal(english.phase, 'error');
+    assert.equal(network.mock.callCount(), 1);
+});
+
 test("install kind honors launcher and container declarations", () => {
     assert.equal(updateManager.detectInstallKind({ KIKOERU_INSTALL_KIND: "windows-portable" }, "win32", false), "windows-portable");
     assert.equal(updateManager.detectInstallKind({ KIKOERU_INSTALL_KIND: "container" }, "linux", false), "container");

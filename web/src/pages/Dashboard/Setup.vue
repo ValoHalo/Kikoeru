@@ -64,7 +64,7 @@
               <q-icon :name="result.ok ? 'check_circle' : 'error'" :color="result.ok ? 'positive' : 'negative'" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>{{ result.label }}</q-item-label>
+              <q-item-label>{{ $t('network.' + result.key) }}</q-item-label>
               <q-item-label caption>{{ networkResultText(result) }}</q-item-label>
             </q-item-section>
           </q-item>

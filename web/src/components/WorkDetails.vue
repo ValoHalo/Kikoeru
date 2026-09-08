@@ -584,7 +584,8 @@ export default {
 
 .work-progress {
   min-width: 0;
-  flex: 0 1 350px;
+  max-width: 100%;
+  flex: 0 0 auto;
 }
 
 .work-progress > .work-field-label,

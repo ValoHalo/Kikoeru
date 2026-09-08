@@ -3,6 +3,7 @@
 const { AsyncLocalStorage } = require('node:async_hooks');
 const i18next = require('i18next');
 const messages = require('./locales/zh-CN.json');
+const english = require('./locales/en.json');
 
 const languageContext = new AsyncLocalStorage();
 const i18n = i18next.createInstance();
@@ -10,7 +11,7 @@ i18n.init({
     initAsync: false,
     lng: 'zh-CN',
     fallbackLng: 'zh-CN',
-    resources: { 'zh-CN': { translation: messages } },
+    resources: { 'zh-CN': { translation: messages }, en: { translation: english } },
     interpolation: { escapeValue: false, prefix: '{', suffix: '}' },
 });
 

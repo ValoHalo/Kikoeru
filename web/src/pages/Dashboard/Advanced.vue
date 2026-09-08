@@ -216,7 +216,7 @@
             <q-item-label caption>{{ $t('advanced.networkTestHint') }}</q-item-label>
             <div v-if="networkResults.length" class="q-mt-sm">
               <q-chip v-for="result in networkResults" :key="result.key" dense square :color="result.ok ? 'positive' : 'negative'" text-color="white" :icon="result.ok ? 'check' : 'close'">
-                {{ result.label }}
+                {{ $t('network.' + result.key) }}
               </q-chip>
             </div>
           </q-item-section>
