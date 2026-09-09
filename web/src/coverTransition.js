@@ -10,6 +10,8 @@ export function cancelCoverTransition () {
   clearTimeout(current.timer)
   current.animation?.cancel()
   current.overlay.remove()
+  current.backdropAnimation?.cancel()
+  current.backdrop?.remove()
   current.source.style.visibility = current.sourceVisibility
   if (current.target) current.target.style.visibility = current.targetVisibility
   window.removeEventListener('resize', cancelCoverTransition)
@@ -30,6 +32,48 @@ export function prepareCoverTransition (event) {
   if (beginCoverTransition(source, match[1], url.pathname)) {
     origin = { id: match[1], fullPath: window.location.pathname + window.location.search + window.location.hash, source }
   }
+}
+
+function capturePageBackdrop (source) {
+  const page = source.closest('.q-page-container')
+  if (!page) return null
+  const rect = page.getBoundingClientRect()
+  const style = getComputedStyle(page)
+  const left = rect.left + parseFloat(style.paddingLeft || 0)
+  const right = rect.right - parseFloat(style.paddingRight || 0)
+  const top = Math.max(0, document.querySelector('.q-header')?.getBoundingClientRect().bottom || 0)
+  const backdrop = document.createElement('div')
+  backdrop.className = 'work-page-transition'
+  backdrop.setAttribute('aria-hidden', 'true')
+  backdrop.inert = true
+  Object.assign(backdrop.style, {
+    position: 'fixed', left: `${left}px`, top: `${top}px`, width: `${right - left}px`, bottom: '0',
+    overflow: 'hidden', pointerEvents: 'none', zIndex: '1999',
+    background: style.backgroundColor === 'rgba(0, 0, 0, 0)' ? getComputedStyle(document.body).backgroundColor : style.backgroundColor
+  })
+  const snapshot = page.cloneNode(true)
+  snapshot.removeAttribute('id')
+  snapshot.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'))
+  snapshot.querySelectorAll('.q-page-scroller').forEach(element => { element.style.visibility = 'hidden' })
+  const coverIndex = [...page.querySelectorAll('.q-img')].indexOf(source)
+  const cover = snapshot.querySelectorAll('.q-img')[coverIndex]
+  if (cover) cover.style.visibility = 'hidden'
+  Object.assign(snapshot.style, {
+    position: 'absolute', margin: '0', left: `${rect.left - left}px`, top: `${rect.top - top}px`,
+    width: `${rect.width}px`, height: `${rect.height}px`, minHeight: '0', transition: 'none'
+  })
+  backdrop.append(snapshot)
+  document.body.append(backdrop)
+  const originals = page.querySelectorAll('*')
+  const copies = snapshot.querySelectorAll('*')
+  // Preserve horizontal carousels and any nested scrollers in the frozen page.
+  originals.forEach((element, index) => {
+    if (copies[index] && (element.scrollLeft || element.scrollTop)) {
+      copies[index].scrollLeft = element.scrollLeft
+      copies[index].scrollTop = element.scrollTop
+    }
+  })
+  return backdrop
 }
 
 function beginCoverTransition (source, id, destination, returning = false) {
@@ -59,6 +103,7 @@ function beginCoverTransition (source, id, destination, returning = false) {
   overlay.append(image)
   document.body.append(overlay)
   active = {
+    backdrop: capturePageBackdrop(source),
     id, destination, returning, source, sourceVisibility: source.style.visibility, overlay,
     timer: setTimeout(cancelCoverTransition, 1800)
   }
@@ -85,7 +130,7 @@ function findReturnCover (current) {
   requestAnimationFrame(() => {
     if (active !== current) return
     const original = origin?.source
-    const target = original?.isConnected ? original : [...document.querySelectorAll(`a[href="/work/${current.id}"]`)]
+    const target = original?.isConnected ? original : [...document.querySelectorAll(`.q-layout a[href="/work/${current.id}"]`)]
       .map(link => link.closest('.q-card, .q-item')?.querySelector('.q-img'))
       .find(Boolean)
     if (target) finishCoverTransition(current.id, target)
@@ -109,6 +154,9 @@ export async function finishCoverTransition (id, target) {
 
   clearTimeout(current.timer)
   current.timer = setTimeout(cancelCoverTransition, 1600)
+  current.backdropAnimation = current.backdrop?.animate([{ opacity: 1 }, { opacity: 0 }], {
+    duration: 300, easing: 'ease-in-out', fill: 'forwards'
+  })
   const start = current.overlay.style
   current.animation = current.overlay.animate([
     { left: start.left, top: start.top, width: start.width, height: start.height, borderRadius: start.borderRadius },

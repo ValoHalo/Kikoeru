@@ -421,7 +421,7 @@ export default {
   .color-scheme-toggle__track, .color-scheme-toggle__thumb { transition: none; }
 }
 .page-container-style { position: absolute; left: 0; right: 0; bottom: 0; top: 0; }
-.works-page-container { min-height: 100vh; }
+.padding-bottom-play-bar { min-height: 100vh; }
 .body--light .works-page-container { background: #f2f3f5; }
 .padding-bottom-play-bar { padding-bottom: 80px !important; }
 .scroller { transition: .3s; }
