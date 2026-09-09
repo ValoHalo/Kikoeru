@@ -1,7 +1,7 @@
 <template>
   <q-card class="card hover-show" :class="{ 'card--thumbnail': thumbnailMode }">
     <router-link :to="`/work/${metadata.id}`" class="work-card-cover" :aria-label="metadata.title">
-      <CoverSFW :workid="metadata.id" :nsfw="false" :release="thumbnailMode ? metadata.release : ''" :lyric_status="metadata.lyric_status" :tags="metadata.tags" />
+      <CoverSFW :workid="metadata.id" :nsfw="false" :release="thumbnailMode ? metadata.release : ''" :lyric_status="metadata.lyric_status" :tags="fullDetails ? [] : metadata.tags" />
     </router-link>
 
     <q-separator />
@@ -15,7 +15,7 @@
       </div>
       <!-- 标题 -->
       <h2 class="work-card-title">
-        <router-link :to="`/work/${metadata.id}`" class="ellipsis-2-lines" :title="metadata.title">
+        <router-link :to="`/work/${metadata.id}`" :class="fullDetails ? 'work-card-title-full' : 'ellipsis-2-lines'" :title="metadata.title">
           {{ metadata.title }}
         </router-link>
       </h2>
@@ -79,6 +79,12 @@
       </div>
     </div>
 
+    <div v-if="fullDetails && !thumbnailMode && visibleTags.length" class="work-card-tags">
+      <router-link v-for="tag in visibleTags" :key="tag.id" :to="`/works?tagId=${tag.id}`" class="work-card-tag">
+        {{ tag.name }}
+      </router-link>
+    </div>
+
     <div class="work-card-footer">
       <!-- 声优 -->
       <div
@@ -117,6 +123,10 @@ export default {
   },
 
   props: {
+    fullDetails: {
+      type: Boolean,
+      default: false
+    },
     metadata: {
       type: Object,
       required: true
@@ -136,6 +146,9 @@ export default {
   },
 
   computed: {
+    visibleTags () {
+      return (this.metadata.tags || []).filter(tag => tag && tag.id != null && tag.name)
+    },
     sortedRatings: function() {
       function compare(a, b) {
         return (a.review_point > b.review_point) ? -1 : 1;
@@ -350,6 +363,34 @@ export default {
   color: var(--kikoeru-accent-text);
   margin-left: auto;
   white-space: nowrap;
+}
+
+.work-card-title-full {
+  display: block;
+}
+
+.work-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 14px;
+}
+
+.work-card-tag {
+  max-width: 100%;
+  padding: 3px 8px;
+  border: 1px solid var(--card-line);
+  border-radius: 4px;
+  background: var(--card-chip);
+  color: var(--card-muted);
+  font-size: 12px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.work-card-tag:hover {
+  color: var(--kikoeru-accent-text);
+  border-color: currentColor;
 }
 
 .work-card-footer {

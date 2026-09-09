@@ -186,12 +186,12 @@
           <WorkListItem v-for="work in works" :key="work.id" :metadata="work" :showLabel="showLabel && $q.screen.width > 700" />
         </q-list>
 
-        <!--旧式的workCard展示-->
+        <!--完整作品卡片-->
         <div v-if="!listMode && oldWorkCardUIStyle" class="row q-col-gutter-x-md q-col-gutter-y-lg">
           <div class="col-xs-12 col-sm-6 col-md-4" v-for="work in works" :key="work.id"
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
           >
-            <OldWorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit"/>
+            <OldWorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/>
           </div>
         </div>
 
