@@ -38,29 +38,26 @@
       />
     </q-dialog>
 
-    <q-dialog v-model="preview_img" full-width>
-      <q-card v-if="preview_img_list.length">
-        <q-card-section>
-          <div class="row items-center no-wrap">
-            <div class="col">
-              <div class="text-h6">{{preview_img_name}}</div>
-              <div class="text-subtitle2">{{ preview_img_idx+1 }}/{{ preview_img_list.length }}</div>
-            </div>
+    <q-dialog v-model="preview_img">
+      <q-card v-if="preview_img_list.length" class="image-preview-dialog">
+        <q-card-section class="image-preview-header">
+          <div class="image-preview-title">
+            <div class="text-h6">{{ preview_img_name }}</div>
+            <div class="text-subtitle2">{{ preview_img_idx+1 }}/{{ preview_img_list.length }}</div>
+          </div>
+          <div v-if="isAdministrator || playWorkId > 0" class="image-preview-actions">
             <q-btn
               v-if="isAdministrator"
               outline
-              class="q-mr-sm"
               :label="$t('workTree.editCover')"
               @click="editImg(preview_img_list[preview_img_idx])"
             />
-            <div v-if="playWorkId > 0" class="col-auto">
-              <q-btn outline @click="setVisualPlayerCover(preview_img_list[preview_img_idx])">{{ $t('workTree.visualizerCover') }}</q-btn>
-            </div>
+            <q-btn v-if="playWorkId > 0" outline @click="setVisualPlayerCover(preview_img_list[preview_img_idx])">{{ $t('workTree.visualizerCover') }}</q-btn>
           </div>
         </q-card-section>
 
-        <q-card-section class="q-pt-none">
-          <q-img style="height: calc(100vh - 200pt);" :src="preview_img_url" contain />
+        <q-card-section class="image-preview-stage">
+          <q-img class="image-preview-media" :src="preview_img_url" fit="contain" />
         </q-card-section>
 
         <q-card-actions align="around">
@@ -523,5 +520,64 @@ export default {
   max-width: 92vw;
   max-height: 80vh;
   border-radius: 8px;
+}
+
+.image-preview-dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(1200px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  height: min(920px, calc(100vh - 48px));
+  height: min(920px, calc(100dvh - 48px));
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+}
+
+.image-preview-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.image-preview-title {
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.image-preview-title .text-h6 {
+  overflow-wrap: anywhere;
+}
+
+.image-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.image-preview-stage {
+  display: flex;
+  min-height: 0;
+  padding: 0 16px;
+}
+
+.image-preview-media {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 599px) {
+  .image-preview-title {
+    flex-basis: 100%;
+  }
+
+  .image-preview-actions {
+    width: 100%;
+  }
+
+  .image-preview-actions .q-btn {
+    min-width: 0;
+    flex: 1 1 0;
+  }
 }
 </style>
