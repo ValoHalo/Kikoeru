@@ -1,4 +1,5 @@
 let active = null
+let origin = null
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -24,10 +25,16 @@ export function prepareCoverTransition (event) {
   const match = url.pathname.match(/^\/work\/(\d+)$/)
   if (!match || url.origin !== window.location.origin || url.pathname === window.location.pathname) return
 
-  cancelCoverTransition()
-  if (reducedMotion() || typeof Element.prototype.animate !== 'function') return
   const card = link.closest('.q-card, .q-item')
   const source = card?.querySelector('.q-img')
+  if (beginCoverTransition(source, match[1], url.pathname)) {
+    origin = { id: match[1], fullPath: window.location.pathname + window.location.search + window.location.hash, source }
+  }
+}
+
+function beginCoverTransition (source, id, destination, returning = false) {
+  cancelCoverTransition()
+  if (reducedMotion() || typeof Element.prototype.animate !== 'function') return
   const sourceImage = source?.querySelector('img.q-img__image')
   if (!sourceImage?.complete || !sourceImage.naturalWidth) return
   const rect = source.getBoundingClientRect()
@@ -52,17 +59,38 @@ export function prepareCoverTransition (event) {
   overlay.append(image)
   document.body.append(overlay)
   active = {
-    id: match[1], source, sourceVisibility: source.style.visibility, overlay,
+    id, destination, returning, source, sourceVisibility: source.style.visibility, overlay,
     timer: setTimeout(cancelCoverTransition, 1800)
   }
   source.style.visibility = 'hidden'
   window.addEventListener('resize', cancelCoverTransition, { passive: true })
   window.addEventListener('wheel', cancelCoverTransition, { passive: true })
   window.addEventListener('touchmove', cancelCoverTransition, { passive: true })
+  return true
+}
+
+export function prepareReturnCoverTransition (to, from) {
+  if (!origin || from.path !== `/work/${origin.id}` || to.fullPath !== origin.fullPath) return
+  beginCoverTransition(document.querySelector('.work-details .work-cover'), origin.id, to.fullPath, true)
 }
 
 export function checkCoverTransitionRoute (to, from, failure) {
-  if (active && (failure || to.path !== `/work/${active.id}`)) cancelCoverTransition()
+  if (active && (failure || (active.returning ? to.fullPath : to.path) !== active.destination)) cancelCoverTransition()
+  if (active?.returning) findReturnCover(active)
+  if (origin && to.fullPath !== origin.fullPath && to.path !== `/work/${origin.id}`) origin = null
+}
+
+function findReturnCover (current) {
+  // Cached lists reactivate before scroll restoration; other lists may fetch again.
+  requestAnimationFrame(() => {
+    if (active !== current) return
+    const original = origin?.source
+    const target = original?.isConnected ? original : [...document.querySelectorAll(`a[href="/work/${current.id}"]`)]
+      .map(link => link.closest('.q-card, .q-item')?.querySelector('.q-img'))
+      .find(Boolean)
+    if (target) finishCoverTransition(current.id, target)
+    else findReturnCover(current)
+  })
 }
 
 export async function finishCoverTransition (id, target) {
@@ -103,8 +131,8 @@ export async function finishCoverTransition (id, target) {
 }
 
 export const coverTransition = {
-  mounted: (element, binding) => finishCoverTransition(binding.value, element),
-  updated: (element, binding) => finishCoverTransition(binding.value, element),
+  mounted: (element, binding) => { if (!active?.returning) finishCoverTransition(binding.value, element) },
+  updated: (element, binding) => { if (!active?.returning) finishCoverTransition(binding.value, element) },
   beforeUnmount: element => {
     if (active?.target === element) cancelCoverTransition()
   }
