@@ -644,6 +644,9 @@
     "saveFailed": "更新設定の保存に失敗しました"
   },
   "userManage": {
+    "adminProtected": "組み込みの admin アカウントは削除できません",
+    "selectUser": "ユーザー {name} を選択",
+    "selectPageUsers": "このページの削除可能なユーザーを選択",
     "user": "ユーザー",
     "guest": "ゲスト",
     "administrator": "管理者",

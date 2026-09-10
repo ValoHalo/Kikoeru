@@ -63,6 +63,7 @@
         <h2 id="users-title">{{ $t('userManage.allUsers') }}</h2>
       </div>
       <q-table
+        ref="usersTable"
         flat bordered
         class="settings-table"
         :rows="users"
@@ -70,10 +71,30 @@
         row-key="name"
         :selected-rows-label="getSelectedString"
         selection="multiple"
-        v-model:selected="selected"
-      />
+        :selected="selected"
+        @update:selected="updateSelectedUsers"
+      >
+        <template #header-selection>
+          <q-checkbox
+            :model-value="pageSelection"
+            :disable="pageDeletableUsers.length === 0 || loadingDeleteUsers"
+            :aria-label="$t('userManage.selectPageUsers')"
+            @update:model-value="selectPageUsers"
+          />
+        </template>
+        <template #body-selection="scope">
+          <q-checkbox
+            :model-value="isDeletableUser(scope.row) && scope.selected"
+            :disable="!isDeletableUser(scope.row) || loadingDeleteUsers"
+            :aria-label="isDeletableUser(scope.row) ? $t('userManage.selectUser', { name: scope.row.name }) : $t('userManage.adminProtected')"
+            @update:model-value="scope.selected = $event"
+          >
+            <q-tooltip v-if="!isDeletableUser(scope.row)">{{ $t('userManage.adminProtected') }}</q-tooltip>
+          </q-checkbox>
+        </template>
+      </q-table>
       <div class="settings-form-actions">
-        <q-btn outline no-caps :loading="loadingDeleteUsers" :disable="selected.length === 0" @click="confirm = true" color="negative" icon="delete_outline" :label="$t('userManage.deleteSelected')" />
+        <q-btn outline no-caps :loading="loadingDeleteUsers" :disable="selected.length === 0 || loadingDeleteUsers" @click="confirm = true" color="negative" icon="delete_outline" :label="$t('userManage.deleteSelected')" />
       </div>
     </section>
 
@@ -93,13 +114,27 @@
 </template>
 
 <script>
+import { ref } from 'vue'
 import { t } from '../../i18n'
 import NotifyMixin from '../../mixins/Notification.js'
 
 export default {
   mixins: [NotifyMixin],
 
+  setup () {
+    return { usersTable: ref(null) }
+  },
+
   computed: {
+    pageDeletableUsers () {
+      return (this.usersTable?.computedRows || []).filter(this.isDeletableUser)
+    },
+    pageSelection () {
+      const selectedNames = new Set(this.selected.map(user => user.name))
+      const selectedCount = this.pageDeletableUsers.filter(user => selectedNames.has(user.name)).length
+      if (selectedCount === 0) return false
+      return selectedCount === this.pageDeletableUsers.length ? true : null
+    },
     groups () { return ['user', 'guest'].map(value => ({ value, label: this.groupLabel(value) })) },
     columns () {
       return [
@@ -130,6 +165,17 @@ export default {
   },
 
   methods: {
+    isDeletableUser (user) {
+      return user.name !== 'admin'
+    },
+    updateSelectedUsers (users) {
+      this.selected = users.filter(this.isDeletableUser)
+    },
+    selectPageUsers (value) {
+      const pageNames = new Set(this.pageDeletableUsers.map(user => user.name))
+      const otherSelected = this.selected.filter(user => !pageNames.has(user.name))
+      this.updateSelectedUsers(value ? [...otherSelected, ...this.pageDeletableUsers] : otherSelected)
+    },
     groupLabel (value) {
       return { user: t('userManage.user'), guest: t('userManage.guest'), administrator: t('userManage.administrator') }[value] || value
     },
@@ -165,15 +211,17 @@ export default {
     },
 
     deleteUsers () {
+      if (this.loadingDeleteUsers) return
+      const users = this.selected.filter(this.isDeletableUser).map(user => ({ name: user.name }))
+      if (users.length === 0) return
       this.loadingDeleteUsers = true
       this.$axios.delete('/api/credentials/user', {
-        data: { users: this.selected },
+        data: { users },
       })
         .then((response) => {
-          this.selected.forEach(selectedUser => {
-            const index = this.users.findIndex(user => user.name === selectedUser.name)
-            this.users.splice(index, 1)
-          })
+          const deletedNames = new Set(users.map(user => user.name))
+          this.users = this.users.filter(user => !deletedNames.has(user.name))
+          this.selected = this.selected.filter(user => !deletedNames.has(user.name))
           this.loadingDeleteUsers = false
           this.showSuccNotif(response.data.message)
           this.requestUsers()
@@ -225,6 +273,8 @@ export default {
       this.$axios.get('/api/credentials/users')
         .then((response) => {
           this.users = response.data.users
+          const selectedNames = new Set(this.selected.map(user => user.name))
+          this.updateSelectedUsers(this.users.filter(user => selectedNames.has(user.name)))
         })
         .catch((error) => {
           if (error.response) {

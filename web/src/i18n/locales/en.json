@@ -644,6 +644,9 @@
     "saveFailed": "Failed to save update settings"
   },
   "userManage": {
+    "adminProtected": "The built-in admin account cannot be deleted",
+    "selectUser": "Select user {name}",
+    "selectPageUsers": "Select deletable users on this page",
     "user": "User",
     "guest": "Guest",
     "administrator": "Administrator",

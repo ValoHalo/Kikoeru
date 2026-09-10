@@ -644,6 +644,9 @@
     "saveFailed": "保存更新设置失败"
   },
   "userManage": {
+    "adminProtected": "内置管理员 admin 账户不可删除",
+    "selectUser": "选择用户 {name}",
+    "selectPageUsers": "选择本页可删除的用户",
     "user": "用户",
     "guest": "访客",
     "administrator": "管理员",

@@ -644,6 +644,9 @@
     "saveFailed": "儲存更新設定失敗"
   },
   "userManage": {
+    "adminProtected": "內建管理員 admin 帳戶不可刪除",
+    "selectUser": "選取使用者 {name}",
+    "selectPageUsers": "選取本頁可刪除的使用者",
     "user": "使用者",
     "guest": "訪客",
     "administrator": "管理員",
