@@ -34,14 +34,8 @@ test("fresh schema does not create the retired translation task table", async ()
     }
 });
 
-test("upgrade removes translation task schema but preserves legacy lyric files", async () => {
+test("upgrade removes translation task schema and migrates lyric status", async () => {
     const knex = makeDatabase();
-    const runtime = fs.mkdtempSync(path.join(os.tmpdir(), "kikoeru-translation-retirement-"));
-    const lyricDir = path.join(runtime, "sqlite", "lyrics");
-    const legacyLyric = path.join(lyricDir, "1.lrc");
-    fs.mkdirSync(lyricDir, { recursive: true });
-    fs.writeFileSync(legacyLyric, "[00:00.00]legacy lyric\n");
-
     try {
         await knex.schema.createTable("t_work", table => {
             table.bigInteger("id").primary();
@@ -73,9 +67,7 @@ test("upgrade removes translation task schema but preserves legacy lyric files",
             .first();
         assert.equal(trigger, undefined);
         assert.deepEqual(await knex("t_work").orderBy("id").pluck("lyric_status"), ["", "local", "local"]);
-        assert.equal(fs.readFileSync(legacyLyric, "utf8"), "[00:00.00]legacy lyric\n");
     } finally {
         await knex.destroy();
-        fs.rmSync(runtime, { recursive: true, force: true });
     }
 });

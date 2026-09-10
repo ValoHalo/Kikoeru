@@ -49,6 +49,7 @@ router.get('/', async (_req, res) => {
     res.send({
         current: package_json_1.default.version,
         ...latest,
+        latest: selectedLatest,
         update_available,
         notifyUser: config_1.config.checkUpdate,
         lockFileExists: upgrade_1.updateLock.isLockFilePresent,

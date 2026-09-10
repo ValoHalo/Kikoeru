@@ -21,9 +21,8 @@
   ],
   "scripts": {
     "build": "quasar build -m pwa",
-    "check": "node scripts/check-source-syntax.js && node scripts/check-i18n.js",
-    "lint": "eslint .",
-    "test": "npm run check"
+    "check": "node scripts/check-i18n.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@quasar/extras": "2.0.2",

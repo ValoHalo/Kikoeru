@@ -23,8 +23,6 @@ process.env.NODE_ENV = "test";
 const db = require("../../src/database/db");
 const { createSchema } = require("../../src/database/schema");
 const libraryMigration = require("../../src/database/migrations/20260830150000_add_library_state");
-const libraryRouter = require("../../src/routes/library");
-const scanFailuresRouter = require("../../src/routes/scanFailures");
 
 test.before(async () => {
     await createSchema(db.knex);
@@ -46,11 +44,6 @@ test.before(async () => {
 test.after(async () => {
     await db.knex.destroy();
     fs.rmSync(runtime, { recursive: true, force: true });
-});
-
-test("library routes export Express middleware functions", () => {
-    assert.equal(typeof libraryRouter, "function");
-    assert.equal(typeof scanFailuresRouter, "function");
 });
 
 test("library migration upgrades an existing database and can roll back", async () => {

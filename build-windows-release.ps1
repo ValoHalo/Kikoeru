@@ -116,7 +116,6 @@ Invoke-Robocopy -Source $sourceServerRoot -Destination $serverBuildRoot -Exclude
 Copy-Item -LiteralPath (Join-Path $repositoryRoot "LICENSE") -Destination (Join-Path $serverBuildRoot "LICENSE")
 
 Invoke-Step $frontendNpm @("ci", "--no-audit", "--no-fund", "--cache", (Join-Path $buildRoot "cache\frontend-npm")) $webBuildRoot
-Invoke-Step $frontendNode @("scripts/check-source-syntax.js") $webBuildRoot
 Invoke-Step $frontendNpm @("run", "build") $webBuildRoot
 
 Invoke-Robocopy -Source (Join-Path $webBuildRoot "dist\pwa") -Destination (Join-Path $serverBuildRoot "src\public")

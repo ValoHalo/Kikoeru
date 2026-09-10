@@ -126,6 +126,7 @@ import { applyColorScheme, COLOR_SCHEMES, COLOR_SCHEME_EVENT, hasSavedColorSchem
 import { applyAccentColor, hasSavedAccentColor, normalizeAccentColor } from '../themeColor'
 
 const LOGIN_PROMPT_DISMISSED_KEY = 'anonymous-login-prompt-dismissed'
+const DISMISSED_UPDATE_VERSION_KEY = 'dismissed-update-version'
 
 export default {
   name: 'MainLayout',
@@ -135,12 +136,19 @@ export default {
     return {
       drawerOpen: false, drawerMini: true, confirm: false, randId: null, showTimer: false, showScroller: true,
       loginDialog: false, loginName: '', loginPassword: '', loginSubmitting: false, loginPromptDismiss: null,
+      updateChecksReady: false,
+      updateNotification: null,
+      updateVersion: '',
       restoredQueueUser: '',
       preferencesLoaded: false,
       colorScheme: readColorScheme(),
     }
   },
   watch: {
+    canManage (allowed) {
+      if (allowed && this.updateChecksReady) this.checkUpdate()
+      else if (this.updateNotification) this.updateNotification()
+    },
     randId () { if (this.randId) this.$router.push(`/work/${this.randId}`) },
     '$route.query.login' (value) { if (value === '1') this.openLoginDialog() }
   },
@@ -150,11 +158,12 @@ export default {
     if (this.colorSchemeMediaQuery) this.colorSchemeMediaQuery.addListener(this.onSystemColorSchemeChange)
     window.addEventListener(COLOR_SCHEME_EVENT, this.onColorSchemeEvent)
     if (this.$route.query.login === '1') this.openLoginDialog()
-    this.checkUpdate()
     await this.readSharedConfig()
     this.preferencesLoaded = true
     await this.$nextTick()
-    this.initUser()
+    await this.initUser()
+    this.updateChecksReady = true
+    this.checkUpdate()
   },
   computed: {
     links () {
@@ -277,10 +286,31 @@ export default {
       }
     },
     checkUpdate () {
+      if (!this.canManage) return
       this.$axios.get('/api/version').then((res) => {
-        if (res.data.update_available && res.data.notifyUser) this.$q.notify({ message: t('mainLayout.updateAvailable'), color: 'primary', textColor: 'white', icon: 'cloud_download', timeout: 5000, actions: [{ label: t('mainLayout.ok'), color: 'white' }, { label: t('mainLayout.view'), color: 'white', handler: () => { Object.assign(document.createElement('a'), { target: '_blank', href: 'https://github.com/ValoHalo/Kikoeru/releases' }).click() } }] })
+        if (!this.canManage) return
+        this.updateVersion = res.data.latest || ''
+        if (res.data.update_available && res.data.notifyUser && (!this.updateVersion || this.$q.localStorage.getItem(DISMISSED_UPDATE_VERSION_KEY) !== this.updateVersion)) {
+          this.updateNotification = this.$q.notify({
+            message: t('mainLayout.updateAvailable'), color: 'primary', textColor: 'white',
+            icon: 'cloud_download', timeout: 5000, group: false,
+            actions: this.updateActions(),
+            onDismiss: () => { this.updateNotification = null },
+          })
+        }
         if (res.data.lockFileExists) this.$q.notify({ message: res.data.lockReason, type: 'warning', timeout: 60000, actions: [{ label: t('mainLayout.remindLater'), color: 'black' }, { label: t('mainLayout.openLibrary'), color: 'black', handler: () => this.$router.push('/admin#scanner') }] })
       }).catch(() => {})
+    },
+    updateActions () {
+      if (!this.canManage) return []
+      return [
+        { label: t('mainLayout.openUpdate'), color: 'white', handler: () => {
+          if (this.canManage) this.$router.push('/admin/update')
+        } },
+        { label: t('mainLayout.ignoreUpdate'), color: 'white', handler: () => {
+          if (this.canManage && this.updateVersion) this.$q.localStorage.set(DISMISSED_UPDATE_VERSION_KEY, this.updateVersion)
+        } },
+      ]
     },
     readSharedConfig () {
       return this.$axios.get('/api/config/shared').then((response) => {
@@ -390,6 +420,7 @@ export default {
     getLinks () { return this.links.filter(link => link.path !== '/fullScreenPlayer' || this.playWorkId !== 0).map(link => link.path === '/fullScreenPlayer' ? { ...link, path: `${link.path}/${this.playWorkId}` } : link) },
   },
   beforeUnmount () {
+    if (this.updateNotification) this.updateNotification()
     this.dismissAnonymousLoginPrompt()
     if (this.colorSchemeMediaQuery) this.colorSchemeMediaQuery.removeListener(this.onSystemColorSchemeChange)
     window.removeEventListener(COLOR_SCHEME_EVENT, this.onColorSchemeEvent)

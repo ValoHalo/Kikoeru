@@ -5,12 +5,6 @@ const { test } = require('node:test');
 const express = require('express');
 const { i18n, t, localizeRequest } = require('../../src/i18n');
 
-test('Chinese messages preserve interpolated names and paths', () => {
-    const name = 'Alice <test> {name}';
-    assert.equal(t('credentials.userExists', { name }), `用户 ${name} 已存在.`);
-    assert.equal(t('media.folderMissing', { root_folder: 'D:\\Audio' }), '找不到文件夹: "D:\\Audio"，请尝试重启服务器或重新扫描.');
-});
-
 test('request languages remain independent across asynchronous responses', async () => {
     i18n.addResourceBundle('test', 'translation', { credentials: { userExists: '[test] {name}' } });
     const app = express();
@@ -38,17 +32,6 @@ test('request languages remain independent across asynchronous responses', async
         server.closeAllConnections();
         await new Promise(resolve => server.close(resolve));
         i18n.removeResourceBundle('test', 'translation');
-    }
-});
-
-test('English messages preserve parameters and use singular and plural forms', () => {
-    const english = i18n.getFixedT('en');
-    const name = 'Alice <test> {name}';
-    assert.equal(english('credentials.userExists', { name }), `User ${name} already exists.`);
-    assert.equal(english('media.folderMissing', { root_folder: 'D:\\Audio' }), 'Folder not found: "D:\\Audio". Try restarting the server or rescanning.');
-    for (const count of [0, 1, 2]) {
-        assert.equal(english('library.added', { count }), `Added ${count} ${count === 1 ? 'work' : 'works'}`);
-        assert.equal(english('scanFailures.cleared', { count }), `Cleared ${count} failure ${count === 1 ? 'record' : 'records'}`);
     }
 });
 

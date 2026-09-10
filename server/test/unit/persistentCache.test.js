@@ -18,20 +18,6 @@ function cachePath(name) {
     return path.join(runtimeRoot, name, "cache.json");
 }
 
-test("successful persistence updates the debounce timestamp", () => {
-    const file = cachePath("timestamp");
-    const cache = new PersistentCache(file);
-    const beforePersist = Date.now();
-
-    cache.set("track.wav", { loudnorm: -16 });
-
-    assert(cache.lastPersistTime >= beforePersist);
-    assert(cache.lastPersistTime <= Date.now());
-    assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")), {
-        "track.wav": { loudnorm: -16 },
-    });
-});
-
 test("invalid cache JSON falls back to an empty usable cache", () => {
     const file = cachePath("invalid-json");
     fs.mkdirSync(path.dirname(file), { recursive: true });

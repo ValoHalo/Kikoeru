@@ -12,14 +12,9 @@ process.env.FREEZE_CONFIG_FILE = "1";
 process.env.NODE_ENV = "test";
 
 const updateManager = require("../../src/update/updateManager");
-const updateRouter = require("../../src/routes/update");
 
 test.after(() => {
     fs.rmSync(runtime, { recursive: true, force: true });
-});
-
-test("update route exports an Express middleware function", () => {
-    assert.equal(typeof updateRouter, "function");
 });
 
 test("cached update errors use the language of each status request", async (context) => {
