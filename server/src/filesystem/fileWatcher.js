@@ -155,7 +155,7 @@ async function flushPendingChanges() {
     console.log(`[FileWatcher] 防抖到期，批量处理 ${uniqueCodes.length} 个作品文件夹变更`);
     for (const { rootFolderName, code, codeFolderPath, eventType } of uniqueCodes) {
         TaskQueue_1.scanTaskQueue.add(() => handleFolderAdd(rootFolderName, code, codeFolderPath, eventType))
-            .catch(err => console.error(`[FileWatcher] 处理文件夹失败: ${err.message}`));
+            .catch(err => console.error(`[FileWatcher] 处理文件夹失败 (${rootFolderName}:${codeFolderPath}):`, err));
     }
 }
 let debounceTimer = null;
@@ -164,9 +164,8 @@ function scheduleDebounceFlush() {
         clearTimeout(debounceTimer);
     }
     debounceTimer = setTimeout(() => {
-        flushPendingChanges().finally(() => {
-            debounceTimer = null;
-        });
+        debounceTimer = null;
+        flushPendingChanges().catch(err => console.error('[FileWatcher] 批量处理失败:', err));
     }, DEBOUNCE_DELAY_MS);
 }
 async function processWatcherEvents(rootFolder, events) {
@@ -198,7 +197,8 @@ async function watchRootFolder(rootFolder) {
                 return;
             }
             setTimeout(() => {
-                processWatcherEvents(rootFolder, events);
+                processWatcherEvents(rootFolder, events)
+                    .catch(err => console.error(`[FileWatcher] 处理监听事件失败 (${rootFolder.name}):`, err));
             }, 100);
         }, { ignore: ignorePatterns });
         subscriptions.push(subscription);

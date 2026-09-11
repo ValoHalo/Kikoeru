@@ -245,6 +245,11 @@ function writeReleaseFiles(stagePath, ffmpegInput) {
         "\"%~dp0kikoeru-express.exe\"",
         "set \"KIKOERU_EXIT_CODE=%ERRORLEVEL%\"",
         "if \"%KIKOERU_EXIT_CODE%\"==\"42\" goto run",
+        "if not \"%KIKOERU_EXIT_CODE%\"==\"0\" (",
+        "  echo Kikoeru exited with code %KIKOERU_EXIT_CODE%.",
+        "  if not exist \"%KIKOERU_DATA_DIR%\" mkdir \"%KIKOERU_DATA_DIR%\"",
+        "  >>\"%KIKOERU_DATA_DIR%\\process-exits.log\" echo [%DATE% %TIME%] Exit code: %KIKOERU_EXIT_CODE%",
+        ")",
         "if exist \"%KIKOERU_DATA_DIR%\\updates\\startup-pending.json\" goto run",
         "if not \"%KIKOERU_EXIT_CODE%\"==\"0\" pause",
         "exit /b %KIKOERU_EXIT_CODE%",
@@ -340,4 +345,4 @@ if (require.main === module) {
     main();
 }
 
-module.exports = { parseArguments, requiredPkgNativeAssets };
+module.exports = { parseArguments, requiredPkgNativeAssets, writeReleaseFiles };

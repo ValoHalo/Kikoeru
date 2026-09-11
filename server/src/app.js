@@ -162,7 +162,8 @@ function runServer(app) {
         console.log('Express server started on port %s at %s', server.address().port, server.address().address);
         console.log('Kikoeru: http://127.0.0.1:%s/', server.address().port);
         if (config_1.config.enableFileWatcher) {
-            (0, fileWatcher_1.startWatcher)();
+            (0, fileWatcher_1.startWatcher)()
+                .catch(err => console.error('[FileWatcher] 初始化失败:', err));
         }
         else {
             console.log('[FileWatcher] 文件监听功能已禁用，如需启用请在设置中开启 enableFileWatcher');
