@@ -5,10 +5,11 @@
       <q-tab name="review" icon="star" :label="$t('common.myRating')" />
       <q-tab name="progress" icon="headphones" :label="$t('favourites.progress')" />
       <q-tab name="archived" icon="archive" :label="$t('favourites.archived')" />
+      <q-tab name="missing" icon="folder_off" :label="$t('common.filesMissing')" />
       <q-tab name="folder" icon="folder_special" :label="$t('common.collections')" />
     </q-tabs>
 
-    <div v-if="!['histroy', 'folder', 'archived'].includes(mode)" class="row justify-end q-mt-md">
+    <div v-if="!['histroy', 'folder', 'archived', 'missing'].includes(mode)" class="row justify-end q-mt-md">
       <q-select dense outlined v-model="sortBy" :options="sortOptions" :display-value="sortOptions.find(option => option.order === sortBy.order)?.label" />
       <q-btn :disable="sortButtonDisabled" flat round dense class="q-ml-sm" :icon="direction ? 'arrow_downward' : 'arrow_upward'" :aria-label="$t('favourites.sortDirection')" @click="switchSortMode" />
     </div>
@@ -66,6 +67,7 @@
                   <q-item-label lines="2"><router-link :to="`/work/${work.id}`" class="text-primary">{{ work.title }}</router-link></q-item-label>
                   <q-item-label caption>{{ work.circle && work.circle.name }}</q-item-label>
                   <q-badge v-if="work.archived_at" color="grey-7" :label="$t('favourites.archived')" class="collection-archive-badge" />
+                  <q-item-label v-if="work.files_missing" caption :class="$q.dark.isActive ? 'text-red-4' : 'text-negative'"><q-icon name="folder_off" /> {{ $t('common.filesMissing') }}</q-item-label>
                 </q-item-section>
                 <q-item-section side class="collection-handle"><q-icon name="drag_handle" /><q-tooltip>{{ $t('favourites.reorder') }}</q-tooltip></q-item-section>
                 <q-item-section side><q-btn flat round dense icon="close" color="negative" :aria-label="$t('favourites.removeFromCollection')" @click="removeCollectionItem(work.id)" /></q-item-section>
@@ -126,6 +128,7 @@ export default {
     direction () { return this.sortMode === 'desc' },
     sortButtonDisabled () { return this.sortBy.order === 'allage' || this.sortBy.order === 'nsfw' },
     emptyMessage () {
+      if (this.mode === 'missing') return t('favourites.noMissing')
       if (this.mode === 'archived') return t('favourites.noArchived')
       if (this.mode === 'histroy') return t('favourites.noHistory')
       return t('favourites.noReviews')
@@ -162,7 +165,7 @@ export default {
       if (this.sortBy.order === 'allage') { params.order = 'nsfw'; params.sort = 'asc' }
       if (this.sortBy.order === 'nsfw') { params.order = 'nsfw'; params.sort = 'desc' }
       if (this.mode === 'progress') params.filter = this.progressFilter
-      const requestUrl = this.mode === 'histroy' ? '/api/histroy' : this.mode === 'archived' ? '/api/library/archived' : '/api/review'
+      const requestUrl = this.mode === 'histroy' ? '/api/histroy' : ['archived', 'missing'].includes(this.mode) ? `/api/library/${this.mode}` : '/api/review'
       this.loading = true
       try {
         const response = await this.$axios.get(requestUrl, { params })

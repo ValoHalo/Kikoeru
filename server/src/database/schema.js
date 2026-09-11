@@ -103,6 +103,11 @@ const createSchema = (connection = db_1.knex) => connection.schema
     table.foreign('playlist_id').references('id').inTable('t_playlist').onDelete('CASCADE');
     table.index(['playlist_id', 'position']);
 })
+    .createTable('t_work_availability', (table) => {
+    table.bigInteger('work_id').unsigned().primary();
+    table.timestamp('missing_since').notNullable().defaultTo(connection.fn.now());
+    table.foreign('work_id').references('id').inTable('t_work').onDelete('CASCADE');
+})
     .createTable('t_scan_failure', (table) => {
     table.increments('id');
     table.string('code', 16).notNullable();

@@ -14,6 +14,7 @@
           </router-link>
         </q-item-label>
 
+        <q-item-label v-if="metadata.files_missing" caption :class="$q.dark.isActive ? 'text-red-4' : 'text-negative'"><q-icon name="folder_off" /> {{ $t('common.filesMissing') }}</q-item-label>
         <div class="row q-gutter-x-sm col-auto" >
           <router-link :to="`/works?circleId=${metadata.circle.id}`" class="col-auto text-grey">
             {{metadata.circle.name}}

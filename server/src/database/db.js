@@ -20,6 +20,7 @@ function archivedWorkIds(username) {
 }
 
 function archiveFilter(query, username, mode = 'exclude', column = 'staticMetadata.id') {
+    query.whereNotIn(column, knex('t_work_availability').select('work_id'));
     if (!username || mode === 'include')
         return query;
     if (mode === 'only')
@@ -966,6 +967,16 @@ async function getArchivedWorks(username, { limit = 1000, offset = 0, nsfw = 0 }
     return { works, totalCount };
 }
 exports.getArchivedWorks = getArchivedWorks;
+
+async function getMissingWorks(username, { limit = 12, offset = 0, nsfw = 0 } = {}) {
+    const query = () => nsfwFilter(nsfw, worksQuery(username)
+        .join('t_work_availability', 't_work_availability.work_id', 'staticMetadata.id')
+        .select('t_work_availability.missing_since')
+        .orderBy('t_work_availability.missing_since', 'desc').orderBy('staticMetadata.id', 'desc'));
+    const totalCount = await countQuery(query(), 'id');
+    return { works: await query().limit(limit).offset(offset), totalCount };
+}
+exports.getMissingWorks = getMissingWorks;
 
 async function getWorkCollections(username, sfwOnly = false) {
     const items = knex('t_work_collection_item');

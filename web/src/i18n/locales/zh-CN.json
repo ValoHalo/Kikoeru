@@ -13,6 +13,7 @@
     "addKeyword": "添加关键词"
   },
   "common": {
+    "filesMissing": "文件缺失",
     "pageNotFound": "此页面不存在。",
     "backHome": "返回主页",
     "interfaceLanguage": "界面语言",
@@ -462,8 +463,8 @@
     "defaultRecursionDepth": "默认 2",
     "resetRecursionDepth": "恢复默认值 {scannerMaxRecursionDepth}",
     "resetRecursionDepthHint": "恢复默认值：{scannerMaxRecursionDepth}",
-    "skipCleanup": "扫描时跳过清理音声库",
-    "skipCleanupHint": "是否跳过清理不存在的音声（不推荐，默认不跳过）",
+    "skipCleanup": "扫描时跳过文件状态检查",
+    "skipCleanupHint": "保留作品当前的文件可用状态。",
     "fileWatcher": "启用文件监听",
     "fileWatcherHint": "监听媒体目录变化并自动加入新作品；实验性功能，修改后需重启服务器。",
     "server": "Web 服务器",
@@ -670,6 +671,7 @@
     "deletePrompt": "确认删除选中用户？"
   },
   "favourites": {
+    "noMissing": "没有文件缺失的作品",
     "history": "播放历史",
     "progress": "我的进度",
     "archived": "已归档",
@@ -899,9 +901,9 @@
     "repairVoiceActors": "开始进行声优元数据修复，需要联网",
     "repairVoiceActorsFailed": "声优元数据修复失败 {value0} 个，保留修复任务以便下次重试",
     "repairComplete": "完成元数据修复",
-    "skipCleanup": "跳过清理“不存在的音声数据”",
-    "cleanupStarted": "清理本地不再存在的音声的数据与封面图片...",
-    "cleanupComplete": "清理完成. 现在开始扫描...",
+    "skipCleanup": "跳过作品文件状态检查。",
+    "cleanupStarted": "检查作品文件状态...",
+    "cleanupComplete": "文件状态检查完成，开始扫描...",
     "cleanupFailed": "在执行清理过程中出错: {value0}",
     "foldersFound": "共找到 {value0} 个音声文件夹.",
     "scanRootFailed": "在扫描根文件夹的过程中出错: {value0}",

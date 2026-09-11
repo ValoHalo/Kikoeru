@@ -11,8 +11,11 @@ async function prepareWorks(works, sfwOnly = false) {
     const ids = new Set();
     for (const work of works) {
         for (const track of work.state?.queue || []) ids.add(trackWorkId(track, work.id));
-        if (sfwOnly) for (const related of work.relatedWorks || []) ids.add(Number(related.id));
+        for (const related of work.relatedWorks || []) ids.add(Number(related.id));
     }
+    const unavailable = await db.knex('t_work_availability').select('work_id', 'missing_since')
+        .whereIn('work_id', [...ids, ...works.map(work => work.id)]);
+    const missingFiles = new Map(unavailable.map(row => [Number(row.work_id), row.missing_since]));
     const missing = [...ids].filter(id => Number.isInteger(id) && id > 0 && !ratings.has(id));
     if (missing.length) {
         const rows = await db.knex('t_work').select('id', 'nsfw').whereIn('id', missing);
@@ -20,7 +23,9 @@ async function prepareWorks(works, sfwOnly = false) {
     }
     const isSfw = id => ratings.get(id) === false || ratings.get(id) === 0;
     for (const work of works) {
-        if (sfwOnly) work.relatedWorks = (work.relatedWorks || []).filter(related => isSfw(Number(related.id)));
+        work.files_missing = missingFiles.has(Number(work.id));
+        work.missing_since = missingFiles.get(Number(work.id)) || null;
+        work.relatedWorks = (work.relatedWorks || []).filter(related => !missingFiles.has(Number(related.id)) && (!sfwOnly || isSfw(Number(related.id))));
         if (!Array.isArray(work.state?.queue)) continue;
         const state = work.state;
         const originalIndex = Number(state.index) || 0;
@@ -30,8 +35,7 @@ async function prepareWorks(works, sfwOnly = false) {
             const nsfw = ratings.get(track.workId);
             track.nsfw = nsfw == null ? null : Boolean(nsfw);
         }
-        if (!sfwOnly) continue;
-        const queue = state.queue.filter(track => isSfw(track.workId));
+        const queue = state.queue.filter(track => !missingFiles.has(track.workId) && (!sfwOnly || isSfw(track.workId)));
         const index = queue.indexOf(current);
         if (queue.length !== state.queue.length) {
             work.state = { ...state, queue, index: Math.max(0, index), seconds: index < 0 ? 0 : state.seconds };

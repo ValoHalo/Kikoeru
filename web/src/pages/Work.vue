@@ -21,6 +21,7 @@
         <RelatedWorks :metadata="metadata" />
         <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
         <WorkTree
+          v-if="!metadata.files_missing"
           ref="workTree"
           :tree="tree"
           :metadata="metadata"
@@ -138,7 +139,7 @@ export default {
         this.metadataLoaded = true
         // 如果有播放状态记录
         // 同时当前尚未播放，则设置历史播放进度
-        if (!this.isLyricsPage && this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length > 0 && this.playWorkId == 0) {
+        if (!this.metadata.files_missing && !this.isLyricsPage && this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length > 0 && this.playWorkId == 0) {
           this.resumeMetadataPlayHistroy()
         }
         return true
@@ -183,7 +184,7 @@ export default {
       this.metadataLoaded = false
       this.workUnavailable = false
       this.tree = []
-      if (await this.requestMetaData()) await this.requestTracks()
+      if (await this.requestMetaData() && !this.metadata.files_missing) await this.requestTracks()
       this.loadingData = false
     },
 

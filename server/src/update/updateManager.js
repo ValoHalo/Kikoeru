@@ -340,24 +340,33 @@ async function requestInstall() {
     const support = installSupport();
     if (!support.supported)
         throw updateError(support.reason);
-    if (runtimeState.scannerActive)
+    if (runtimeState.scannerActive || runtimeState.scannerPending || runtimeState.installing)
         throw updateError('updateManager.scannerRunning');
     if (state.phase !== "ready" || !state.packagePath || !fs.existsSync(state.packagePath))
         throw updateError('updateManager.downloadIncomplete');
 
-    await prepareDatabaseForUpdate();
-    const marker = {
-        fromVersion: packageJson.version,
-        targetVersion: state.targetVersion,
-        packagePath: state.packagePath,
-        digest: state.digest,
-        assetName: state.assetName,
-        installKind: detectInstallKind(),
-        createdAt: new Date().toISOString(),
-    };
-    writeJson(installMarkerPath, marker);
-    state.phase = "installing";
-    writeJson(statePath, state);
+    runtimeState.installing = true;
+    try {
+        await require('../filesystem/fileWatcher').stopWatcher();
+        await prepareDatabaseForUpdate();
+        const marker = {
+            fromVersion: packageJson.version,
+            targetVersion: state.targetVersion,
+            packagePath: state.packagePath,
+            digest: state.digest,
+            assetName: state.assetName,
+            installKind: detectInstallKind(),
+            createdAt: new Date().toISOString(),
+        };
+        writeJson(installMarkerPath, marker);
+        state.phase = "installing";
+        writeJson(statePath, state);
+    }
+    catch (error) {
+        runtimeState.installing = false;
+        if (config.enableFileWatcher) await require('../filesystem/fileWatcher').startWatcher();
+        throw error;
+    }
 
     setTimeout(async () => {
         const db = require("../database/db");

@@ -41,6 +41,7 @@ exports.performUpdate = performUpdate;
 exports.performWorkFileScan = performWorkFileScan;
 exports.performRetryFailed = performRetryFailed;
 exports.processFolder = processFolder;
+exports.processWatchedFolder = processWatchedFolder;
 exports.classifyFolderResult = classifyFolderResult;
 exports.classifyCoverDownloadResults = classifyCoverDownloadResults;
 exports.updateMetadata = updateMetadata;
@@ -53,7 +54,6 @@ const dlsite_new_1 = require("../scraper/dlsite-new");
 const asmrOne_1 = require("../scraper/asmrOne");
 const db = __importStar(require("../database/db"));
 const utils_1 = require("./utils");
-const cleanupSafety_1 = require("./cleanupSafety");
 const utils_2 = require("../scraper/utils");
 const config_1 = require("../config");
 const upgrade_1 = require("../upgrade");
@@ -63,6 +63,8 @@ const tasks = [];
 const failedTasks = [];
 const mainLogs = [];
 const results = [];
+const { inspectWorkFolder } = require('./workSnapshot');
+const { setWorkMissing, reconcileAvailability } = require('./workAvailability');
 const LOG = {
     finish(message, messageKey, params) {
         console.log(` * ${message}`);
@@ -190,6 +192,57 @@ async function persistFolderResult(folder, result) {
     }
     else {
         await db.clearScanFailure(identity);
+    }
+}
+async function finishFolderTask(folder, result) {
+    try { await persistFolderResult(folder, result); }
+    finally { LOG.task.remove(folder.code, result); }
+}
+async function processWatchedFolder(folder, snapshot) {
+    let result = 'skipped';
+    let recorded = false;
+    try {
+        const workId = idConverter.codeToIdNumber(folder.code);
+        const existing = await db.knex('t_work').where('id', workId).first();
+        const samePath = existing && existing.root_folder === folder.rootFolderName && existing.dir === folder.relativePath;
+        if (snapshot.state !== 'present') {
+            if (samePath && ['missing', 'empty'].includes(snapshot.state)) await setWorkMissing(db, workId, true);
+            return result;
+        }
+        if (existing && !samePath) {
+            const oldRoot = config_1.config.rootFolders.find(root => root.name === existing.root_folder);
+            if (!oldRoot) return result;
+            const oldSnapshot = await inspectWorkFolder(oldRoot, existing.dir);
+            if (oldSnapshot.state === 'unavailable') throw new Error('Original work directory is unavailable');
+            if (oldSnapshot.state !== 'missing') return 'duplicate';
+            await db.knex('t_work').where('id', workId).update({ root_folder: folder.rootFolderName, dir: folder.relativePath });
+        }
+        recorded = true;
+        if (existing) {
+            const oldMemo = typeof existing.memo === 'string' ? JSON.parse(existing.memo) : existing.memo || {};
+            const memo = await (0, utils_1.scrapeWorkMemo)(folder.absolutePath, oldMemo);
+            await db.setWorkMemo(workId, memo);
+            await db.updateWorkLocalLyricStatus(memo.isContainLyric, existing.lyric_status || '', workId);
+        }
+        result = await processFolder(folder);
+        if (result !== 'failed') await setWorkMissing(db, idConverter.codeToIdNumber(folder.code), false);
+        return result;
+    }
+    catch (error) {
+        recorded = true;
+        result = 'failed';
+        if (!tasks.some(task => task.rjcode === folder.code)) LOG.task.add(folder.code);
+        LOG.task.error(folder.code, error.message || String(error));
+        return result;
+    }
+    finally {
+        try { if (recorded) await finishFolderTask(folder, result); }
+        finally {
+            tasks.length = 0;
+            failedTasks.length = 0;
+            mainLogs.length = 0;
+            results.length = 0;
+        }
     }
 }
 process.on('message', (m) => {
@@ -448,33 +501,7 @@ async function processFolderLimited(folder) {
 }
 ;
 async function performCleanup() {
-    const works = await db.knex('t_work').select('id', 'root_folder', 'dir');
-    const cleanupReport = (0, cleanupSafety_1.assertCleanupSafe)(config_1.config.rootFolders, works, {
-        allowEmptyRootCleanup: config_1.config.allowEmptyRootCleanup === true,
-        allowLargeCleanup: config_1.config.allowLargeCleanup === true,
-        maxMissingRatio: config_1.config.cleanupMaxMissingRatio,
-    });
-    const trxProvider = db.knex.transactionProvider();
-    const trx = await trxProvider();
-    try {
-        for (const work of cleanupReport.missingWorks) {
-            await db.removeWork(work.id, trxProvider);
-            const rjcode = idConverter.idNumberToCode(work.id);
-            try {
-                (0, utils_1.deleteCoverImageFromDisk)(rjcode);
-            }
-            catch (err) {
-                if (err && err.code !== 'ENOENT') {
-                    LOG.main.error(`[${rjcode}] 在删除封面过程中出错: ${err.message}`, 'scanner.deleteCoverFailed', { value0: String(rjcode), value1: String(err.message) });
-                }
-            }
-        }
-        await trx.commit();
-    }
-    catch (error) {
-        await trx.rollback();
-        throw error;
-    }
+    await reconcileAvailability(db, config_1.config.rootFolders);
 }
 ;
 async function fixVADatabase() {
@@ -501,13 +528,13 @@ async function fixVADatabase() {
 }
 async function tryCleanupStage() {
     if (config_1.config.skipCleanup) {
-        LOG.main.info('跳过清理“不存在的音声数据”', 'scanner.skipCleanup');
+        LOG.main.info('跳过作品文件状态检查', 'scanner.skipCleanup');
     }
     else {
         try {
-            LOG.main.info('清理本地不再存在的音声的数据与封面图片...', 'scanner.cleanupStarted');
+            LOG.main.info('检查作品文件状态...', 'scanner.cleanupStarted');
             await performCleanup();
-            LOG.main.info('清理完成. 现在开始扫描...', 'scanner.cleanupComplete');
+            LOG.main.info('文件状态检查完成，开始扫描...', 'scanner.cleanupComplete');
         }
         catch (err) {
             LOG.main.error(`在执行清理过程中出错: ${err.message}`, 'scanner.cleanupFailed', { value0: String(err.message) });
@@ -582,8 +609,7 @@ async function tryProcessFolderListParallel(folderList) {
                     break;
                 default: break;
             }
-            await persistFolderResult(folder, result);
-            LOG.task.remove(folder.code, result);
+            await finishFolderTask(folder, result);
             if (result !== 'skipped')
                 LOG.result.add(folder.code, result, counts[result]);
         }));

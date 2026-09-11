@@ -13,6 +13,20 @@ const { prepareWorks } = require('./utils/workVisibility');
 const router = express.Router();
 const PAGE_SIZE = config.pageSize || 12;
 
+router.get('/missing', query('page').optional().isInt({ min: 1 }), async (req, res, next) => {
+    if (!isValidRequest(req, res)) return;
+    try {
+        const currentPage = Number(req.query.page) || 1;
+        const { works, totalCount } = await db.getMissingWorks(username(req), {
+            limit: PAGE_SIZE, offset: (currentPage - 1) * PAGE_SIZE, nsfw: req.query.nsfw === '1' ? 1 : 0,
+        });
+        normalize(works, { dateOnly: true });
+        await prepareWorks(works, req.query.nsfw === '1');
+        res.send({ works, pagination: { currentPage, pageSize: PAGE_SIZE, totalCount } });
+    }
+    catch (error) { next(error); }
+});
+
 function username(req) {
     return getRequestUsername(req, config);
 }

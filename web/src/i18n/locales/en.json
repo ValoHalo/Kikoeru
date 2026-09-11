@@ -13,6 +13,7 @@
     "addKeyword": "Add keyword"
   },
   "common": {
+    "filesMissing": "Files missing",
     "pageNotFound": "This page does not exist.",
     "backHome": "Back to home",
     "interfaceLanguage": "Interface language",
@@ -462,8 +463,8 @@
     "defaultRecursionDepth": "Default: 2",
     "resetRecursionDepth": "Reset to {scannerMaxRecursionDepth}",
     "resetRecursionDepthHint": "Default: {scannerMaxRecursionDepth}",
-    "skipCleanup": "Skip library cleanup during scans",
-    "skipCleanupHint": "Keep works whose files no longer exist. Not recommended; off by default.",
+    "skipCleanup": "Skip file availability checks during scans",
+    "skipCleanupHint": "Keep the current file availability status of each work.",
     "fileWatcher": "Enable folder monitoring",
     "fileWatcherHint": "Watch media folders and add works automatically. Experimental; requires a server restart.",
     "server": "Web server",
@@ -670,6 +671,7 @@
     "deletePrompt": "Delete the selected users?"
   },
   "favourites": {
+    "noMissing": "No works with missing files",
     "history": "Playback history",
     "progress": "My progress",
     "archived": "Archived",
@@ -899,9 +901,9 @@
     "repairVoiceActors": "Repairing voice actor metadata. Internet access is required.",
     "repairVoiceActorsFailed": "Voice actor metadata repair failed for {value0} items. Keeping the repair task for another attempt.",
     "repairComplete": "Metadata repair completed.",
-    "skipCleanup": "Skipping cleanup of works that no longer exist locally.",
-    "cleanupStarted": "Removing data and covers for works that no longer exist locally...",
-    "cleanupComplete": "Cleanup completed. Starting scan...",
+    "skipCleanup": "Skipping file availability checks.",
+    "cleanupStarted": "Checking work files...",
+    "cleanupComplete": "File check completed. Starting scan...",
     "cleanupFailed": "Error during cleanup: {value0}",
     "foldersFound": "Audio folders found: {value0}.",
     "scanRootFailed": "Error scanning root folders: {value0}",

@@ -176,6 +176,11 @@ const routes = [
           component: Favourites,
         },
         {
+          path: '/missing',
+          props: { route: 'missing'},
+          component: Favourites,
+        },
+        {
           path: '/histroy',
           props: { route: 'histroy'},
           component: Favourites,

@@ -18,6 +18,7 @@
             {{metadata.circle.name}}
           </router-link>
           <span v-if="metadata.archived_at" class="work-archived"><q-icon name="archive" size="14px" />{{ $t('workDetails.archived') }}</span>
+          <span v-if="metadata.files_missing" class="work-archived" :class="$q.dark.isActive ? 'text-red-4' : 'text-negative'"><q-icon name="folder_off" size="14px" />{{ $t('common.filesMissing') }}</span>
         </div>
 
         <!-- 标题 -->
@@ -145,7 +146,7 @@
             <span class="work-field-label">{{ $t('workDetails.actions') }}</span>
             <div class="work-tools">
           <q-btn
-            v-if="metadata.state && playWorkId !== metadata.id"
+            v-if="metadata.state && !metadata.files_missing && playWorkId !== metadata.id"
             flat
             round
             icon="history"

@@ -13,6 +13,7 @@
     "addKeyword": "新增關鍵字"
   },
   "common": {
+    "filesMissing": "檔案缺失",
     "pageNotFound": "此頁面不存在。",
     "backHome": "返回主頁",
     "interfaceLanguage": "介面語言",
@@ -462,8 +463,8 @@
     "defaultRecursionDepth": "預設 2",
     "resetRecursionDepth": "恢復預設值 {scannerMaxRecursionDepth}",
     "resetRecursionDepthHint": "恢復預設值：{scannerMaxRecursionDepth}",
-    "skipCleanup": "掃描時跳過清理音聲庫",
-    "skipCleanupHint": "是否跳過清理不存在的音聲（不推薦，預設不跳過）",
+    "skipCleanup": "掃描時跳過檔案狀態檢查",
+    "skipCleanupHint": "保留作品目前的檔案可用狀態。",
     "fileWatcher": "啟用檔案監聽",
     "fileWatcherHint": "監聽媒體目錄變化並自動加入新作品；實驗性功能，修改後需重新啟動伺服器。",
     "server": "Web 伺服器",
@@ -670,6 +671,7 @@
     "deletePrompt": "確認刪除選中使用者？"
   },
   "favourites": {
+    "noMissing": "沒有檔案缺失的作品",
     "history": "播放歷史",
     "progress": "我的進度",
     "archived": "已歸檔",
@@ -899,9 +901,9 @@
     "repairVoiceActors": "開始進行聲優中繼資料修復，需要聯網",
     "repairVoiceActorsFailed": "聲優中繼資料修復失敗 {value0} 個，保留修復任務以便下次重試",
     "repairComplete": "完成中繼資料修復",
-    "skipCleanup": "跳過清理“不存在的音聲資料”",
-    "cleanupStarted": "清理本地不再存在的音聲的資料與封面圖片...",
-    "cleanupComplete": "清理完成，現在開始掃描...",
+    "skipCleanup": "跳過作品檔案狀態檢查。",
+    "cleanupStarted": "檢查作品檔案狀態...",
+    "cleanupComplete": "檔案狀態檢查完成，開始掃描...",
     "cleanupFailed": "在執行清理過程中出錯: {value0}",
     "foldersFound": "共找到 {value0} 個音聲資料夾。",
     "scanRootFailed": "在掃描根資料夾的過程中出錯: {value0}",

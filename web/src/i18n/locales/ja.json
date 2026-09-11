@@ -13,6 +13,7 @@
     "addKeyword": "キーワードを追加"
   },
   "common": {
+    "filesMissing": "ファイルなし",
     "pageNotFound": "このページは存在しません。",
     "backHome": "ホームに戻る",
     "interfaceLanguage": "表示言語",
@@ -462,8 +463,8 @@
     "defaultRecursionDepth": "初期値：2",
     "resetRecursionDepth": "初期値 {scannerMaxRecursionDepth} に戻す",
     "resetRecursionDepthHint": "初期値に戻す：{scannerMaxRecursionDepth}",
-    "skipCleanup": "スキャン時のライブラリ整理をスキップ",
-    "skipCleanupHint": "存在しなくなった作品の削除をスキップします（非推奨。初期設定ではスキップしません）",
+    "skipCleanup": "スキャン時にファイル状態の確認をスキップ",
+    "skipCleanupHint": "作品の現在のファイル状態を維持します。",
     "fileWatcher": "ファイル監視を有効にする",
     "fileWatcherHint": "メディアフォルダーの変更を監視し、新しい作品を自動で追加します。実験的な機能です。変更後はサーバーの再起動が必要です。",
     "server": "Webサーバー",
@@ -670,6 +671,7 @@
     "deletePrompt": "選択したユーザーを削除しますか？"
   },
   "favourites": {
+    "noMissing": "ファイルが見つからない作品はありません",
     "history": "再生履歴",
     "progress": "視聴状況",
     "archived": "アーカイブ済み",
@@ -899,9 +901,9 @@
     "repairVoiceActors": "声優のメタデータを修復中。インターネット接続が必要です。",
     "repairVoiceActorsFailed": "声優のメタデータ {value0} 件の修復に失敗しました。次回再試行できるようタスクを保持します。",
     "repairComplete": "メタデータの修復が完了しました。",
-    "skipCleanup": "ローカルに存在しない作品の整理をスキップします。",
-    "cleanupStarted": "ローカルに存在しない作品のデータとカバーを削除中…",
-    "cleanupComplete": "整理が完了しました。スキャンを開始します…",
+    "skipCleanup": "ファイル状態の確認をスキップします。",
+    "cleanupStarted": "作品のファイル状態を確認中...",
+    "cleanupComplete": "ファイル状態の確認が完了しました。スキャンを開始します...",
     "cleanupFailed": "整理中にエラーが発生しました：{value0}",
     "foldersFound": "音声フォルダーが {value0} 件見つかりました。",
     "scanRootFailed": "ルートフォルダーのスキャン中にエラー：{value0}",
