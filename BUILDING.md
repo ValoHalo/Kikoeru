@@ -45,7 +45,7 @@ Set-Location kikoeru
 如果脚本无法自动下载 FFmpeg，可以使用浏览器手动准备归档：
 
 1. 打开 `server/scripts/release-config.json`，访问 `ffmpeg.archiveUrl` 指定的下载地址。
-2. 下载完成后，确保文件名与 `ffmpeg.archiveFileName` 完全一致，不要解压或改名。
+2. 下载完成后，将文件名改为 `ffmpeg.archiveFileName` 指定的名称，不要解压。
 3. 在仓库根目录创建 `.build/downloads/`，把归档放入该目录。最终路径应为 `.build/downloads/<ffmpeg.archiveFileName>`。
 4. 重新运行 `.\build-windows-release.ps1`。
 
@@ -62,6 +62,8 @@ kikoeru-win-x64-<6 位 commit ID>.zip
 不同提交的 ZIP 不会互相覆盖。同一提交重复构建仍对应同一个文件名；未提交改动会被编译进去，但不会反映在文件名的 commit ID 中。ZIP 包含应用程序、`ffmpeg.exe`、`ffprobe.exe`、启动脚本和根目录下唯一的 `LICENSE`；该文件依次包含项目 GPLv3 全文和 FFmpeg 归档自带的 LGPLv3 全文。用户数据由首次启动创建在 ZIP 解压目录下的 `data/` 中。
 
 默认 FFmpeg 下载信息集中在 `server/scripts/release-config.json`。需要更新 FFmpeg 时，只修改该文件中的下载地址、归档结构和 SHA-256，不需要把二进制提交到 Git。
+
+Windows 和 Linux 的 FFmpeg 归档使用 BtbN 每个月最后一次构建的固定地址，并校验 SHA-256。上游只保留最近 14 次每日构建，月末构建保留两年，因此更新时应选择已结束月份的最后一次构建，避免使用普通每日构建或内容会变化的 `latest`。超过保留期前仍需更新依赖。`archiveFileName` 应包含构建日期，以区分文件名相同但内容不同的归档；`archiveRoot` 必须与压缩包内的实际目录一致。
 
 ## 哪些文件进入仓库
 
