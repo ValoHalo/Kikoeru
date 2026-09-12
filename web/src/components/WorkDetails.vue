@@ -166,6 +166,7 @@
             @changed="$emit('reset')"
           />
 
+          <slot name="folder-action" />
           <q-btn flat round icon="more_horiz" :aria-label="$t('workDetails.moreActions')">
             <q-tooltip>{{ $t('workDetails.moreActions') }}</q-tooltip>
             <q-menu anchor="bottom right" self="top right">

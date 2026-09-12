@@ -335,6 +335,11 @@
     "deleteHistoryFailed": "删除历史失败："
   },
   "workTree": {
+    "setDefaultFolder": "设置为默认文件夹",
+    "clearDefaultFolder": "取消默认文件夹",
+    "defaultFolderSaved": "已设置为默认文件夹",
+    "defaultFolderCleared": "已取消默认文件夹",
+    "defaultFolderSaveFailed": "无法保存默认文件夹",
     "root": "根目录",
     "addWorkToPlaylist": "将整个作品加入已保存列表",
     "addToPlaylist": "加入已保存列表",

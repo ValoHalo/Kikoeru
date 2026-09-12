@@ -335,6 +335,11 @@
     "deleteHistoryFailed": "刪除歷史失敗："
   },
   "workTree": {
+    "setDefaultFolder": "設為預設資料夾",
+    "clearDefaultFolder": "取消預設資料夾",
+    "defaultFolderSaved": "已設為預設資料夾",
+    "defaultFolderCleared": "已取消預設資料夾",
+    "defaultFolderSaveFailed": "無法儲存預設資料夾",
     "root": "根目錄",
     "addWorkToPlaylist": "將整個作品加入已儲存清單",
     "addToPlaylist": "加入已儲存清單",

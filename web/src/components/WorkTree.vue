@@ -150,9 +150,11 @@ import ImageEditor from './ImageEditor.vue'
 import { mapState, mapGetters } from 'vuex'
 import { formatSeconds } from '../utils'
 import NotifyMixin from '../mixins/Notification.js'
+import { initialWorkFolder } from '../utils/workFolder.mjs'
 
 export default {
   name: 'WorkTree',
+  emits: ['path-change'],
   mixins: [NotifyMixin],
 
   components: {
@@ -178,6 +180,10 @@ export default {
   },
 
   props: {
+    defaultFolder: {
+      type: Array,
+      default: null,
+    },
     tree: {
       type: Array,
       required: true,
@@ -198,10 +204,14 @@ export default {
       this.initPath();
     },
 
-    importantTreePathArr (value) {
-      if (Array.isArray(value) && value.length > 0) {
-        this.path = value.slice()
-      }
+    importantTreePathArr () {
+      this.initPath()
+    },
+
+    path: {
+      deep: true,
+      immediate: true,
+      handler (value) { this.$emit('path-change', value.slice()) }
     }
   },
 
@@ -334,13 +344,7 @@ export default {
     },
 
     initPath () {
-      const initialPath = []
-      let fatherFolder = this.internalTree.concat()
-      while (fatherFolder.length === 1 && fatherFolder[0].type === 'folder') {
-        initialPath.push(fatherFolder[0].title)
-        fatherFolder = fatherFolder[0].children
-      }
-      this.path = initialPath
+      this.path = initialWorkFolder(this.internalTree, this.defaultFolder, this.importantTreePathArr)
     },
     
     onClickBreadcrumb (index) {
@@ -471,9 +475,7 @@ export default {
   
   mounted() {
     this.internalTree = this.tree;
-    if (this.importantTreePathArr.length > 0) {
-      this.path = this.importantTreePathArr.slice()
-    }
+    this.initPath()
   }
 }
 </script>

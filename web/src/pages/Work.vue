@@ -17,7 +17,21 @@
       </div>
       <div v-if="workUnavailable" class="q-pa-xl text-center text-grey">{{ $t('work.unavailable') }}</div>
       <template v-if="metadataLoaded">
-        <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy" />
+        <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy">
+          <template #folder-action>
+            <q-btn
+              v-if="!metadata.files_missing"
+              flat round icon="folder_special"
+              :color="isDefaultFolder ? 'primary' : undefined"
+              :aria-label="$t(isDefaultFolder ? 'workTree.clearDefaultFolder' : 'workTree.setDefaultFolder')"
+              :aria-pressed="isDefaultFolder"
+              :disable="loadingData"
+              @click="toggleDefaultFolder"
+            >
+              <q-tooltip>{{ $t(isDefaultFolder ? 'workTree.clearDefaultFolder' : 'workTree.setDefaultFolder') }}</q-tooltip>
+            </q-btn>
+          </template>
+        </WorkDetails>
         <RelatedWorks :metadata="metadata" />
         <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
         <WorkTree
@@ -26,6 +40,8 @@
           :tree="tree"
           :metadata="metadata"
           :importantTreePathArr="importantTreePathArr"
+          :default-folder="defaultFolder"
+          @path-change="currentFolder = $event"
           :editable="false"
         />
       </template>
@@ -42,6 +58,7 @@ import RelatedWorks from 'components/RelatedWorks.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { mapState } from 'vuex'
 import { getImportantTreePath } from 'src/utils'
+import { folderExists, workFolderStorageKey } from '../utils/workFolder.mjs'
 
 export default {
   name: 'Work',
@@ -67,11 +84,19 @@ export default {
       metadataLoaded: false,
       loadingData: true,
       workUnavailable: false,
-      importantTreePathArr: []
+      importantTreePathArr: [],
+      defaultFolder: null,
+      currentFolder: []
     }
   },
 
   computed: {
+    defaultFolderKey () {
+      return workFolderStorageKey(this.$store.state.User.name, this.workid)
+    },
+    isDefaultFolder () {
+      return Array.isArray(this.defaultFolder) && JSON.stringify(this.defaultFolder) === JSON.stringify(this.currentFolder)
+    },
     isLyricsPage () { return this.$route.name === 'lyrics' },
     subtitleFiles () {
       if (!this.isLyricsPage) return []
@@ -99,6 +124,10 @@ export default {
   },
 
   watch: {
+    '$store.state.User.name' () {
+      this.loadDefaultFolder()
+      this.$nextTick(() => this.$refs.workTree?.initPath())
+    },
     $route (to) {
       if (!to.path.startsWith('/work/') || String(to.params.id) === String(this.workid)) return
       this.workid = to.params.id;
@@ -115,6 +144,27 @@ export default {
   },
 
   methods: {
+    loadDefaultFolder () {
+      this.defaultFolder = null
+      try {
+        const saved = JSON.parse(localStorage.getItem(this.defaultFolderKey))
+        if (Array.isArray(saved) && saved.every(part => typeof part === 'string' && part.length > 0)) this.defaultFolder = saved
+      } catch {
+        // Unavailable storage or an invalid saved value leaves the global preference in effect.
+      }
+    },
+    toggleDefaultFolder () {
+      if (this.loadingData || !folderExists(this.tree, this.currentFolder)) return
+      const clear = this.isDefaultFolder
+      try {
+        if (clear) localStorage.removeItem(this.defaultFolderKey)
+        else localStorage.setItem(this.defaultFolderKey, JSON.stringify(this.currentFolder))
+        this.defaultFolder = clear ? null : this.currentFolder.slice()
+        this.showSuccNotif(this.$t(clear ? 'workTree.defaultFolderCleared' : 'workTree.defaultFolderSaved'))
+      } catch {
+        this.showErrNotif(this.$t('workTree.defaultFolderSaveFailed'))
+      }
+    },
     backToWork () {
       if (this.subtitleFile && this.$refs.workTree) {
         this.$refs.workTree.path = String(this.subtitleFile.subtitle || '').replace(/\\/g, '/').split('/').filter(Boolean)
@@ -184,6 +234,9 @@ export default {
       this.metadataLoaded = false
       this.workUnavailable = false
       this.tree = []
+      this.importantTreePathArr = []
+      this.currentFolder = []
+      this.loadDefaultFolder()
       if (await this.requestMetaData() && !this.metadata.files_missing) await this.requestTracks()
       this.loadingData = false
     },

@@ -335,6 +335,11 @@
     "deleteHistoryFailed": "再生履歴の削除に失敗しました："
   },
   "workTree": {
+    "setDefaultFolder": "デフォルトフォルダに設定",
+    "clearDefaultFolder": "デフォルトフォルダを解除",
+    "defaultFolderSaved": "デフォルトフォルダを保存しました",
+    "defaultFolderCleared": "デフォルトフォルダを解除しました",
+    "defaultFolderSaveFailed": "デフォルトフォルダを保存できませんでした",
     "root": "ルートフォルダー",
     "addWorkToPlaylist": "作品全体を保存済みプレイリストに追加",
     "addToPlaylist": "保存済みプレイリストに追加",

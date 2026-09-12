@@ -335,6 +335,11 @@
     "deleteHistoryFailed": "Failed to delete playback history: "
   },
   "workTree": {
+    "setDefaultFolder": "Set as default folder",
+    "clearDefaultFolder": "Clear default folder",
+    "defaultFolderSaved": "Default folder saved",
+    "defaultFolderCleared": "Default folder cleared",
+    "defaultFolderSaveFailed": "Could not save the default folder",
     "root": "Root folder",
     "addWorkToPlaylist": "Add entire work to saved playlist",
     "addToPlaylist": "Add to saved playlist",
