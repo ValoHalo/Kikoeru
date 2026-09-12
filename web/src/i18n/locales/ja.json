@@ -281,8 +281,8 @@
   "smartPathSettings": {
     "title": "スマートパス",
     "description": "作品を開くと、音声が含まれるフォルダーに自動で移動します。",
-    "preferEffects": "効果音を優先",
-    "preferEffectsHint": "効果音のフォルダーを優先して開きます。",
+    "preferEffects": "効果音あり版を優先",
+    "preferEffectsHint": "音声形式の優先順位に従い、その中で効果音あり版のフォルダーを優先します。表記のない版は効果音ありとして扱います。",
     "formatPriority": "音声形式の優先順位",
     "formatPriorityHint": "上位の形式を含む音声フォルダーを優先して開きます。",
     "reorderFormats": "音声形式の優先順位を変更",

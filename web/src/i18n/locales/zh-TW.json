@@ -281,8 +281,8 @@
   "smartPathSettings": {
     "title": "智慧路徑",
     "description": "開啟作品後，自動進入包含音訊的資料夾。",
-    "preferEffects": "效果音偏好",
-    "preferEffectsHint": "優先進入效果音目錄。",
+    "preferEffects": "優先有音效版本",
+    "preferEffectsHint": "先依音訊類型，再優先進入有音效版本的資料夾；未標示的版本視為有音效。",
     "formatPriority": "音訊類型優先順序",
     "formatPriorityHint": "優先進入包含靠前格式的音訊目錄。",
     "reorderFormats": "調整音訊類型優先順序",

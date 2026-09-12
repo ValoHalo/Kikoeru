@@ -32,6 +32,7 @@ const url_1 = require("../routes/utils/url");
 const config_1 = require("../config");
 const minimatch_1 = __importDefault(require("minimatch"));
 const natural_compare_lite_1 = __importDefault(require("natural-compare-lite"));
+const { getAudioEffectState } = require("./audioEffects");
 const crypto_1 = __importDefault(require("crypto"));
 const supportedMediaExtList = ['.mp3', '.ogg', '.opus', '.wav', '.aac', '.flac', '.webm', '.mp4', '.m4a', '.mka', '.aiff', '.avi'];
 exports.supportedMediaExtList = supportedMediaExtList;
@@ -297,7 +298,6 @@ function naturalSortTree(tree) {
     tree.splice(0, tree.length, ...folders, ...files);
 }
 const SMART_PATH_AUDIO_TYPES = ['mp3', 'flac', 'wav', 'opus', 'm4a', 'aac'];
-const EFFECT_FOLDER_PATTERN = /(?:^|[\s_\-[(])(?:se|sfx)(?=$|[\s_\-\])])|効果音|效果音|音效/i;
 function normalizeSmartPathAudioTypes(value) {
     const values = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : [];
     const normalized = values
@@ -310,36 +310,49 @@ function getSmartAudioFolderPath(tree, options = {}) {
     if (options.enabled === false)
         return [];
     const candidates = [];
-    const collectCandidates = (items, folderPath = []) => {
+    const collectCandidates = (items, folderPath = [], hasEffects = true) => {
         const audioFiles = items.filter(item => item.type === 'audio');
         if (audioFiles.length > 0) {
             const typeCounts = Object.create(null);
+            const effectTypeCounts = Object.create(null);
+            let effectCount = 0;
             for (const file of audioFiles) {
                 const extension = path_1.default.extname(file.title || '').slice(1).toLowerCase();
                 typeCounts[extension] = (typeCounts[extension] || 0) + 1;
+                const filename = path_1.default.basename(file.title || '', path_1.default.extname(file.title || ''));
+                if (getAudioEffectState(filename, hasEffects)) {
+                    effectTypeCounts[extension] = (effectTypeCounts[extension] || 0) + 1;
+                    effectCount++;
+                }
             }
             candidates.push({
                 path: folderPath,
-                isEffectFolder: folderPath.some(folderName => EFFECT_FOLDER_PATTERN.test(folderName.trim())),
                 typeCounts,
+                effectTypeCounts,
+                effectCount,
                 totalCount: audioFiles.length,
             });
         }
         for (const folder of items.filter(item => item.type === 'folder' && Array.isArray(item.children))) {
-            collectCandidates(folder.children, folderPath.concat(folder.title));
+            collectCandidates(folder.children, folderPath.concat(folder.title), getAudioEffectState(folder.title, hasEffects));
         }
     };
     collectCandidates(tree);
     if (candidates.length === 0)
         return [];
     let rankedCandidates = candidates;
+    const audioTypes = normalizeSmartPathAudioTypes(options.audioTypes);
+    const preferredType = audioTypes.find(type => candidates.some(candidate => candidate.typeCounts[type]));
+    if (preferredType) {
+        rankedCandidates = candidates.filter(candidate => candidate.typeCounts[preferredType]);
+    }
     if (options.preferEffect !== false) {
-        const effectCandidates = candidates.filter(candidate => candidate.isEffectFolder);
+        const effectCandidates = rankedCandidates.filter(candidate => preferredType
+            ? candidate.effectTypeCounts[preferredType] > 0
+            : candidate.effectCount > 0);
         if (effectCandidates.length > 0)
             rankedCandidates = effectCandidates;
     }
-    const audioTypes = normalizeSmartPathAudioTypes(options.audioTypes);
-    const preferredType = audioTypes.find(type => rankedCandidates.some(candidate => candidate.typeCounts[type]));
     rankedCandidates.sort((candidateA, candidateB) => {
         if (preferredType) {
             const typeCountDifference = (candidateB.typeCounts[preferredType] || 0) - (candidateA.typeCounts[preferredType] || 0);

@@ -281,8 +281,8 @@
   "smartPathSettings": {
     "title": "智能路径",
     "description": "打开作品后，自动进入包含音频的文件夹。",
-    "preferEffects": "效果音偏好",
-    "preferEffectsHint": "优先进入效果音目录。",
+    "preferEffects": "优先有音效版本",
+    "preferEffectsHint": "先按音频类型，再优先进入有音效版本的文件夹；未标注的版本视为有音效。",
     "formatPriority": "音频类型优先级",
     "formatPriorityHint": "优先进入包含靠前格式的音频目录。",
     "reorderFormats": "调整音频类型优先级",

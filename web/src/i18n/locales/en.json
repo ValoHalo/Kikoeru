@@ -281,8 +281,8 @@
   "smartPathSettings": {
     "title": "Smart folder selection",
     "description": "Automatically enter a folder containing audio when opening a work.",
-    "preferEffects": "Prefer sound effects",
-    "preferEffectsHint": "Prefer folders containing sound effects.",
+    "preferEffects": "Prefer versions with sound effects",
+    "preferEffectsHint": "Apply audio format priority first, then prefer folders with sound effects. Unmarked versions count as having sound effects.",
     "formatPriority": "Audio format priority",
     "formatPriorityHint": "Prefer folders containing formats higher in this list.",
     "reorderFormats": "Reorder audio formats",
