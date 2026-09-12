@@ -119,14 +119,14 @@ export default {
         this.$store.commit('AudioPlayer/SET_HISTORY_CLEARING', false);
       }
     },
-    resetHistory () {
+    resetHistory (preserve = false) {
       this.requestId++;
-      this.works = [];
+      if (preserve !== true) this.works = [];
       this.pagination = { currentPage: 0, pageSize: 12, totalCount: 0 };
       this.stopLoad = false;
       this.isLoading = false;
       this.loadError = false;
-      if (this.active) this.getHistory();
+      if (this.active) this.getHistory(true);
     },
     onCollapseTransitionEnd() {
       if (this.expanded) this.$refs.scroll?.refresh();
@@ -185,14 +185,14 @@ export default {
       event.stopPropagation();
     },
 
-    async getHistory() {
+    async getHistory(replace = false) {
       if (this.stopLoad || this.isLoading) return;
 
       this.isLoading = true;
       const requestId = ++this.requestId;
 
       const params = {
-        page: this.pagination.currentPage + 1,
+        page: replace ? 1 : this.pagination.currentPage + 1,
         sort: 'desc',
       };
 
@@ -200,7 +200,7 @@ export default {
       try {
         const response = await this.$axios.get('/api/histroy', { params });
         if (requestId !== this.requestId) return;
-        this.works = this.works.concat(response.data.works);
+        this.works = replace ? response.data.works : this.works.concat(response.data.works);
         this.pagination = response.data.pagination;
         if (this.$refs.scroll) this.$refs.scroll.refresh();
         // console.log("vscroll = ", this.$refs.scroll);
@@ -251,7 +251,7 @@ export default {
   },
 
   mounted() { this.getHistory(); },
-  activated() { this.active = true; this.resetHistory(); },
+  activated() { this.active = true; this.resetHistory(true); },
   deactivated() { this.active = false; this.requestId++; },
 }
 </script>

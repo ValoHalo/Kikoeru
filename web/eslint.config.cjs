@@ -10,6 +10,7 @@ module.exports = [
   {
     ignores: [
       '.postcssrc.js',
+      '.quasar/**',
       'dist/**',
       'eslint.config.cjs',
       'src/router/index.js'
@@ -34,7 +35,7 @@ module.exports = [
     ],
     overrides: [
       {
-        files: ['scripts/*.js'],
+        files: ['scripts/*.js', 'quasar.config.js'],
         env: {
           browser: false,
           node: true
@@ -42,6 +43,9 @@ module.exports = [
       }
     ],
     rules: {
+      'vue/multi-word-component-names': ['error', {
+        ignores: ['Scrollable', 'About', 'Advanced', 'Folders', 'Setup', 'Update', 'Error404', 'List', 'Playlist', 'Preferences', 'Work', 'Works']
+      }],
       'import-x/named': 2,
       'import-x/namespace': 2,
       'import-x/default': 2,

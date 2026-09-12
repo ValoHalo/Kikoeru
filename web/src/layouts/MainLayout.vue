@@ -219,7 +219,9 @@ export default {
               await this.$router.replace('/admin/setup')
               return response.data
             }
-          } catch (_) {}
+          } catch (_) {
+            // Continue user initialization if the setup status is unavailable.
+          }
         }
         const currentUserName = response.data.user && response.data.user.name ? response.data.user.name : ''
         if (currentUserName !== previousUserName && this.$store.state.AudioPlayer.queue.length > 0) {
@@ -453,7 +455,11 @@ export default {
 }
 .page-container-style { position: absolute; left: 0; right: 0; bottom: 0; top: 0; }
 .padding-bottom-play-bar { min-height: 100vh; }
+.body--light .padding-bottom-play-bar { background-color: #fff; transition: background-color 180ms ease; }
 .body--light .works-page-container { background: #f2f3f5; }
+@media (prefers-reduced-motion: reduce) {
+  .body--light .padding-bottom-play-bar { transition: none; }
+}
 .padding-bottom-play-bar { padding-bottom: 80px !important; }
 .scroller { transition: .3s; }
 .scroller-show { opacity: 1; visibility: visible; }

@@ -121,7 +121,9 @@ export default {
         if (!response.data.completed && this.$route.path !== '/admin/setup') {
           await this.$router.replace('/admin/setup')
         }
-      } catch (_) {}
+      } catch (_) {
+        // Keep the current route if the setup status is unavailable.
+      }
     },
     readSharedConfig () {
       this.$axios.get('/api/config/shared').then((response) => {

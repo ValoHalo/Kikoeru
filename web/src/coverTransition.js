@@ -8,6 +8,7 @@ export function cancelCoverTransition () {
   const current = active
   active = null
   clearTimeout(current.timer)
+  cancelAnimationFrame(current.positionFrame)
   current.animation?.cancel()
   current.overlay.remove()
   current.source.style.visibility = current.sourceVisibility
@@ -60,7 +61,7 @@ function beginCoverTransition (source, id, destination, returning = false) {
   document.body.append(overlay)
   active = {
     id, destination, returning, source, sourceVisibility: source.style.visibility, overlay,
-    timer: setTimeout(cancelCoverTransition, 220)
+    scrollReady: false, timer: setTimeout(cancelCoverTransition, 800)
   }
   source.style.visibility = 'hidden'
   window.addEventListener('resize', cancelCoverTransition, { passive: true })
@@ -76,8 +77,13 @@ export function prepareReturnCoverTransition (to, from) {
 
 export function checkCoverTransitionRoute (to, from, failure) {
   if (active && (failure || (active.returning ? to.fullPath : to.path) !== active.destination)) cancelCoverTransition()
-  if (active?.returning) findReturnCover(active)
   if (origin && to.fullPath !== origin.fullPath && to.path !== `/work/${origin.id}`) origin = null
+}
+
+export function coverTransitionScrollReady (to) {
+  if (!active || (active.returning ? to.fullPath : to.path) !== active.destination) return
+  active.scrollReady = true
+  if (active.returning) findReturnCover(active)
 }
 
 function findReturnCover (current) {
@@ -100,8 +106,16 @@ export async function finishCoverTransition (id, target) {
   current.targetVisibility = target.style.visibility
   target.style.visibility = 'hidden'
 
-  // Wait for the router's scroll restoration and the detail layout to settle.
-  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  // Cached lists and virtual rows must finish reactivation before measuring.
+  let previousRect = null
+  let stableFrames = 0
+  while (active === current && stableFrames < 3) {
+    await new Promise(resolve => requestAnimationFrame(resolve))
+    const nextRect = target.getBoundingClientRect()
+    const unchanged = previousRect && ['left', 'top', 'width', 'height'].every(key => Math.abs(nextRect[key] - previousRect[key]) < 0.5)
+    stableFrames = current.scrollReady && unchanged ? stableFrames + 1 : 0
+    previousRect = nextRect
+  }
   if (active !== current) return
   if (!target.isConnected || reducedMotion()) return cancelCoverTransition()
   const rect = target.getBoundingClientRect()
@@ -109,6 +123,13 @@ export async function finishCoverTransition (id, target) {
 
   clearTimeout(current.timer)
   current.timer = setTimeout(cancelCoverTransition, 600)
+  const checkPosition = () => {
+    if (active !== current) return
+    const latest = target.getBoundingClientRect()
+    if (['left', 'top', 'width', 'height'].some(key => Math.abs(latest[key] - rect[key]) > 1)) return cancelCoverTransition()
+    current.positionFrame = requestAnimationFrame(checkPosition)
+  }
+  current.positionFrame = requestAnimationFrame(checkPosition)
   const start = current.overlay.style
   current.animation = current.overlay.animate([
     { left: start.left, top: start.top, width: start.width, height: start.height, borderRadius: start.borderRadius },
@@ -118,7 +139,10 @@ export async function finishCoverTransition (id, target) {
   try {
     await current.animation.finished
     const image = target.querySelector('img.q-img__image')
-    if (image && !image.complete) return cancelCoverTransition()
+    if (image && (!image.complete || !image.naturalWidth)) return cancelCoverTransition()
+    while (active === current && image && Number(getComputedStyle(image).opacity) < 0.99) {
+      await new Promise(resolve => requestAnimationFrame(resolve))
+    }
     if (active !== current) return
     target.style.visibility = current.targetVisibility
     current.animation = current.overlay.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 100, fill: 'forwards' })

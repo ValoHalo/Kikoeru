@@ -191,6 +191,7 @@ import { mapState } from 'vuex'
 import OldWorkCard from 'src/components/OldWorkCard.vue'
 import { AdvanceSearchCondType } from '../utils.js'
 import { WORK_LIST_MODES } from '../store/module-AudioPlayer/state'
+import { rememberWorksScroll } from '../utils/worksScroll'
 
 export default {
   name: 'Works',
@@ -214,7 +215,6 @@ export default {
       worksRequestId: 0,
       titleRequestId: 0,
       activeWorkListMode: null,
-      savedScrollPosition: 0,
       WORK_LIST_MODES,
       works: [],
       pageTitle: '',
@@ -354,15 +354,10 @@ export default {
       this.stopLoad = false
     }
 
-    this.$nextTick(() => {
-      setTimeout(() => {
-        requestAnimationFrame(() => window.scrollTo(0, this.savedScrollPosition))
-      }, 0)
-    })
   },
 
   beforeRouteLeave (to, from, next) {
-    this.savedScrollPosition = window.scrollY
+    rememberWorksScroll(from.fullPath)
     next()
   },
 
