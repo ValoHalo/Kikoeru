@@ -839,7 +839,14 @@
     "allAges": "全年齢",
     "adult": "R18",
     "emptyKeyword": "空のキーワードは追加できません",
-    "duplicateKeyword": "同じキーワードが既に追加されています"
+    "duplicateKeyword": "同じキーワードが既に追加されています",
+    "viewMode": "表示形式",
+    "cardView": "カード",
+    "listView": "リスト",
+    "showTags": "タグを表示",
+    "hideTags": "タグを非表示",
+    "smallerCards": "カードを縮小",
+    "largerCards": "カードを拡大"
   },
   "list": {
     "circles": {

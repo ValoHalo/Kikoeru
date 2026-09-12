@@ -839,7 +839,14 @@
     "allAges": "全年龄",
     "adult": "十八禁",
     "emptyKeyword": "无法添加空白的关键字",
-    "duplicateKeyword": "关键字重复，添加失败"
+    "duplicateKeyword": "关键字重复，添加失败",
+    "viewMode": "显示方式",
+    "cardView": "卡片",
+    "listView": "列表",
+    "showTags": "显示标签",
+    "hideTags": "隐藏标签",
+    "smallerCards": "缩小卡片",
+    "largerCards": "放大卡片"
   },
   "list": {
     "circles": {

@@ -15,7 +15,7 @@
           </q-card-actions>
 
           <q-card-actions align="right">
-            <q-btn flat :label="$t('common.cancel')" color="primary" v-close-popup />
+            <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="primary" v-close-popup />
             <q-btn flat :label="$t('common.ok')" color="primary" @click="setSleepTimer" v-close-popup />
           </q-card-actions>
         </div>

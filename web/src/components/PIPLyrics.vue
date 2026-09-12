@@ -6,6 +6,7 @@
 </template>
 
 <script>
+import { appDialog } from '../utils/appDialog'
 import { t } from '../i18n'
 import { mapState, mapMutations, mapGetters } from 'vuex'
 import { debounce } from 'quasar';
@@ -263,7 +264,7 @@ export default {
         okMsg = t('pIPLyrics.ok')
       }
 
-      this.$q.dialog({
+      appDialog(this.$q, {
         title: t('pIPLyrics.title'),
         message: msg,
         ok: okMsg,

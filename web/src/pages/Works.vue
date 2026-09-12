@@ -3,11 +3,20 @@
     <!--没有搜索的情况下，显示最近播放作品-->
     <RecentWorks v-if="enableShowRecent && !isAdvanceSearch && searchMetas.length == 0 && !collectionId" />
 
-    <div class="q-mt-lg q-ml-md row items-center">
-      <span class="text-h5 text-weight-regular q-pa-xs relative-position">
-        {{ pageTitle ? $t(pageTitle) : '' }}
-        <q-badge color="secondary" floating>{{pagination.totalCount}}</q-badge>
-      </span>
+    <section class="works-toolbar" :class="{ 'works-toolbar--dark': $q.dark.isActive }" aria-labelledby="works-heading">
+    <div class="works-toolbar-heading">
+      <div class="works-title"><q-icon name="library_music" size="23px" /><h2 id="works-heading">{{ pageTitle ? $t(pageTitle) : '' }}</h2><span class="works-count">{{ pagination.totalCount }}</span></div>
+      <div class="works-display-controls">
+        <q-btn flat no-caps :icon="sortInDesc ? 'south' : 'north'" :label="sortInDesc ? $t('works.descending') : $t('works.ascending')" :aria-label="$t('favourites.sortDirection')" class="works-sort-direction" @click="sortInDesc = !sortInDesc" />
+        <div class="works-view-options" role="group" :aria-label="$t('works.viewMode')">
+          <q-btn flat dense no-caps icon="grid_view" :label="$t('works.cardView')" :aria-pressed="!listMode" :class="{ 'is-selected': !listMode }" @click="listMode = false" />
+          <q-btn flat dense no-caps icon="view_list" :label="$t('works.listView')" :aria-pressed="listMode" :class="{ 'is-selected': listMode }" @click="listMode = true" />
+        </div>
+        <q-btn v-if="$q.screen.width > 700 && listMode" flat dense :icon="showLabel ? 'label' : 'label_off'" :aria-label="$t(showLabel ? 'works.hideTags' : 'works.showTags')" :aria-pressed="showLabel" class="works-density" @click="showLabel = !showLabel"><q-tooltip>{{ $t(showLabel ? 'works.hideTags' : 'works.showTags') }}</q-tooltip></q-btn>
+        <q-btn v-if="$q.screen.width >= 1120 && !listMode" flat dense :icon="detailMode ? 'zoom_out' : 'zoom_in'" :aria-label="$t(detailMode ? 'works.smallerCards' : 'works.largerCards')" class="works-density" @click="detailMode = !detailMode"><q-tooltip>{{ $t(detailMode ? 'works.smallerCards' : 'works.largerCards') }}</q-tooltip></q-btn>
+      </div>
+    </div>
+    <div v-if="advanceSearchKeywords.length || searchMetas.length" class="works-search-chips">
       <div v-if="isAdvanceSearch"><!--高级搜索模式的多关键字展示-->
         <q-badge class="q-ma-xs" v-for="meta,index in advanceSearchKeywords" :key="meta.t+meta.d">
           {{ meta.d }}
@@ -28,12 +37,11 @@
       </div>
     </div>
 
-    <div class="works-filters row justify-between q-mb-md q-mx-sm">
+    <div class="works-filters">
       <div class="works-filter-fields">
       <!-- 排序属性 -->
       <q-select
         dense
-        rounded
         outlined
         bg-color=""
         transition-show="scale"
@@ -48,7 +56,6 @@
       <!-- 年龄分级 -->
       <q-select
         dense
-        rounded
         outlined
         bg-color=""
         transition-show="scale"
@@ -65,7 +72,6 @@
       <!-- 字幕筛选 -->
       <q-select
         dense
-        rounded
         outlined
         bg-color=""
         transition-show="scale"
@@ -81,7 +87,6 @@
 
       <q-select
         dense
-        rounded
         outlined
         :model-value="collectionId"
         @update:model-value="setCollectionFilter"
@@ -100,66 +105,10 @@
       </q-select>
       </div>
 
-      <div class="works-display-controls">
-      <!-- 排序顺序 -->
-      <q-toggle v-model="sortInDesc" :label="sortInDesc ? $t('works.descending') : $t('works.ascending')" />
-
-      <!-- 切换显示模式按钮 -->
-      <q-btn-toggle
-        dense
-        spread
-        rounded
-        v-model="listMode"
-        toggle-color="primary"
-        color="white"
-        text-color="primary"
-        :options="[
-          { icon: 'apps', value: false },
-          { icon: 'list', value: true }
-        ]"
-        style="width: 85px;"
-        class="col-auto works-view-toggle"
-      />
-
-      <q-btn-toggle
-        dense
-        spread
-        rounded
-        v-model="showLabel"
-        toggle-color="primary"
-        color="white"
-        text-color="primary"
-        :options="[
-          { icon: 'label', value: true },
-          { icon: 'label_off', value: false }
-        ]"
-        style="width: 85px;"
-        class="col-auto"
-        v-if="$q.screen.width > 700 && listMode"
-      />
-
-      <q-btn-toggle
-        dense
-        spread
-        rounded
-        :disable="$q.screen.width < 1120"
-        v-model="detailMode"
-        toggle-color="primary"
-        color="white"
-        text-color="primary"
-        :options="[
-          { icon: 'zoom_in', value: true },
-          { icon: 'zoom_out', value: false },
-        ]"
-        style="width: 85px;"
-        class="col-auto"
-        v-if="$q.screen.width > 700 && !listMode"
-      />
-
-      </div>
     </div>
+    </section>
 
-    <div :class="`row justify-center ${listMode ? 'list' : 'q-mx-md'}`">
+    <div class="works-results row justify-center">
       <q-infinite-scroll ref="infiniteScroller" @load="onLoad" :offset="250" :disable="stopLoad || workListMode === WORK_LIST_MODES.PAGINATION" class="col">
 
         <div v-if="workListMode === WORK_LIST_MODES.PAGINATION" class="row justify-center q-pb-lg">
@@ -745,53 +694,53 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.works-filters {
-  align-items: center;
-  gap: 12px;
+.works-results { margin: 0 16px; }
+.works-toolbar {
+  --toolbar-surface: #fff;
+  --toolbar-border: rgba(0, 0, 0, .1);
+  --toolbar-muted: #686b71;
+  --toolbar-inset: #f5f6f7;
+  margin: 28px 16px 18px;
+  padding: 16px;
+  border: 1px solid var(--toolbar-border);
+  border-radius: 10px;
+  background: var(--toolbar-surface);
 }
-
-.works-filter-lyrics {
-  min-width: 0;
+.works-toolbar--dark {
+  --toolbar-surface: #1b1b1b;
+  --toolbar-border: rgba(255,255,255,.12);
+  --toolbar-muted: #aaadb3;
+  --toolbar-inset: #242426;
 }
-
-.works-filter-fields {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  flex: 1 1 540px;
-}
-
-.works-filter-fields > .q-field {
-  min-width: 0;
-  width: 100%;
-}
-
-.works-display-controls {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  flex: 1 0 auto;
-}
-
-.works-filters :deep(.q-btn.bg-white.text-primary) {
-  color: var(--kikoeru-accent-text-light) !important;
-}
-
-@media (max-width: 700px) {
-  .works-filters {
-    margin: 12px 16px 20px;
-  }
-
-  .works-filter-fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    flex-basis: 100%;
-  }
-
-  .works-display-controls {
-    justify-content: space-between;
-    flex-basis: 100%;
-  }
+.works-toolbar-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.works-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.works-title > .q-icon { color: var(--kikoeru-accent-text); flex-shrink: 0; }
+.works-title h2 { margin: 0; font-size: 22px; font-weight: 500; line-height: 32px; letter-spacing: 0; overflow-wrap: anywhere; }
+.works-count { padding: 2px 8px; border-radius: 5px; color: var(--toolbar-muted); background: var(--toolbar-inset); font-size: 13px; font-variant-numeric: tabular-nums; }
+.works-display-controls { display: flex; align-items: center; gap: 12px; }
+.works-display-controls > .q-btn { min-height: 36px; border-radius: 6px; color: var(--toolbar-muted); }
+.works-sort-direction { padding: 6px 10px; }
+.works-display-controls :deep(.q-icon) { font-size: 18px; }
+.works-view-options { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--toolbar-border); border-radius: 7px; background: var(--toolbar-inset); }
+.works-view-options .q-btn { padding: 5px 12px; min-height: 32px; border-radius: 4px; color: var(--toolbar-muted); }
+.works-view-options .is-selected { color: var(--kikoeru-accent-text); background: color-mix(in srgb, var(--q-primary) 14%, transparent); }
+.works-density { width: 36px; }
+.works-filter-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.works-filter-fields > .q-field { min-width: 0; width: 100%; }
+.works-filter-fields :deep(.q-field__control) { border-radius: 6px; }
+.works-filter-fields :deep(.q-field__label) { color: var(--toolbar-muted); }
+.works-filter-fields :deep(.q-field__native) { letter-spacing: 0; }
+.works-search-chips { margin: -4px 0 12px; }
+.works-toolbar .q-btn:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: 2px; }
+@media (max-width: 699px) {
+  .works-results { margin: 0 12px; }
+  .works-toolbar { margin: 24px 12px 16px; padding: 14px 12px; }
+  .works-title h2 { font-size: 20px; }
+  .works-toolbar-heading { gap: 14px; }
+  .works-display-controls { flex-basis: 100%; justify-content: flex-start; gap: 8px; }
+  .works-filter-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+  .works-display-controls > .q-btn { min-height: 40px; }
+  .works-view-options .q-btn { min-height: 36px; }
 }
 
   .list {

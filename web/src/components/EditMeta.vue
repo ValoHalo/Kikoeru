@@ -87,7 +87,7 @@
     </q-card-section>
 
     <q-card-actions align="right">
-      <q-btn flat :label="$t('common.cancel')" color="grey" :disable="saving" v-close-popup />
+      <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="grey" :disable="saving" v-close-popup />
       <q-btn :label="$t('common.ok')" color="primary" :loading="saving" @click="confirmChange" />
     </q-card-actions>
 
@@ -126,7 +126,7 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat :label="$t('common.cancel')" color="negative" v-close-popup />
+          <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="negative" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>

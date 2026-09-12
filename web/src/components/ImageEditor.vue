@@ -32,7 +32,7 @@
       </div>
       <div class="col-auto">
         <q-btn color="primary" :label="$t('common.confirm')" :loading="saving" @click="confirmCrop" />
-        <q-btn color="negative" :label="$t('common.cancel')" :disable="saving" v-close-popup />
+        <q-btn class="app-dialog-cancel" color="negative" :label="$t('common.cancel')" :disable="saving" v-close-popup />
       </div>
     </q-card-actions>
   </q-card>

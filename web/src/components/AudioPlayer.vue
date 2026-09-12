@@ -285,17 +285,17 @@
     </q-dialog>
 
     <q-dialog v-model="showSaveQueueDialog">
-      <q-card class="save-queue-dialog">
+      <q-card class="save-queue-dialog app-form-dialog">
         <q-form @submit.prevent="saveQueueAsPlaylist">
           <q-card-section><div class="text-h6">{{ $t('audioPlayer.saveQueue') }}</div></q-card-section>
           <q-card-section class="q-pt-none"><q-input v-model.trim="saveQueueName" autofocus outlined :label="$t('audioPlayer.playlistName')" maxlength="80" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section>
-          <q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.save')" type="submit" :loading="savingQueue" /></q-card-actions>
+          <q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.save')" type="submit" :loading="savingQueue" /></q-card-actions>
         </q-form>
       </q-card>
     </q-dialog>
 
     <q-dialog v-model="lyricSyncDialog"  seamless position="top">
-      <q-card class="bg-primary text-white">
+      <q-card class="app-form-dialog">
         <q-card-section>
           <div class="text-h6">{{ $t('audioPlayer.syncTool') }}</div>
         </q-card-section>

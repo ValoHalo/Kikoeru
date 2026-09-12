@@ -839,7 +839,14 @@
     "allAges": "All ages",
     "adult": "Adults only",
     "emptyKeyword": "A keyword cannot be empty",
-    "duplicateKeyword": "This keyword is already in the search"
+    "duplicateKeyword": "This keyword is already in the search",
+    "viewMode": "View mode",
+    "cardView": "Cards",
+    "listView": "List",
+    "showTags": "Show tags",
+    "hideTags": "Hide tags",
+    "smallerCards": "Smaller cards",
+    "largerCards": "Larger cards"
   },
   "list": {
     "circles": {

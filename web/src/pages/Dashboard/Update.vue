@@ -105,6 +105,7 @@
 </template>
 
 <script>
+import { appDialog } from '../../utils/appDialog'
 import { t } from '../../i18n'
 import NotifyMixin from '../../mixins/Notification.js'
 
@@ -204,7 +205,7 @@ export default {
       catch (error) { this.showErrNotif(this.errorMessage(error, t('update.cancelFailed'))) }
     },
     confirmInstall () {
-      this.$q.dialog({
+      appDialog(this.$q, {
         title: t('update.installTitle'),
         message: t('update.installPrompt'),
         cancel: t('common.cancel'),

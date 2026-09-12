@@ -47,19 +47,16 @@
         <div
           class="recent-work-item"
         >
-          <article class="recent-work-card">
-            <router-link :to="`/work/${item.id}`" :aria-label="item.title" class="recent-work-cover">
-              <CoverSFW :workid="item.id" :nsfw="false" :release="''" :lyric_status="item.lyric_status" />
-            </router-link>
-            <div class="recent-work-info">
-              <router-link :to="`/work/${item.id}`" class="recent-work-title">{{ item.title }}</router-link>
-              <div class="recent-work-track ellipsis" :title="getWorkHistoryInfo(item)">{{ getWorkHistoryInfo(item) }}</div>
-              <div class="recent-work-footer">
-                <span class="recent-work-time"><q-icon name="headphones" size="16px" />{{ formatPosition(item.state.seconds) }}</span>
-                <q-btn flat dense no-caps color="primary" icon="play_arrow" :label="$t('favListItem.resume')" :disable="!item.state?.queue?.[item.state.index]" @click="resumeThisHistroy(item)" />
-              </div>
-            </div>
-          </article>
+          <button class="recent-work-cover" type="button" :aria-label="`${$t('favListItem.resume')} · ${item.title}`" :disabled="!item.state?.queue?.[item.state.index]" @click="resumeThisHistroy(item)">
+            <CoverSFW :workid="item.id" :nsfw="false" :release="''" :lyric_status="item.lyric_status">
+              <template #cover>
+                <div class="recent-work-overlay absolute-bottom">
+                  <div class="recent-work-track ellipsis-2-lines">{{ getWorkHistoryInfo(item) }}</div>
+                  <div class="recent-work-title ellipsis">{{ item.title }}</div>
+                </div>
+              </template>
+            </CoverSFW>
+          </button>
         </div>
       </template>
     </q-virtual-scroll>
@@ -69,6 +66,7 @@
 </template>
 
 <script>
+import { appDialog } from '../utils/appDialog'
 
 import CoverSFW from './CoverSFW.vue';
 import { clearPlaybackHistory } from '../utils/playbackHistory.mjs';
@@ -103,13 +101,8 @@ export default {
     '$store.state.AudioPlayer.historyRevision' () { this.resetHistory() }
   },
   methods: {
-    formatPosition (seconds) {
-      const total = Math.max(0, Math.floor(Number(seconds) || 0));
-      const minutes = Math.floor(total / 60);
-      return `${minutes}:${String(total % 60).padStart(2, '0')}`;
-    },
     confirmClear () {
-      this.$q.dialog({ title: this.$t('recentWorks.clear'), message: this.$t('recentWorks.clearPrompt'), cancel: this.$t('common.cancel'), ok: { label: this.$t('recentWorks.clearConfirm'), color: 'negative' } }).onOk(() => this.clearHistory());
+      appDialog(this.$q, { title: this.$t('recentWorks.clear'), message: this.$t('recentWorks.clearPrompt'), cancel: this.$t('common.cancel'), ok: { label: this.$t('recentWorks.clearConfirm'), color: 'negative' } }).onOk(() => this.clearHistory());
     },
     async clearHistory () {
       this.clearing = true;
@@ -285,6 +278,8 @@ export default {
   overflow: hidden;
 }
 
+.recent-works-collapse-inner > :first-child { margin-top: 16px; }
+
 .recent-works-chevron {
   transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -311,13 +306,18 @@ export default {
   }
 }
 
- .recent-works {
+.recent-works {
   --recent-surface: #fff;
   --recent-border: rgba(0, 0, 0, .1);
   --recent-muted: #686b71;
+  --recent-inset: #f5f6f7;
   margin: 24px 16px 0;
+  padding: 16px;
+  border: 1px solid var(--recent-border);
+  border-radius: 10px;
+  background: var(--recent-surface);
 }
-.recent-works-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.recent-works-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .recent-works-heading { display: flex; align-items: center; gap: 10px; }
 .recent-works-heading > .q-icon { color: var(--kikoeru-accent-text); }
 .recent-works-heading h2 { margin: 0; font-size: 22px; line-height: 32px; letter-spacing: 0; font-weight: 500; }
@@ -326,26 +326,21 @@ export default {
 .recent-works-actions .q-btn { color: var(--recent-muted); min-height: 38px; padding: 6px 12px; border-radius: 6px; }
 .recent-works-actions .recent-works-favourites { color: var(--kikoeru-accent-text); background: color-mix(in srgb, var(--q-primary) 10%, transparent); }
 .recent-works-actions :deep(.q-icon) { font-size: 19px; }
-.recent-works-placeholder { display: flex; align-items: center; gap: 16px; min-height: 100px; padding: 24px; border: 1px solid var(--recent-border); border-radius: 10px; background: var(--recent-surface); color: var(--recent-muted); }
+.recent-works-placeholder { display: flex; align-items: center; gap: 16px; min-height: 100px; padding: 24px; border: 1px solid var(--recent-border); border-radius: 6px; background: var(--recent-inset); color: var(--recent-muted); }
 .recent-work-item { width: 328px; max-width: 82vw; padding: 0 14px 6px 0; }
-.recent-work-card { border: 1px solid var(--recent-border); border-radius: 10px; overflow: hidden; background: var(--recent-surface); }
-.recent-work-cover { display: block; }
+.recent-work-cover { display: block; width: 100%; border: 0; padding: 0; border-radius: 8px; overflow: hidden; background: transparent; color: white; text-align: left; font: inherit; cursor: pointer; }
 .recent-work-cover :deep(.q-img) { display: block; }
 .recent-work-cover :deep(.bg-brown) { background: rgba(25,25,25,.8) !important; backdrop-filter: blur(8px); box-shadow: none; }
-.recent-work-info { padding: 12px 14px 10px; }
-.recent-work-title { color: inherit; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; font-weight: 500; line-height: 1.7; min-height: 48px; overflow-wrap: anywhere; }
-.recent-work-title:hover { color: var(--kikoeru-accent-text); }
-.recent-work-track { color: var(--recent-muted); font-size: 12px; margin-top: 8px; }
-.recent-work-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
-.recent-work-time { display: flex; align-items: center; gap: 6px; color: var(--recent-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.recent-work-footer .q-btn { border-radius: 6px; }
-.recent-work-cover:focus-visible, .recent-work-title:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: -2px; }
+.recent-work-overlay { padding: 28px 12px 12px; background: linear-gradient(transparent, rgba(0,0,0,.8)); }
+.recent-work-track { font-size: 14px; font-weight: 600; line-height: 1.6; }
+.recent-work-title { margin-top: 4px; color: #ddd; font-size: 12px; }
+.recent-work-cover:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: -2px; }
 .scroll-style-change { scrollbar-color: #888 transparent; scrollbar-width: thin; }
-.recent-works.recent-works--dark { --recent-surface: #1b1b1b; --recent-border: rgba(255,255,255,.12); --recent-muted: #aaadb3; }
-@media (max-width: 599px) {
-  .recent-works { margin: 20px 12px 0; }
+.recent-works.recent-works--dark { --recent-surface: #1b1b1b; --recent-border: rgba(255,255,255,.12); --recent-muted: #aaadb3; --recent-inset: #242426; }
+@media (max-width: 699px) {
+  .recent-works { margin: 20px 12px 0; padding: 14px 12px; }
   .recent-works-heading h2 { font-size: 20px; }
-  .recent-works-actions { width: 100%; justify-content: space-between; gap: 4px; }
+  .recent-works-actions { width: 100%; justify-content: flex-start; gap: 8px; }
   .recent-works-actions .q-btn { padding: 6px 10px; min-height: 40px; }
   .recent-work-item { width: 290px; }
   .recent-works-placeholder { min-height: 96px; padding: 20px 16px; }

@@ -196,7 +196,7 @@
           />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn v-close-popup flat :label="$t('common.cancel')" />
+          <q-btn class="app-dialog-cancel" v-close-popup flat :label="$t('common.cancel')" />
           <q-btn color="primary" :label="$t('lyricSelection.apply')" @click="confirmLyricChange" />
         </q-card-actions>
       </q-card>
@@ -205,6 +205,7 @@
 </template>
 
 <script>
+import { appDialog } from '../utils/appDialog'
 import { t } from '../i18n'
 import { mapGetters, mapMutations, mapState } from 'vuex'
 import { formatSeconds, ServerApi } from 'src/utils'
@@ -386,7 +387,7 @@ export default {
         return
       }
       const defaultPath = this.defaultWritePath()
-      this.$q.dialog({
+      appDialog(this.$q, {
         title: t('lyricSelection.saveFile'),
         message: t('lyricSelection.savePathPrompt'),
         prompt: {

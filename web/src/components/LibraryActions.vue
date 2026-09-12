@@ -41,7 +41,7 @@
     </q-btn>
 
     <q-dialog v-model="showCollectionDialog">
-      <q-card class="library-dialog">
+      <q-card class="library-dialog app-form-dialog">
         <q-card-section><div class="text-h6">{{ $t('libraryActions.addToCollection') }}</div></q-card-section>
         <q-card-section class="q-pt-none">
           <q-select v-model="selectedCollectionId" outlined emit-value map-options :options="collectionOptions" :label="$t('libraryActions.selectCollection')" :loading="loading" />
@@ -51,7 +51,7 @@
           </div>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat :label="$t('common.cancel')" v-close-popup />
+          <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup />
           <q-btn flat color="primary" :label="$t('libraryActions.add')" :disable="!selectedCollectionId" :loading="saving" @click="addToCollection" />
         </q-card-actions>
       </q-card>

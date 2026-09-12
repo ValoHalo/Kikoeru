@@ -1,0 +1,70 @@
+.q-dialog {
+  --dialog-surface: #fff;
+  --dialog-border: rgba(0, 0, 0, .12);
+  --dialog-muted: #666970;
+  --dialog-text: #25272b;
+  --dialog-inset: #f5f6f7;
+}
+.body--dark .q-dialog {
+  --dialog-surface: #1b1b1b;
+  --dialog-border: rgba(255, 255, 255, .12);
+  --dialog-muted: #aaadb3;
+  --dialog-text: #ececee;
+  --dialog-inset: #242426;
+}
+
+.q-dialog .q-dialog__inner > .q-card {
+  background: var(--dialog-surface);
+  color: var(--dialog-text);
+  border: 1px solid var(--dialog-border);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, .3);
+}
+.q-dialog .q-dialog__backdrop { background: rgba(0, 0, 0, .55); }
+.q-dialog .q-card__actions {
+  gap: 8px;
+  padding: 16px 24px 20px;
+}
+.q-dialog .q-card__actions .q-btn:not(.q-btn--round) {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+.q-dialog .app-dialog-cancel.q-btn { color: var(--dialog-muted) !important; background: var(--dialog-inset) !important; }
+.q-dialog .q-card__actions .q-btn:before { box-shadow: none; }
+.q-dialog .q-field--outlined .q-field__control { border-radius: 6px; }
+.q-dialog .q-btn:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: 2px; }
+.body--dark .q-dialog .q-btn--flat.text-negative { color: #ff8795 !important; }
+
+.q-dialog .q-dialog__inner > .app-confirm-dialog { width: 440px; }
+.app-confirm-dialog .q-dialog__title { padding: 24px 24px 12px; font-size: 20px; font-weight: 500; line-height: 1.5; letter-spacing: 0; }
+.app-confirm-dialog .q-dialog__message { padding: 0 24px 20px; color: var(--dialog-muted); font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+.app-confirm-dialog .q-dialog__progress, .app-confirm-dialog .q-dialog-plugin__form { padding: 0 24px 20px; }
+
+.q-dialog .app-form-dialog {
+  .q-card__section { padding: 20px 24px; }
+  .q-card__section.q-pt-none { padding-top: 0; }
+  .q-card__section .text-h6 { font-size: 20px; font-weight: 500; line-height: 1.5; letter-spacing: 0; }
+}
+
+.q-dialog .review-dialog {
+  width: 540px;
+  .review-dialog-settings { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+  .q-btn-toggle { display: flex; flex-wrap: wrap; width: 100%; margin: 0 !important; gap: 4px; border-radius: 6px; }
+  .q-btn-toggle .q-btn { flex: 1; min-height: 40px; padding: 8px; border-radius: 6px !important; }
+  .q-btn-toggle .q-btn:not(.bg-primary) { background: var(--dialog-inset) !important; color: var(--dialog-muted) !important; }
+  .review-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+  .review-dialog-actions > .q-card__actions:first-child { margin-right: auto; }
+  .q-card__actions { padding: 12px 20px 20px; }
+}
+
+@media (max-width: 599px) {
+  .q-dialog__inner--minimized { padding: 16px; }
+  .q-dialog .q-card__actions { padding: 12px 20px 20px; flex-wrap: wrap; }
+  .app-confirm-dialog .q-dialog__title { padding: 20px 20px 12px; }
+  .app-confirm-dialog .q-dialog__message { padding: 0 20px 16px; }
+  .q-dialog .app-form-dialog .q-card__section { padding-right: 20px; padding-left: 20px; }
+}

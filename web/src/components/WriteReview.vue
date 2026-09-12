@@ -1,16 +1,16 @@
 <template>
   <div>
       <q-dialog v-model="showReviewDialog" @hide="closeDialog">
-        <q-card :class="cardClass">
+        <q-card class="app-form-dialog review-dialog" :class="cardClass">
           <q-card-section class="q-pb-sm">
-            <div class="text-body1">{{ $t('writeReview.title') }}</div>
+            <div class="text-h6">{{ $t('writeReview.title') }}</div>
           </q-card-section>
 
-          <q-card-section class="q-pt-none">
+          <q-card-section class="q-pt-none review-dialog-settings">
             <q-rating
               v-model="rating"
               size="sm"
-              :color="cardClass ? 'primary' : 'blue'"
+              color="primary"
               icon="star_border"
               icon-selected="star"
               icon-half="star_half"
@@ -37,7 +37,7 @@
           </q-card-section>
 
           <q-card-section class="q-pt-none" >
-            <div style="min-width: 300px">
+            <div style="min-width: 0">
               <q-input
                 v-model="reviewText"
                 filled
@@ -46,28 +46,28 @@
             </div>
           </q-card-section>
           
-          <div class="row justify-between">
-            <q-card-actions  class="text-red">
-              <q-btn flat :label="$t('writeReview.deleteMark')" v-close-popup @click="deleteConfirm = true" />
+          <div class="review-dialog-actions">
+            <q-card-actions>
+              <q-btn flat color="negative" :label="$t('writeReview.deleteMark')" v-close-popup @click="deleteConfirm = true" />
             </q-card-actions>
 
             <q-card-actions align="right" class="text-primary">
-              <q-btn flat :label="$t('common.ok')" v-close-popup @click="submitReview()" />
-              <q-btn flat :label="$t('common.cancel')" v-close-popup @click="closeDialog()" />
+              <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup @click="closeDialog()" />
+              <q-btn unelevated color="primary" :label="$t('common.save')" v-close-popup @click="submitReview()" />
             </q-card-actions>
           </div>
         </q-card>
       </q-dialog>
 
       <q-dialog v-model="deleteConfirm" persistent transition-show="scale" transition-hide="scale">
-        <q-card class="bg-teal text-white" style="width: 300px">
+        <q-card class="app-form-dialog" style="width: 360px">
           <q-card-section>
             <div class="text-h6">{{ $t('writeReview.deletePrompt') }}</div>
           </q-card-section>
 
-          <q-card-actions align="right" class="text-teal">
-              <q-btn flat :label="$t('common.ok')" v-close-popup @click="deleteReview()" />
-              <q-btn flat :label="$t('common.cancel')" v-close-popup @click="closeDialog()"/>
+          <q-card-actions align="right">
+              <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup @click="closeDialog()"/>
+              <q-btn unelevated color="negative" :label="$t('common.delete')" v-close-popup @click="deleteReview()" />
           </q-card-actions>
         </q-card>
       </q-dialog>

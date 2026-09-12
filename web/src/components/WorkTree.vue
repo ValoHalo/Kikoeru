@@ -15,7 +15,7 @@
     </div>
 
     <q-dialog v-model="showPlaylistPicker">
-      <q-card class="playlist-picker-dialog">
+      <q-card class="playlist-picker-dialog app-form-dialog">
         <q-card-section><div class="text-h6">{{ $t('workTree.addToPlaylist') }}</div><div class="text-caption text-grey-7">{{ $t('workTree.trackCount', { count: pendingPlaylistTracks.length }) }}</div></q-card-section>
         <q-list v-if="savedPlaylists.length" separator bordered class="scroll" style="max-height: 42vh">
           <q-item v-for="playlist in savedPlaylists" :key="playlist.id" clickable v-ripple @click="addPendingToPlaylist(playlist.id)"><q-item-section avatar><q-icon name="library_music" /></q-item-section><q-item-section><q-item-label>{{ playlist.name }}</q-item-label><q-item-label caption>{{ $t('workTree.playlistTrackCount', { count: playlist.item_count }) }}</q-item-label></q-item-section><q-item-section side><q-icon name="add" /></q-item-section></q-item>
@@ -25,7 +25,7 @@
         <q-form @submit.prevent="createPlaylistFromPending">
           <q-card-section><q-input v-model.trim="newPlaylistName" outlined dense :label="$t('workTree.newPlaylistName')" maxlength="80" :rules="[value => Boolean(value) || $t('common.nameRequired')]"><template #append><q-btn flat round dense icon="add" type="submit" :loading="addingToPlaylist" :aria-label="$t('workTree.createAndAdd')" /></template></q-input></q-card-section>
         </q-form>
-        <q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /></q-card-actions>
+        <q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup /></q-card-actions>
       </q-card>
     </q-dialog>
 

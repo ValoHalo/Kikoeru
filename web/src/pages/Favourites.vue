@@ -81,12 +81,13 @@
       <div v-else-if="$q.screen.gt.sm" class="collections-placeholder empty-state text-center text-grey q-pa-xl"><q-icon name="folder_open" size="36px" class="empty-state__icon" /><div>{{ $t('favourites.selectCollection') }}</div></div>
     </div>
 
-    <q-dialog v-model="showCreateDialog"><q-card class="favourites-dialog"><q-form @submit.prevent="createCollection"><q-card-section><div class="text-h6">{{ $t('favourites.newCollection') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="collectionName" autofocus outlined maxlength="80" :label="$t('favourites.collectionName')" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /><q-btn unelevated color="primary" :label="$t('common.create')" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
-    <q-dialog v-model="showRenameDialog"><q-card class="favourites-dialog"><q-form @submit.prevent="renameCollection"><q-card-section><div class="text-h6">{{ $t('favourites.renameCollection') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="collectionName" autofocus outlined maxlength="80" :label="$t('favourites.collectionName')" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /><q-btn unelevated color="primary" :label="$t('common.save')" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
+    <q-dialog v-model="showCreateDialog"><q-card class="favourites-dialog app-form-dialog"><q-form @submit.prevent="createCollection"><q-card-section><div class="text-h6">{{ $t('favourites.newCollection') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="collectionName" autofocus outlined maxlength="80" :label="$t('favourites.collectionName')" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup /><q-btn unelevated color="primary" :label="$t('common.create')" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
+    <q-dialog v-model="showRenameDialog"><q-card class="favourites-dialog app-form-dialog"><q-form @submit.prevent="renameCollection"><q-card-section><div class="text-h6">{{ $t('favourites.renameCollection') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="collectionName" autofocus outlined maxlength="80" :label="$t('favourites.collectionName')" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup /><q-btn unelevated color="primary" :label="$t('common.save')" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
   </q-page>
 </template>
 
 <script>
+import { appDialog } from '../utils/appDialog'
 import { t } from '../i18n'
 import draggable from 'vuedraggable'
 import FavListItem from 'components/FavListItem.vue'
@@ -237,7 +238,7 @@ export default {
         await this.loadCollections()
       } catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.renameFailed'))) }
     },
-    confirmDeleteCollection () { this.$q.dialog({ title: t('favourites.deleteCollection'), message: t('favourites.deletePrompt', { name: this.selectedCollection.name }), cancel: t('common.cancel'), ok: { label: t('common.delete'), color: 'negative' } }).onOk(() => this.deleteCollection()) },
+    confirmDeleteCollection () { appDialog(this.$q, { title: t('favourites.deleteCollection'), message: t('favourites.deletePrompt', { name: this.selectedCollection.name }), cancel: t('common.cancel'), ok: { label: t('common.delete'), color: 'negative' } }).onOk(() => this.deleteCollection()) },
     async deleteCollection () {
       try { await this.$axios.delete(`/api/library/collections/${this.selectedCollection.id}`); this.closeCollection(); await this.loadCollections() }
       catch (error) { this.showErrNotif(this.errorMessage(error, t('favourites.deleteFailed'))) }

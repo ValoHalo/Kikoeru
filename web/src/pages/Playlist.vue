@@ -71,12 +71,13 @@
       </q-tab-panel>
     </q-tab-panels>
 
-    <q-dialog v-model="showSaveDialog"><q-card class="playlist-dialog"><q-form @submit.prevent="saveCurrentQueue"><q-card-section><div class="text-h6">{{ $t('playlist.saveQueue') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="newPlaylistName" autofocus outlined :label="$t('playlist.name')" maxlength="80" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.save')" type="submit" :loading="savingPlaylist" /></q-card-actions></q-form></q-card></q-dialog>
-    <q-dialog v-model="showRenameDialog"><q-card class="playlist-dialog"><q-form @submit.prevent="renameSelectedPlaylist"><q-card-section><div class="text-h6">{{ $t('playlist.rename') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="renameValue" autofocus outlined :label="$t('playlist.name')" maxlength="80" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.save')" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
+    <q-dialog v-model="showSaveDialog"><q-card class="playlist-dialog app-form-dialog"><q-form @submit.prevent="saveCurrentQueue"><q-card-section><div class="text-h6">{{ $t('playlist.saveQueue') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="newPlaylistName" autofocus outlined :label="$t('playlist.name')" maxlength="80" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.save')" type="submit" :loading="savingPlaylist" /></q-card-actions></q-form></q-card></q-dialog>
+    <q-dialog v-model="showRenameDialog"><q-card class="playlist-dialog app-form-dialog"><q-form @submit.prevent="renameSelectedPlaylist"><q-card-section><div class="text-h6">{{ $t('playlist.rename') }}</div></q-card-section><q-card-section class="q-pt-none"><q-input v-model.trim="renameValue" autofocus outlined :label="$t('playlist.name')" maxlength="80" :rules="[value => Boolean(value) || $t('common.nameRequired')]" /></q-card-section><q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup /><q-btn flat color="primary" :label="$t('common.save')" type="submit" /></q-card-actions></q-form></q-card></q-dialog>
   </q-page>
 </template>
 
 <script>
+import { appDialog } from '../utils/appDialog'
 import { t } from '../i18n'
 import draggable from 'vuedraggable'
 import { mapMutations, mapState } from 'vuex'
@@ -153,7 +154,7 @@ export default {
       try { await this.$axios.patch(`/api/playlists/${this.selectedPlaylist.id}`, { name: this.renameValue }); this.selectedPlaylist.name = this.renameValue; this.showRenameDialog = false; await this.loadPlaylists() }
       catch (error) { this.showErrNotif(this.errorMessage(error, t('playlist.renameFailed'))) }
     },
-    confirmDeletePlaylist () { this.$q.dialog({ title: t('playlist.delete'), message: t('playlist.deletePrompt', { name: this.selectedPlaylist.name }), cancel: t('common.cancel'), ok: { label: t('common.delete'), color: 'negative' } }).onOk(() => this.deleteSelectedPlaylist()) },
+    confirmDeletePlaylist () { appDialog(this.$q, { title: t('playlist.delete'), message: t('playlist.deletePrompt', { name: this.selectedPlaylist.name }), cancel: t('common.cancel'), ok: { label: t('common.delete'), color: 'negative' } }).onOk(() => this.deleteSelectedPlaylist()) },
     async deleteSelectedPlaylist () {
       try { await this.$axios.delete(`/api/playlists/${this.selectedPlaylist.id}`); this.closePlaylist(); await this.loadPlaylists() }
       catch (error) { this.showErrNotif(this.errorMessage(error, t('playlist.deleteFailed'))) }

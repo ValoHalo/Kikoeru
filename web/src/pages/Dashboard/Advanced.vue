@@ -491,6 +491,7 @@
 </template>
 
 <script>
+import { appDialog } from '../../utils/appDialog'
 import { t } from '../../i18n'
 import NotifyMixin from '../../mixins/Notification.js'
 
@@ -620,7 +621,7 @@ export default {
     },
 
     confirmUncensorTags () {
-      this.$q.dialog({
+      appDialog(this.$q, {
         title: t('advanced.restoreTags'),
         message: t('advanced.restoreTagsPrompt'),
         cancel: { label: t('common.cancel'), flat: true },

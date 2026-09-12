@@ -105,8 +105,8 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat :label="$t('common.cancel')" color="primary" v-close-popup />
-          <q-btn flat :label="$t('common.confirm')" color="primary" @click="deleteUsers()" v-close-popup />
+          <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="primary" v-close-popup />
+          <q-btn flat :label="$t('common.confirm')" color="negative" @click="deleteUsers()" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>

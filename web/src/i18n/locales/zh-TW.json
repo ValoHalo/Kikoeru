@@ -839,7 +839,14 @@
     "allAges": "全年齡",
     "adult": "十八禁",
     "emptyKeyword": "無法新增空白的關鍵字",
-    "duplicateKeyword": "關鍵字重複，新增失敗"
+    "duplicateKeyword": "關鍵字重複，新增失敗",
+    "viewMode": "顯示方式",
+    "cardView": "卡片",
+    "listView": "列表",
+    "showTags": "顯示標籤",
+    "hideTags": "隱藏標籤",
+    "smallerCards": "縮小卡片",
+    "largerCards": "放大卡片"
   },
   "list": {
     "circles": {

@@ -61,7 +61,7 @@
     </q-drawer>
 
     <q-dialog v-model="loginDialog" persistent>
-      <q-card class="auth-dialog-card">
+      <q-card class="auth-dialog-card app-form-dialog">
         <q-form @submit="login">
           <q-card-section class="row items-center">
             <q-avatar icon="login" color="primary" text-color="white" />
@@ -86,13 +86,13 @@
             />
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat :label="$t('common.cancel')" color="primary" :disable="loginSubmitting" @click="cancelLogin" />
+            <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="primary" :disable="loginSubmitting" @click="cancelLogin" />
             <q-btn flat :label="$t('common.login')" color="primary" type="submit" :loading="loginSubmitting" />
           </q-card-actions>
         </q-form>
       </q-card>
     </q-dialog>
-    <q-dialog v-model="confirm" persistent><q-card class="auth-dialog-card"><q-card-section class="row items-center"><q-avatar icon="power_settings_new" color="primary" text-color="white" /><span class="q-ml-sm">{{ $t('mainLayout.logoutPrompt') }}</span></q-card-section><q-card-actions align="right"><q-btn flat :label="$t('common.cancel')" color="primary" v-close-popup /><q-btn flat :label="$t('mainLayout.exit')" color="primary" @click="logout()" v-close-popup /></q-card-actions></q-card></q-dialog>
+    <q-dialog v-model="confirm" persistent><q-card class="auth-dialog-card app-form-dialog"><q-card-section class="row items-center"><q-avatar icon="power_settings_new" color="primary" text-color="white" /><span class="q-ml-sm">{{ $t('mainLayout.logoutPrompt') }}</span></q-card-section><q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="primary" v-close-popup /><q-btn flat :label="$t('mainLayout.exit')" color="primary" @click="logout()" v-close-popup /></q-card-actions></q-card></q-dialog>
     <SleepMode v-if="oldSleepTimerUIStyle" v-model="showTimer" />
     <CountDownSleepMode v-else v-model="showTimer" />
 

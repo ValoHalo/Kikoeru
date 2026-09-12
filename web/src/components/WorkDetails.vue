@@ -204,6 +204,7 @@
 </template>
 
 <script>
+import { appDialog } from '../utils/appDialog'
 import { t } from '../i18n'
 import CoverSFW from 'components/CoverSFW.vue'
 import WriteReview from './WriteReview.vue'
@@ -357,7 +358,7 @@ export default {
     },
 
     clearThisHistroy() {
-      this.$q.dialog({
+      appDialog(this.$q, {
         title: t('workDetails.notice'),
         message: t('workDetails.deleteHistoryPrompt'),
         cancel: t('common.cancel'),
