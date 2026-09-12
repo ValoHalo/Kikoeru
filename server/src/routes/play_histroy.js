@@ -90,7 +90,13 @@ router.put('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator
         console.error(err);
     });
 });
-router.delete('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.body)('work_id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
+router.delete('/all', accessControl_1.requireAuthenticatedWrite, async (req, res, next) => {
+    try {
+        const deleted = await db.clearPlayHistory((0, accessControl_1.getRequestUsername)(req, config_1.config));
+        res.send({ deleted, message: t('play_histroy.deleted') });
+    } catch (err) { next(err); }
+});
+router.delete('/',  accessControl_1.requireAuthenticatedWrite, (0, express_validator_1.body)('work_id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);

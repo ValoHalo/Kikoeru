@@ -1,117 +1,46 @@
 <template>
-  <q-item clickable class="row">
-      <q-item-section class="col-auto" top> 
-        <router-link :to="`/work/${metadata.id}`">
-          <q-img :key="coverUrl" transition="fade" :src="coverUrl" style="height: 120px; width: 160px;" />
-        </router-link>
-      </q-item-section>
+  <article class="favourite-work">
+    <router-link :to="`/work/${metadata.id}`" class="favourite-work__cover" :aria-label="metadata.title">
+      <q-img :key="coverUrl" :src="coverUrl" :ratio="4 / 3" />
+    </router-link>
 
+    <div class="favourite-work__main">
+      <router-link :to="`/work/${metadata.id}`" class="favourite-work__title">{{ metadata.title }}</router-link>
+      <div class="favourite-work__meta">
+        <router-link v-if="metadata.circle" :to="`/works?circleId=${metadata.circle.id}`">{{ metadata.circle.name }}</router-link>
+        <span v-if="metadata.release">{{ metadata.release }}</span>
+        <router-link v-for="va in metadata.vas" :key="va.id" :to="`/works?vaId=${va.id}`">{{ va.name }}</router-link>
+      </div>
+      <div class="favourite-work__status">
+        <q-rating v-if="!hideRating" v-model="rating" @update:model-value="setRating" size="20px" color="primary" icon="star_border" icon-selected="star" :aria-label="$t('favourites.rating')" />
+        <span v-if="metadata.updated_at" class="favourite-work__date"><q-icon :name="mode === 'histroy' ? 'history' : 'schedule'" size="15px" />{{ metadata.updated_at }}</span>
+        <span v-if="metadata.archived_at" class="favourite-work__badge"><q-icon name="inventory_2" />{{ $t('favListItem.archived') }}</span>
+        <span v-if="metadata.files_missing" class="favourite-work__missing"><q-icon name="folder_off" />{{ $t('common.filesMissing') }}</span>
+      </div>
+    </div>
 
-      <q-item-section class="q-gutter-y-xs column items-start" top v-on:click.self="showReviewDialog = true && mode != 'histroy' ">
-        <q-item-label lines="2" class="text-body2">
-          <router-link :to="`/work/${metadata.id}`" class="col-auto text-secondary">
-            {{metadata.title}}
-          </router-link>
-        </q-item-label>
+    <div class="favourite-work__actions">
+      <LibraryActions :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('reset')" />
+    </div>
 
-        <q-item-label v-if="metadata.files_missing" caption :class="$q.dark.isActive ? 'text-red-4' : 'text-negative'"><q-icon name="folder_off" /> {{ $t('common.filesMissing') }}</q-item-label>
-        <div class="row q-gutter-x-sm col-auto" >
-          <router-link :to="`/works?circleId=${metadata.circle.id}`" class="col-auto text-grey">
-            {{metadata.circle.name}}
-          </router-link>
+    <div v-if="mode === 'histroy' && historyTrack" class="favourite-work__detail favourite-work__resume">
+      <div class="favourite-work__track">
+        <div class="favourite-work__position"><q-icon name="headphones" size="18px" /><span>{{ metadata.state.index + 1 }} / {{ metadata.state.queue.length }}</span><span class="favourite-work__time">{{ humanReadableSeconds(metadata.state.seconds) }}</span></div>
+        <div class="favourite-work__filename" :title="historyTrack.title">{{ historyTrack.title }}</div>
+      </div>
+      <q-btn unelevated no-caps color="primary" icon="play_arrow" :label="$t('favListItem.resume')" :disable="Boolean(metadata.files_missing)" class="favourite-work__play" @click="playHistroy(metadata.id, metadata.state)" />
+    </div>
 
-          <span class="col-auto">/</span>
-          <span class="col-auto text-grey"> {{metadata.release}}</span>
-          <span class="col-auto">/</span>
+    <div v-if="mode === 'review'" class="favourite-work__detail favourite-work__review">
+      <p v-if="metadata.review_text">{{ metadata.review_text }}</p>
+      <q-btn flat no-caps dense color="primary" icon="edit" :label="$t('writeReview.title')" @click="showReviewDialog = true" />
+    </div>
 
-          <router-link
-            v-for="(va, index) in metadata.vas"
-            :key=index
-            :to="`/works?vaId=${va.id}`"
-            class="col-auto text-primary"
-          >
-            {{ va.name }}
-          </router-link>
-        </div>
-
-        <div class="row items-center q-gutter-x-xs">
-          <q-rating
-            v-if="!hideRating"
-            v-model="rating"
-            @update:model-value="setRating"
-            size="sm"
-            color="blue"
-            icon="star_border"
-            icon-selected="star"
-            icon-half="star_half"
-            class="col-auto"
-          />
-          <span class="col-auto text-grey ">{{metadata.updated_at}}</span>
-        </div>
-
-        <q-item-label class="q-pt-sm" v-if="mode === 'review'">
-          <q-card class="my-card col-auto" @click="showReviewDialog = true" v-show="metadata.review_text" >
-            <q-card-section class="q-pa-sm">
-              <pre class="q-ma-none">{{metadata.review_text}}</pre>
-            </q-card-section>
-          </q-card>
-        </q-item-label>
-
-        <div v-if="mode === 'histroy'" class="full-width">
-          <div class="full-width">
-            <q-btn color="primary" :label="$t('favListItem.resume')"  class="full-width" @click="playHistroy(metadata.id, metadata.state)"/>
-          </div>
-
-          <!--
-          <div>
-            <span class="text-primary">历史：</span>
-              <q-badge color="blue">
-                {{ metadata.play_updated_at }}
-              </q-badge>
-          </div>
-          -->
-
-          <div>
-            <span class="text-primary">{{ $t('favListItem.progress') }}</span>
-            <q-badge color="purple">{{ metadata.state.index+1 }} / {{ metadata.state.queue.length }}</q-badge>
-            <q-badge color="blue">{{ humanReadableSeconds(metadata.state.seconds) }}</q-badge>
-            <span class="text-grey">
-              {{ metadata.state.queue[metadata.state.index].title }}
-            </span>
-          </div>
-        </div>
-
-        <q-item-label class="q-pt-xs" v-if="mode === 'progress'">
-          <q-btn-toggle
-            v-if="mode === 'progress'"
-            v-model="progress"
-            @update:model-value="setProgress"
-            dense
-            no-caps
-            rounded
-            toggle-color="primary"
-            color="white"
-            text-color="black"
-            class="q-pa-sm"
-            :options="[
-              {label: $t('favListItem.marked'), value: 'marked'},
-              {label: $t('favListItem.listening'), value: 'listening'},
-              {label: $t('favListItem.listened'), value: 'listened'},
-              {label: $t('favListItem.replay'), value: 'replay'},
-              {label: $t('favListItem.postponed'), value: 'postponed'}
-            ]"
-          />
-          </q-item-label>
-      </q-item-section>
-
-      <q-item-section side top>
-        <q-badge v-if="metadata.archived_at" color="grey-7" :label="$t('favListItem.archived')" class="q-mb-xs" />
-        <LibraryActions :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('reset')" />
-      </q-item-section>
-
-      <WriteReview v-if="showReviewDialog" @closed="processReview" :workid="workid" :metadata="metadata"></WriteReview>
-
-  </q-item>
+    <div v-if="mode === 'progress'" class="favourite-work__detail">
+      <q-select v-model="progress" outlined dense emit-value map-options :label="$t('favourites.progress')" class="favourite-work__progress" :options="progressOptions" @update:model-value="setProgress" />
+    </div>
+    <WriteReview card-class="favourites-review-dialog" v-if="showReviewDialog" @closed="processReview" :workid="workid" :metadata="metadata" />
+  </article>
 </template>
 
 <script>
@@ -155,6 +84,10 @@ export default {
   },
 
   computed: {
+    historyTrack () { return this.metadata.state?.queue?.[this.metadata.state.index] },
+    progressOptions () {
+      return ['marked', 'listening', 'listened', 'replay', 'postponed'].map(value => ({ value, label: t(`favListItem.${value}`) }))
+    },
     coverUrl () {
       return this.$store.getters['AudioPlayer/coverUrl'](this.workid, '240x240')
     },
@@ -175,7 +108,7 @@ export default {
   methods: {
     humanReadableSeconds(seconds) {
       const hour = Math.floor(seconds / 3600)
-      const minute = Math.floor(seconds / 60)
+      const minute = Math.floor(seconds / 60) % 60
       const sec = Math.floor(seconds) % 60
 
       const parts = []

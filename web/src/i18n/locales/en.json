@@ -261,7 +261,14 @@
   "recentWorks": {
     "title": "Recently played",
     "expand": "Expand recently played",
-    "collapse": "Collapse recently played"
+    "collapse": "Collapse recently played",
+    "clear": "Clear recent history",
+    "empty": "No recently played works",
+    "clearPrompt": "Clear all playback history for this account? Works, ratings and collections will be kept. Playback will create new history.",
+    "clearConfirm": "Clear history",
+    "cleared": "Recent history cleared",
+    "clearFailed": "Could not clear recent history. Try again.",
+    "loadFailed": "Could not load recent history"
   },
   "relatedWorks": {
     "title": "Related works"

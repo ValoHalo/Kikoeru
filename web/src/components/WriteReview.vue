@@ -1,7 +1,7 @@
 <template>
   <div>
       <q-dialog v-model="showReviewDialog" @hide="closeDialog">
-        <q-card>
+        <q-card :class="cardClass">
           <q-card-section class="q-pb-sm">
             <div class="text-body1">{{ $t('writeReview.title') }}</div>
           </q-card-section>
@@ -10,7 +10,7 @@
             <q-rating
               v-model="rating"
               size="sm"
-              color="blue"
+              :color="cardClass ? 'primary' : 'blue'"
               icon="star_border"
               icon-selected="star"
               icon-half="star_half"
@@ -83,6 +83,7 @@ export default {
   mixins: [NotifyMixin],
 
   props: {
+    cardClass: { type: String, default: '' },
     workid: {
       type: Number,
       required: true

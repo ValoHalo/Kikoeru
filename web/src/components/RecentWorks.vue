@@ -1,24 +1,19 @@
 <template>
-  <div>
-    <div class="row items-center justify-between q-mt-lg q-ml-md">
-      <div class="col row items-center no-wrap">
-        <span class="text-h5 text-weight-regular">{{ $t('recentWorks.title') }}</span>
-        <q-btn
-          flat
-          round
-          dense
-          class="q-ml-xs"
-          :aria-label="$t(expanded ? 'recentWorks.collapse' : 'recentWorks.expand')"
-          :aria-expanded="expanded"
-          aria-controls="recent-works-list"
-          @click="toggleExpanded"
-        >
+  <section class="recent-works" :class="{ 'recent-works--dark': $q.dark.isActive }" aria-labelledby="recent-works-title">
+    <header class="recent-works-toolbar">
+      <div class="recent-works-heading">
+        <q-icon name="history" size="23px" />
+        <h2 id="recent-works-title">{{ $t('recentWorks.title') }}</h2>
+        <q-btn flat round dense :aria-label="$t(expanded ? 'recentWorks.collapse' : 'recentWorks.expand')" :aria-expanded="expanded" aria-controls="recent-works-list" @click="toggleExpanded">
           <q-icon name="expand_more" class="recent-works-chevron" :class="{ 'is-expanded': expanded }" />
           <q-tooltip>{{ $t(expanded ? 'recentWorks.collapse' : 'recentWorks.expand') }}</q-tooltip>
         </q-btn>
       </div>
-      <q-btn flat icon="navigate_next" @click="$router.push('/favourites/histroy')"></q-btn>
-    </div>
+      <div class="recent-works-actions">
+        <q-btn flat no-caps icon="delete_sweep" :label="$t('recentWorks.clear')" :disable="!works.length || isLoading || !$store.state.User.name" :loading="clearing" @click="confirmClear" />
+        <q-btn flat no-caps icon="favorite_border" icon-right="chevron_right" :label="$t('common.favourites')" to="/favourites/histroy" class="recent-works-favourites" />
+      </div>
+    </header>
     <div
       id="recent-works-list"
       class="recent-works-collapse"
@@ -28,8 +23,11 @@
       @transitionend.self="onCollapseTransitionEnd"
     >
       <div class="recent-works-collapse-inner">
-    <q-virtual-scroll
-      class="q-px-sm recent-works-scroll"
+    <div v-if="isLoading && !works.length" class="recent-works-placeholder"><q-spinner size="24px" color="primary" /></div>
+    <div v-else-if="loadError && !works.length" class="recent-works-placeholder" role="alert"><q-icon name="cloud_off" size="28px" /><span>{{ $t('recentWorks.loadFailed') }}</span><q-btn flat no-caps color="primary" icon="refresh" :label="$t('common.refresh')" @click="resetHistory" /></div>
+    <div v-else-if="!works.length" class="recent-works-placeholder"><q-icon name="history" size="28px" /><span>{{ $t('recentWorks.empty') }}</span></div>
+    <q-virtual-scroll v-else
+      class="recent-works-scroll"
       :class="{'scroll-style-change': !$q.platform.has.touch, 'is-dragging': mouseDrag && mouseDrag.active}"
       :items="works"
       ref="scroll"
@@ -47,39 +45,33 @@
     >
       <template v-slot="{ item }">
         <div
-          class="q-pa-sm"
-          style="width: 500px; max-width: 80vw;"
-          @click.stop.prevent="resumeThisHistroy(item)"
+          class="recent-work-item"
         >
-          <CoverSFW
-            class="card q-mx-sm shadow-4"
-            :workid="item.id"
-            :nsfw="false"
-            :release="''"
-            :lyric_status="item.lyric_status"
-          >
-            <template #cover>
-              <div class="playInfo absolute-bottom">
-                <div class="ellipsis-2-lines audioText">
-                  {{ getWorkHistoryInfo(item) }}
-                </div>
-                <div class="ellipsis workText" >
-                  {{ item.title }}
-                </div>
+          <article class="recent-work-card">
+            <router-link :to="`/work/${item.id}`" :aria-label="item.title" class="recent-work-cover">
+              <CoverSFW :workid="item.id" :nsfw="false" :release="''" :lyric_status="item.lyric_status" />
+            </router-link>
+            <div class="recent-work-info">
+              <router-link :to="`/work/${item.id}`" class="recent-work-title">{{ item.title }}</router-link>
+              <div class="recent-work-track ellipsis" :title="getWorkHistoryInfo(item)">{{ getWorkHistoryInfo(item) }}</div>
+              <div class="recent-work-footer">
+                <span class="recent-work-time"><q-icon name="headphones" size="16px" />{{ formatPosition(item.state.seconds) }}</span>
+                <q-btn flat dense no-caps color="primary" icon="play_arrow" :label="$t('favListItem.resume')" :disable="!item.state?.queue?.[item.state.index]" @click="resumeThisHistroy(item)" />
               </div>
-            </template>
-          </CoverSFW>
+            </div>
+          </article>
         </div>
       </template>
     </q-virtual-scroll>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script>
 
 import CoverSFW from './CoverSFW.vue';
+import { clearPlaybackHistory } from '../utils/playbackHistory.mjs';
 
 export default {
   name: 'RecentWorks',
@@ -90,6 +82,10 @@ export default {
 
   data () {
     return {
+      active: true,
+      requestId: 0,
+      loadError: false,
+      clearing: false,
       expanded: true,
       currentPage: 0,
       pagination: { currentPage:0, pageSize:12, totalCount:0 },
@@ -101,7 +97,44 @@ export default {
     }
   },
 
+  watch: {
+    '$store.state.User.name' () { this.resetHistory() },
+    '$store.state.AudioPlayer.historySavedRevision' () { if (this.active && !this.clearing) this.resetHistory() },
+    '$store.state.AudioPlayer.historyRevision' () { this.resetHistory() }
+  },
   methods: {
+    formatPosition (seconds) {
+      const total = Math.max(0, Math.floor(Number(seconds) || 0));
+      const minutes = Math.floor(total / 60);
+      return `${minutes}:${String(total % 60).padStart(2, '0')}`;
+    },
+    confirmClear () {
+      this.$q.dialog({ title: this.$t('recentWorks.clear'), message: this.$t('recentWorks.clearPrompt'), cancel: this.$t('common.cancel'), ok: { label: this.$t('recentWorks.clearConfirm'), color: 'negative' } }).onOk(() => this.clearHistory());
+    },
+    async clearHistory () {
+      this.clearing = true;
+      this.$store.commit('AudioPlayer/SET_HISTORY_CLEARING', true);
+      try {
+        await clearPlaybackHistory(this.$axios);
+        this.expanded = true;
+        this.$store.commit('AudioPlayer/HISTORY_CLEARED');
+        this.$q.notify({ type: 'positive', message: this.$t('recentWorks.cleared') });
+      } catch (_) {
+        this.$q.notify({ type: 'negative', message: this.$t('recentWorks.clearFailed') });
+      } finally {
+        this.clearing = false;
+        this.$store.commit('AudioPlayer/SET_HISTORY_CLEARING', false);
+      }
+    },
+    resetHistory () {
+      this.requestId++;
+      this.works = [];
+      this.pagination = { currentPage: 0, pageSize: 12, totalCount: 0 };
+      this.stopLoad = false;
+      this.isLoading = false;
+      this.loadError = false;
+      if (this.active) this.getHistory();
+    },
     onCollapseTransitionEnd() {
       if (this.expanded) this.$refs.scroll?.refresh();
     },
@@ -163,6 +196,7 @@ export default {
       if (this.stopLoad || this.isLoading) return;
 
       this.isLoading = true;
+      const requestId = ++this.requestId;
 
       const params = {
         page: this.pagination.currentPage + 1,
@@ -172,12 +206,14 @@ export default {
       // console.warn('load more page on: ', params.page);
       try {
         const response = await this.$axios.get('/api/histroy', { params });
+        if (requestId !== this.requestId) return;
         this.works = this.works.concat(response.data.works);
         this.pagination = response.data.pagination;
         if (this.$refs.scroll) this.$refs.scroll.refresh();
         // console.log("vscroll = ", this.$refs.scroll);
       } catch(err) {
-        console.warn('load recent work failed: ', err);
+        if (requestId !== this.requestId) return;
+        this.loadError = true;
       }
       this.isLoading = false;
 
@@ -203,8 +239,7 @@ export default {
     // 返回单个作品播放历史的简单信息
     getWorkHistoryInfo(work) {
       const state = work.state;
-      const lastPlayItem = state.queue[state.index]
-      return lastPlayItem.title;
+      return state?.queue?.[state.index]?.title || '';
     },
 
     resumeThisHistroy(work) {
@@ -217,14 +252,14 @@ export default {
       })
       if (work.state.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', work.state.playMode)
       if (Object.prototype.hasOwnProperty.call(work.state, 'playbackRate')) this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', work.state.playbackRate)
-      console.log(`resume seconds = ${work.state.seconds}`)
+
     }
 
   },
 
-  mounted() {
-    this.getHistory();
-  },
+  mounted() { this.getHistory(); },
+  activated() { this.active = true; this.resetHistory(); },
+  deactivated() { this.active = false; this.requestId++; },
 }
 </script>
 
@@ -276,49 +311,43 @@ export default {
   }
 }
 
-.card {
-  border-radius: 8px;
-  overflow: hidden;
+ .recent-works {
+  --recent-surface: #fff;
+  --recent-border: rgba(0, 0, 0, .1);
+  --recent-muted: #686b71;
+  margin: 24px 16px 0;
 }
-
-.card :deep(.bg-brown) {
-  background: rgba(25, 25, 25, 0.8) !important;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  box-shadow: none;
+.recent-works-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.recent-works-heading { display: flex; align-items: center; gap: 10px; }
+.recent-works-heading > .q-icon { color: var(--kikoeru-accent-text); }
+.recent-works-heading h2 { margin: 0; font-size: 22px; line-height: 32px; letter-spacing: 0; font-weight: 500; }
+.recent-works-heading .q-btn { color: var(--recent-muted); }
+.recent-works-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.recent-works-actions .q-btn { color: var(--recent-muted); min-height: 38px; padding: 6px 12px; border-radius: 6px; }
+.recent-works-actions .recent-works-favourites { color: var(--kikoeru-accent-text); background: color-mix(in srgb, var(--q-primary) 10%, transparent); }
+.recent-works-actions :deep(.q-icon) { font-size: 19px; }
+.recent-works-placeholder { display: flex; align-items: center; gap: 16px; min-height: 100px; padding: 24px; border: 1px solid var(--recent-border); border-radius: 10px; background: var(--recent-surface); color: var(--recent-muted); }
+.recent-work-item { width: 328px; max-width: 82vw; padding: 0 14px 6px 0; }
+.recent-work-card { border: 1px solid var(--recent-border); border-radius: 10px; overflow: hidden; background: var(--recent-surface); }
+.recent-work-cover { display: block; }
+.recent-work-cover :deep(.q-img) { display: block; }
+.recent-work-cover :deep(.bg-brown) { background: rgba(25,25,25,.8) !important; backdrop-filter: blur(8px); box-shadow: none; }
+.recent-work-info { padding: 12px 14px 10px; }
+.recent-work-title { color: inherit; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; font-weight: 500; line-height: 1.7; min-height: 48px; overflow-wrap: anywhere; }
+.recent-work-title:hover { color: var(--kikoeru-accent-text); }
+.recent-work-track { color: var(--recent-muted); font-size: 12px; margin-top: 8px; }
+.recent-work-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.recent-work-time { display: flex; align-items: center; gap: 6px; color: var(--recent-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.recent-work-footer .q-btn { border-radius: 6px; }
+.recent-work-cover:focus-visible, .recent-work-title:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: -2px; }
+.scroll-style-change { scrollbar-color: #888 transparent; scrollbar-width: thin; }
+.recent-works.recent-works--dark { --recent-surface: #1b1b1b; --recent-border: rgba(255,255,255,.12); --recent-muted: #aaadb3; }
+@media (max-width: 599px) {
+  .recent-works { margin: 20px 12px 0; }
+  .recent-works-heading h2 { font-size: 20px; }
+  .recent-works-actions { width: 100%; justify-content: space-between; gap: 4px; }
+  .recent-works-actions .q-btn { padding: 6px 10px; min-height: 40px; }
+  .recent-work-item { width: 290px; }
+  .recent-works-placeholder { min-height: 96px; padding: 20px 16px; }
 }
-
-.playInfo {
-  background: linear-gradient(to top, black, rgba(0, 0, 0, 0.5), transparent);
-  width: 100%;
-  padding: 0.5rem;
-}
-
-.audioText {
-  font-weight: bold;
-  font-size: larger;
-}
-
-.workText {
-  font-weight: normal;
-  font-size: small;
-  color: lightgrey;
-
-}
-
-.scroll-style-change {
-  scrollbar-color: gray transparent;
-}
-
-.scroll-style-change::-webkit-scrollbar {
-  background: transparent;
-  height: 0.5rem;
-}
-
-.scroll-style-change::-webkit-scrollbar-thumb {
-  background: gray;
-  min-width: 3rem;
-  border-radius: 10px;
-}
-
 </style>

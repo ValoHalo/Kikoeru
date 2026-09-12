@@ -56,6 +56,10 @@ function syncCurrentTrackContext (state, fallbackWorkId = 0) {
 }
 
 const mutations = {
+  SET_HISTORY_CLEARING (state, value) { state.historyClearing = value },
+  HISTORY_RECORDING_STARTED (state) { state.suppressPausedHistory = false },
+  HISTORY_SAVED (state) { state.historySavedRevision++ },
+  HISTORY_CLEARED (state) { state.historyRevision++; state.suppressPausedHistory = true },
   APPLY_DEFAULT_PREFERENCES: (state, defaults) => {
     const assignWhenUnset = (key, stateKey, normalize) => {
       if (!LocalStorage.has(key) && Object.prototype.hasOwnProperty.call(defaults, stateKey)) {

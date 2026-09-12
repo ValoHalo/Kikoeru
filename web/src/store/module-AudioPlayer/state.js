@@ -110,6 +110,10 @@ export function normalizePlaybackRate (value) {
 
 export default function () {
   return {
+    historyClearing: false,
+    historyRevision: 0,
+    historySavedRevision: 0,
+    suppressPausedHistory: false,
     hide: false,
     playing: false, // 播放状态 (true/false)
     playingTranscode: false,

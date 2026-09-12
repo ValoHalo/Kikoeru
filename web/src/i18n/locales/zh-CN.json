@@ -261,7 +261,14 @@
   "recentWorks": {
     "title": "最近播放",
     "expand": "展开最近播放",
-    "collapse": "收起最近播放"
+    "collapse": "收起最近播放",
+    "clear": "清除最近播放",
+    "empty": "没有最近播放的作品",
+    "clearPrompt": "清除当前账号的全部播放历史？作品、评价和作品分组将保留。继续播放后会重新记录。",
+    "clearConfirm": "清除记录",
+    "cleared": "最近播放已清除",
+    "clearFailed": "清除最近播放失败，请重试",
+    "loadFailed": "读取最近播放失败"
   },
   "relatedWorks": {
     "title": "关联作品"

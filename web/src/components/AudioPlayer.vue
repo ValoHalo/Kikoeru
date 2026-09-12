@@ -326,6 +326,7 @@
 </template>
 
 <script>
+import { savePlaybackHistory } from '../utils/playbackHistory.mjs'
 import { t } from '../i18n'
 import draggable from 'vuedraggable'
 import AudioElement from 'components/AudioElement.vue'
@@ -774,6 +775,8 @@ export default {
     },
     
     onUpdatePlayingStatus() {
+      if (this.$store.state.AudioPlayer.historyClearing) return;
+      if (this.$store.state.AudioPlayer.suppressPausedHistory && !this.playing) return;
       // 匿名播放不创建个人历史记录。
       if (!this.$store.state.User.name) return;
       // Filtering a paused queue must not replace the saved playback history.
@@ -806,10 +809,12 @@ export default {
         return
       }
 
-      this.$axios.put('/api/histroy', data)
+      if (this.playing) this.$store.commit('AudioPlayer/HISTORY_RECORDING_STARTED');
+      savePlaybackHistory(this.$axios, data)
         .then((_) => {
           console.log("更新播放状态成功")
           this.latestUpdatedHistory = data;
+          this.$store.commit('AudioPlayer/HISTORY_SAVED');
         })
         .catch((err) => {
           console.error(err.response.data.error)

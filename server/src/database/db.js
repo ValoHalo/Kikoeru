@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fillNewCustomMetaInfo = exports.customWorkMetadata = exports.updatePlayHistroy = exports.getPlayHistroy = exports.deleteUserReview = exports.updateUserReview = exports.getWorksWithReviews = exports.deleteUser = exports.updateUserPassword = exports.createUser = exports.getMetadata = exports.getLabels = exports.updateWorkLyricStatus = exports.updateWorkMetadata = exports.getWorksByKeyWord = exports.getWorksBy = exports.removeWork = exports.getWorkMetadata = exports.insertWorkMetadata = exports.knex = void 0;
 exports.updateWorkLocalLyricStatus = updateWorkLocalLyricStatus;
 exports.deletePlayHistroy = deletePlayHistroy;
+exports.clearPlayHistory = clearPlayHistory;
 exports.nsfwFilter = nsfwFilter;
 exports.lyricFilter = lyricFilter;
 exports.setWorkMemo = setWorkMemo;
@@ -774,6 +775,10 @@ const updatePlayHistroy = async (username, work_id, state) => knex.transaction(a
     await trx.raw('UPDATE t_play_histroy SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE user_name = ? AND work_id = ?;', [state, username, work_id]);
 });
 exports.updatePlayHistroy = updatePlayHistroy;
+async function clearPlayHistory(username) {
+    if (!username) throw new Error('A username is required');
+    return knex('t_play_histroy').where('user_name', username).del();
+}
 async function deletePlayHistroy(username, work_id) {
     await knex('t_play_histroy').select('*').where('work_id', '=', work_id).where('user_name', '=', username).first().del();
 }
