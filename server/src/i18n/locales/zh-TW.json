@@ -131,9 +131,6 @@
   "update": {
     "noDownload": "目前沒有正在進行的更新下載"
   },
-  "version": {
-    "scanRecommended": "新版解決了舊版掃描時將かの仔和こっこ識別為同一個人的問題，建議進行掃描以自動修復這一問題"
-  },
   "accessControl": {
     "adminRequired": "只有管理員可以執行該操作.",
     "writeDisabled": "危險寫操作已停用；請啟用鑑權，或顯式允許未鑑權寫操作.",

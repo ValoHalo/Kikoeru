@@ -54,9 +54,7 @@ const dlsite_new_1 = require("../scraper/dlsite-new");
 const asmrOne_1 = require("../scraper/asmrOne");
 const db = __importStar(require("../database/db"));
 const utils_1 = require("./utils");
-const utils_2 = require("../scraper/utils");
 const config_1 = require("../config");
-const upgrade_1 = require("../upgrade");
 const idConverter = __importStar(require("./idConverter"));
 const isCustomCode = idConverter.isCustomCode;
 const tasks = [];
@@ -504,28 +502,6 @@ async function performCleanup() {
     await reconcileAvailability(db, config_1.config.rootFolders);
 }
 ;
-async function fixVADatabase() {
-    let success = true;
-    if (upgrade_1.updateLock.isLockFilePresent && upgrade_1.updateLock.lockFileConfig.fixVA) {
-        LOG.main.log('开始进行声优元数据修复，需要联网', 'scanner.repairVoiceActors');
-        try {
-            const updateResult = await fixVoiceActorBug();
-            if (updateResult.failed) {
-                LOG.main.error(`声优元数据修复失败 ${updateResult.failed} 个，保留修复任务以便下次重试`, 'scanner.repairVoiceActorsFailed', { value0: String(updateResult.failed) });
-                success = false;
-            }
-            else {
-                upgrade_1.updateLock.removeLockFile();
-                LOG.main.log('完成元数据修复', 'scanner.repairComplete');
-            }
-        }
-        catch (err) {
-            LOG.main.error(err.toString());
-            success = false;
-        }
-    }
-    return success;
-}
 async function tryCleanupStage() {
     if (config_1.config.skipCleanup) {
         LOG.main.info('跳过作品文件状态检查', 'scanner.skipCleanup');
@@ -631,7 +607,6 @@ async function performScan() {
             process.exit(1);
         }
     }
-    const fixVADatabaseSuccess = await fixVADatabase();
     const existingWorkCount = Number((await db.knex('t_work').count({ count: '*' }).first()).count);
     await tryCleanupStage();
     let folderList = await tryScanRootFolders();
@@ -647,7 +622,7 @@ async function performScan() {
     const message = folderResult.updated ? `扫描完成: 更新 ${folderResult.updated} 个，新增 ${folderResult.added} 个，跳过 ${folderResult.skipped} 个，失败 ${folderResult.failed} 个.` : `扫描完成: 新增 ${folderResult.added} 个，跳过 ${folderResult.skipped} 个，失败 ${folderResult.failed} 个.`;
     LOG.finish(message, 'scanner.scanFinished', folderResult);
     db.knex.destroy();
-    if (!fixVADatabaseSuccess || folderResult.failed) {
+    if (folderResult.failed) {
         process.exit(1);
     }
     process.exit(0);
@@ -749,9 +724,6 @@ async function updateMetadata(id, options = {}) {
 async function updateMetadataLimited(id, options = {}) {
     return limitP.call(updateMetadata, id, options);
 }
-async function updateVoiceActorLimited(id) {
-    return limitP.call(updateMetadata, id, { includeVA: true });
-}
 async function performUpdate(options) {
     const baseQuery = db.knex('t_work').select('id', 'root_folder', 'dir');
     const processor = (id) => updateMetadataLimited(id, options);
@@ -761,13 +733,6 @@ async function performUpdate(options) {
     db.knex.destroy();
     if (counts.failed)
         process.exit(1);
-}
-;
-async function fixVoiceActorBug() {
-    const baseQuery = db.knex('r_va_work').select('va_id', 'work_id');
-    const filter = (query) => query.where('va_id', (0, utils_2.nameToUUID)('かの仔')).orWhere('va_id', (0, utils_2.nameToUUID)('こっこ'));
-    const processor = (id) => updateVoiceActorLimited(id);
-    return await refreshWorks(filter(baseQuery), 'work_id', processor);
 }
 ;
 async function refreshWorks(query, idColumnName, processor) {
