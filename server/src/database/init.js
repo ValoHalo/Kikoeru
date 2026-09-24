@@ -11,8 +11,30 @@ const db_1 = require("./db");
 const package_json_1 = __importDefault(require("../../package.json"));
 const compare_versions_1 = __importDefault(require("compare-versions"));
 const config_1 = require("../config");
-const upgrade_1 = require("../upgrade");
 const schema_1 = require("./schema");
+async function checkSupportedDatabase() {
+    if (!['sqlite3', 'better-sqlite3'].includes(config_1.config.sqliteType))
+        return;
+    const unsupported = () => new Error('数据库需要是本仓库 v0.7.0 或更高版本已完成初始化或升级的数据库。请保留现有数据，先使用兼容的旧版本完成升级。');
+    if (!(await db_1.knex.schema.hasTable('knex_migrations')))
+        throw unsupported();
+    // The legacy baseline and the first retained migration cover both old and fresh installations.
+    const baseline = await db_1.knex('knex_migrations').whereIn('name', [
+        '20260803090000_remove_ai_translation_tasks.js',
+        '20260830090000_create_playlists.js',
+    ]).first();
+    if (!baseline)
+        throw unsupported();
+    for (const [table, columns] of [
+        ['t_work', ['lyric_status', 'original_work_id', 'memo', 'is_custom_meta']],
+        ['t_review', ['user_name', 'work_id', 'progress']],
+        ['t_play_histroy', ['user_name', 'work_id', 'state']],
+    ]) {
+        const info = await db_1.knex(table).columnInfo();
+        if (columns.some(column => !Object.hasOwn(info, column)))
+            throw unsupported();
+    }
+}
 function ensureDir(dirPath) {
     if (!fs_1.default.existsSync(dirPath)) {
         try {
@@ -36,11 +58,6 @@ const initDatabase = async () => {
     async function skipMigrations() {
         await (0, knex_migrate_1.knexMigrate)('skipAll', undefined);
     }
-    async function fixMigrations() {
-        if (compare_versions_1.default.compare(configVersion, 'v0.5.1', '>=') && compare_versions_1.default.compare(configVersion, 'v0.5.3', '<')) {
-            await (0, knex_migrate_1.knexMigrate)('skipAll', '20210108093032');
-        }
-    }
     function initDatabaseDir() {
         if (!ensureDir(config_1.config.databaseFolderDir)) {
             console.error(` ! 在创建存放数据库文件的文件夹时出错`);
@@ -57,12 +74,7 @@ const initDatabase = async () => {
     const databaseExist = await (0, db_1.checkDatabaseExists)();
     if (databaseExist) {
         try {
-            if (compare_versions_1.default.compare(currentVersion, configVersion, '>')) {
-                console.log('升级中');
-                const oldVersion = config_1.config.version;
-                await (0, upgrade_1.applyFix)(oldVersion);
-                await fixMigrations();
-            }
+            await checkSupportedDatabase();
             // Always apply pending schema migrations. Maintenance releases can
             // add migrations without changing the legacy config version.
             await runMigrations();

@@ -135,9 +135,6 @@
   "update": {
     "noDownload": "No update download is in progress"
   },
-  "version": {
-    "scanRecommended": "Run a library scan to separate the voice actors かの仔 and こっこ, who were previously identified as the same person."
-  },
   "accessControl": {
     "adminRequired": "Only administrators can perform this action.",
     "writeDisabled": "Write operations are disabled. Enable authentication or explicitly allow unauthenticated writes.",

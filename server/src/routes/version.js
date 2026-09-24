@@ -7,7 +7,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const router = express_1.default.Router();
 const config_1 = require("../config");
-const upgrade_1 = require("../upgrade");
 const httpClient = require("../network/httpClient");
 const package_json_1 = __importDefault(require("../../package.json"));
 const VersionCheckCache_1 = require("../utils/VersionCheckCache");
@@ -40,7 +39,6 @@ const versionCache = new VersionCheckCache_1.VersionCheckCache(fetchLatestVersio
     initialValue: initialGitHubResponse,
 });
 router.get('/', async (_req, res) => {
-    const lockReason = t('version.scanRecommended');
     const latest = await versionCache.get();
     const selectedLatest = config_1.config.checkBetaUpdate
         ? latest.latest_release
@@ -52,8 +50,8 @@ router.get('/', async (_req, res) => {
         latest: selectedLatest,
         update_available,
         notifyUser: config_1.config.checkUpdate,
-        lockFileExists: upgrade_1.updateLock.isLockFilePresent,
-        lockReason: upgrade_1.updateLock.isLockFilePresent ? lockReason : null
+        lockFileExists: false,
+        lockReason: null
     });
 });
 exports.default = router;

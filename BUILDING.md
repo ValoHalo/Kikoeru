@@ -63,7 +63,7 @@ kikoeru-win-x64-<6 位 commit ID>.zip
 
 默认 FFmpeg 下载信息集中在 `server/scripts/release-config.json`。需要更新 FFmpeg 时，只修改该文件中的下载地址、归档结构和 SHA-256，不需要把二进制提交到 Git。
 
-Windows 和 Linux 的 FFmpeg 归档使用 BtbN 每个月最后一次构建的固定地址，并校验 SHA-256。上游只保留最近 14 次每日构建，月末构建保留两年，因此更新时应选择已结束月份的最后一次构建，避免使用普通每日构建或内容会变化的 `latest`。超过保留期前仍需更新依赖。`archiveFileName` 应包含构建日期，以区分文件名相同但内容不同的归档；`archiveRoot` 必须与压缩包内的实际目录一致。
+Windows 和 Linux 的 FFmpeg 归档来自 [Kikoeru-FFmpeg Releases](https://github.com/KaffuAlcaid/Kikoeru-FFmpeg/releases)，使用固定版本标签的下载地址，并校验 SHA-256。Windows 下载直接包含二进制目录的 ZIP，Linux 下载 tar.xz；Actions 下载时生成的外层 ZIP 不能直接用于打包。`archiveFileName` 应包含 Release 版本，以区分文件名相同但内容不同的归档；`archiveRoot` 必须与压缩包内的实际目录一致。
 
 ## 哪些文件进入仓库
 
