@@ -174,12 +174,14 @@ const mutations = {
   },
   ADD_TO_QUEUE: (state, file) => {
     if (state.contentDisplayMode === 'sfw' && state.workNsfw[trackWorkId(file)] !== false) return
-    state.queue.push(file)
+    // 重新赋值以触发 queue 的浅层 watcher
+    state.queue = state.queue.concat(file)
     syncCurrentTrackContext(state)
   },
   REMOVE_FROM_QUEUE: (state, index) => {
     if (index < 0 || index >= state.queue.length) return
-    state.queue.splice(index, 1)
+    // 重新赋值而非原地 splice：组件用浅层 watcher 同步 queue 引用，原地修改不会触发。
+    state.queue = state.queue.filter((_, i) => i !== index)
     if (state.queue.length === 0) {
       state.playing = false
       state.queueIndex = 0
@@ -207,7 +209,10 @@ const mutations = {
   // Add a file after the current playing item in the queue.
   PLAY_NEXT: (state, file) => {
     if (state.contentDisplayMode === 'sfw' && state.workNsfw[trackWorkId(file)] !== false) return
-    state.queue.splice(state.queueIndex + 1, 0, file);
+    // 重新赋值以触发 queue 的浅层 watcher
+    const queue = state.queue.slice()
+    queue.splice(state.queueIndex + 1, 0, file)
+    state.queue = queue
     syncCurrentTrackContext(state)
   },
 

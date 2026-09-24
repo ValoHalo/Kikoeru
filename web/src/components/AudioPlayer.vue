@@ -233,17 +233,37 @@
     <q-dialog v-model="showCurrentPlayList">
       <q-card class="current-play-list">
         <!-- 操作当前播放列表的控制按钮 -->
-        <div class="row" style="padding: 5px; height: 45px;">
-          <q-btn dense round size="md" icon="edit" color="primary" @click="editCurrentPlayList = !editCurrentPlayList" style="height: 35px; width: 35px;" class="col-auto" />
-          <q-btn dense round size="md" icon="save" color="teal" style="height: 35px; width: 35px;" class="col-auto q-mx-sm" :aria-label="$t('audioPlayer.saveQueue')" @click="openSaveQueueDialog"><q-tooltip>{{ $t('audioPlayer.saveQueue') }}</q-tooltip></q-btn>
+        <div class="row items-center no-wrap q-px-sm q-py-xs current-play-list-toolbar">
+          <q-btn
+            flat round dense
+            :icon="editCurrentPlayList ? 'check' : 'edit'"
+            :color="editCurrentPlayList ? 'primary' : undefined"
+            :aria-label="editCurrentPlayList ? $t('audioPlayer.doneEditing') : $t('audioPlayer.editPlaylist')"
+            :aria-pressed="editCurrentPlayList"
+            @click="editCurrentPlayList = !editCurrentPlayList"
+          ><q-tooltip>{{ editCurrentPlayList ? $t('audioPlayer.doneEditing') : $t('audioPlayer.editPlaylist') }}</q-tooltip></q-btn>
+          <q-btn
+            flat round dense
+            icon="save"
+            :disable="queueCopy.length === 0"
+            :aria-label="$t('audioPlayer.saveQueue')"
+            @click="openSaveQueueDialog"
+          ><q-tooltip>{{ $t('audioPlayer.saveQueue') }}</q-tooltip></q-btn>
           <q-space />
-          <q-btn dense round size="md" icon="delete_forever" color="red" @click="emptyQueue()" style="height: 35px; width: 35px;" class="col-auto" />
+          <q-btn
+            flat round dense
+            color="negative"
+            icon="delete_sweep"
+            :disable="queueCopy.length === 0"
+            :aria-label="$t('audioPlayer.clearQueue')"
+            @click="emptyQueue()"
+          ><q-tooltip>{{ $t('audioPlayer.clearQueue') }}</q-tooltip></q-btn>
         </div>
         
         <q-separator />
 
         <!-- 音频文件列表 -->
-        <q-list style="max-height: 450px" class="scroll">
+        <q-list class="scroll current-play-list-queue">
           <draggable
             handle=".handle"
             :force-fallback="true"
@@ -256,26 +276,31 @@
                 clickable
                 v-ripple
                 :active="queueIndex === index"
-                active-class="text-white bg-teal"
-                class="non-selectable"
-                style="padding: 0px 10px;"
+                active-class="text-white bg-primary"
+                class="non-selectable current-play-list-item"
                 @click="onClickTrack(index)"
               >
-                <q-item-section v-show="editCurrentPlayList" side>
-                  <q-icon name="clear" :color="queueIndex === index ? 'white' : 'red'" @click="removeFromQueue(index)" />
-                </q-item-section>
-
                 <q-item-section avatar>
-                  <q-img :key="samCoverUrl(track.hash)" transition="fade" :src="samCoverUrl(track.hash)" style="height: 38px; width: 38px" class="rounded-borders" />
+                  <q-img :key="samCoverUrl(track.hash)" transition="fade" :src="samCoverUrl(track.hash)" class="rounded-borders current-play-list-cover" />
                 </q-item-section>
 
                 <q-item-section>
-                  <q-item-label>{{ track.title }}</q-item-label>
+                  <q-item-label lines="1">{{ track.title }}</q-item-label>
                   <q-item-label caption lines="1">{{ track.workTitle }}</q-item-label>
                 </q-item-section>
 
-                <q-item-section v-show="editCurrentPlayList" side class="handle">
-                  <q-icon name="reorder" :color="queueIndex === index ? 'white' : 'dark'" />
+                <q-item-section v-show="editCurrentPlayList" side class="handle current-play-list-handle">
+                  <q-icon name="drag_handle" :color="queueIndex === index ? 'white' : 'grey-7'" />
+                </q-item-section>
+
+                <q-item-section v-show="editCurrentPlayList" side>
+                  <q-btn
+                    flat round dense
+                    icon="close"
+                    :color="queueIndex === index ? 'white' : 'negative'"
+                    :aria-label="$t('audioPlayer.removeFromQueue')"
+                    @click.stop="removeFromQueue(index)"
+                  />
                 </q-item-section>
               </q-item>
             </template>
@@ -1162,6 +1187,12 @@ export default {
     min-width: 280px;
   }
 }
+
+.current-play-list-toolbar { gap: 4px; }
+.current-play-list-queue { max-height: 450px; }
+.current-play-list-item { padding: 4px 12px; }
+.current-play-list-cover { width: 40px; height: 40px; }
+.current-play-list-handle { cursor: grab; }
 
 .save-queue-dialog {
   width: 420px;
