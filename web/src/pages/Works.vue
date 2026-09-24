@@ -3,7 +3,7 @@
     <!--没有搜索的情况下，显示最近播放作品-->
     <RecentWorks v-if="enableShowRecent && !isAdvanceSearch && searchMetas.length == 0 && !collectionId" />
 
-    <section class="works-toolbar" :class="{ 'works-toolbar--dark': $q.dark.isActive }" aria-labelledby="works-heading">
+    <section class="works-toolbar" aria-labelledby="works-heading">
     <div class="works-toolbar-heading">
       <div class="works-title"><q-icon name="library_music" size="23px" /><h2 id="works-heading">{{ pageTitle ? $t(pageTitle) : '' }}</h2><span class="works-count">{{ pagination.totalCount }}</span></div>
       <div class="works-display-controls">
@@ -43,7 +43,6 @@
       <q-select
         dense
         outlined
-        bg-color=""
         transition-show="scale"
         transition-hide="scale"
         v-model="sortCategoryOption"
@@ -57,7 +56,6 @@
       <q-select
         dense
         outlined
-        bg-color=""
         transition-show="scale"
         transition-hide="scale"
         :model-value="$store.getters['AudioPlayer/sfwOnly'] ? 'nsfw_1' : nsfwOption"
@@ -73,7 +71,6 @@
       <q-select
         dense
         outlined
-        bg-color=""
         transition-show="scale"
         transition-hide="scale"
         v-model="lyricOption"
@@ -691,21 +688,15 @@ export default {
 <style lang="scss" scoped>
 .works-results { margin: 0 16px; }
 .works-toolbar {
-  --toolbar-surface: #fff;
-  --toolbar-border: rgba(0, 0, 0, .1);
-  --toolbar-muted: #686b71;
-  --toolbar-inset: #f5f6f7;
+  --toolbar-surface: var(--kikoeru-surface);
+  --toolbar-border: var(--kikoeru-border);
+  --toolbar-muted: var(--kikoeru-muted);
+  --toolbar-inset: var(--kikoeru-inset);
   margin: 28px 16px 18px;
   padding: 16px;
   border: 1px solid var(--toolbar-border);
-  border-radius: 10px;
+  border-radius: var(--kikoeru-radius-md);
   background: var(--toolbar-surface);
-}
-.works-toolbar--dark {
-  --toolbar-surface: #1b1b1b;
-  --toolbar-border: rgba(255,255,255,.12);
-  --toolbar-muted: #aaadb3;
-  --toolbar-inset: #242426;
 }
 .works-toolbar-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .works-title { display: flex; align-items: center; gap: 10px; min-width: 0; }

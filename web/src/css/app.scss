@@ -19,6 +19,18 @@ a {
 :root {
   --kikoeru-font-family: "Noto Sans CJK SC", "Noto Sans CJK JP", sans-serif;
   --kikoeru-accent-text: var(--kikoeru-accent-text-light);
+
+  // 全局表面 token（浅色）
+  --kikoeru-page-bg: #f2f3f5;
+  --kikoeru-surface: #ffffff;
+  --kikoeru-border: rgba(0, 0, 0, .1);
+  --kikoeru-muted: #686b71;
+  --kikoeru-inset: #f5f6f7;
+  --kikoeru-radius-sm: 6px;
+  --kikoeru-radius-md: 10px;
+  --kikoeru-radius-lg: 14px;
+  --kikoeru-shadow-card: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .08);
+  --kikoeru-shadow-card-hover: 0 10px 24px rgba(16, 24, 40, .14);
 }
 
 :root:lang(ja) {
@@ -31,6 +43,15 @@ a {
 
 .body--dark {
   --kikoeru-accent-text: var(--kikoeru-accent-text-dark);
+
+  // 全局表面 token（深色）
+  --kikoeru-page-bg: #121212;
+  --kikoeru-surface: #1d1d1f;
+  --kikoeru-border: rgba(255, 255, 255, .12);
+  --kikoeru-muted: #aaadb3;
+  --kikoeru-inset: #262628;
+  --kikoeru-shadow-card: 0 1px 2px rgba(0, 0, 0, .4), 0 1px 3px rgba(0, 0, 0, .32);
+  --kikoeru-shadow-card-hover: 0 10px 28px rgba(0, 0, 0, .55);
 }
 
 .bg-primary,

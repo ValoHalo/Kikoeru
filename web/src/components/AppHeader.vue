@@ -83,21 +83,17 @@ export default {
 
 <style lang="scss">
 .app-header {
-  --header-surface: #fff;
+  --header-surface: var(--kikoeru-surface);
   --header-text: #292c32;
-  --header-muted: #656b74;
-  --header-line: #e3e6ea;
-  --header-field: #f2f4f6;
+  --header-muted: var(--kikoeru-muted);
+  --header-line: var(--kikoeru-border);
+  --header-field: var(--kikoeru-inset);
   background: var(--header-surface);
   color: var(--header-text);
   border-bottom: 1px solid var(--header-line);
 }
 .body--dark .app-header {
-  --header-surface: #1d1e20;
   --header-text: #eceef1;
-  --header-muted: #afb4bd;
-  --header-line: #35373c;
-  --header-field: #292b2f;
 }
 .app-toolbar { min-height: 56px; padding: 0 20px 0 8px; gap: 16px; flex-wrap: wrap; }
 .app-header-button { width: 40px; height: 40px; flex: 0 0 40px; }

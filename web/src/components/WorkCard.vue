@@ -213,26 +213,49 @@ export default {
 
 <style scoped>
 .card {
-  --card-muted: #616161;
-  --card-line: rgba(0, 0, 0, 0.1);
+  --card-muted: var(--kikoeru-muted);
+  --card-line: var(--kikoeru-border);
   --card-chip: rgba(0, 0, 0, 0.045);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--kikoeru-radius-md);
   border: 1px solid var(--card-line);
   box-shadow: none;
+  transition: transform .18s ease, box-shadow .18s ease;
+  will-change: transform;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--kikoeru-shadow-card-hover);
 }
 
 .body--dark .card {
-  --card-muted: #b0b0b0;
-  --card-line: rgba(255, 255, 255, 0.12);
   --card-chip: rgba(255, 255, 255, 0.065);
 }
 
 .work-card-cover {
   display: block;
+}
+
+.work-card-cover :deep(.q-img__image:not([src*="blurNsfw=1"])) {
+  transition: transform .3s ease;
+}
+
+.card:hover .work-card-cover :deep(.q-img__image:not([src*="blurNsfw=1"])) {
+  transform: scale(1.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .work-card-cover :deep(.q-img__image) {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
 }
 
 .work-card-cover :deep(.q-img) {

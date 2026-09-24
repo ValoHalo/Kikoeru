@@ -10,7 +10,7 @@
       :width="248"
       :breakpoint="500"
       bordered
-      :class="$q.dark.isActive ? 'main-drawer overflow-hidden bg-dark' : 'main-drawer overflow-hidden bg-white'"
+      class="main-drawer overflow-hidden"
       @mouseenter="drawerMini = false"
       @mouseleave="drawerMini = true"
       @focusin="drawerMini = false"
@@ -168,7 +168,7 @@ export default {
   computed: {
     links () {
       return [
-        { title: t('common.library'), icon: 'widgets', path: '/' }, { title: t('common.advancedSearch'), icon: 'manage_search', path: '/search' }, { title: t('mainLayout.fullscreen'), icon: 'play_circle', path: '/fullScreenPlayer' }, { title: t('common.favourites'), icon: 'favorite', path: '/favourites' }, { title: t('common.playlists'), icon: 'queue_music', path: '/playlist' }, { title: t('common.circles'), icon: 'group', path: '/circles' }, { title: t('common.tags'), icon: 'label', path: '/tags' }, { title: t('common.voiceActors'), icon: 'mic', path: '/vas' }
+        { title: t('common.library'), icon: 'widgets', path: '/works' }, { title: t('common.advancedSearch'), icon: 'manage_search', path: '/search' }, { title: t('mainLayout.fullscreen'), icon: 'play_circle', path: '/fullScreenPlayer' }, { title: t('common.favourites'), icon: 'favorite', path: '/favourites' }, { title: t('common.playlists'), icon: 'queue_music', path: '/playlist' }, { title: t('common.circles'), icon: 'group', path: '/circles' }, { title: t('common.tags'), icon: 'label', path: '/tags' }, { title: t('common.voiceActors'), icon: 'mic', path: '/vas' }
       ]
     },
     isWorkPage () { return this.$route.path.startsWith('/work/') },
@@ -431,14 +431,59 @@ export default {
 </script>
 
 <style lang="scss">
-.main-drawer { background: #fff; }
-.body--dark .main-drawer { background: #1d1d1d; }
+.main-drawer { background: var(--kikoeru-surface); }
+// 桌面端 mini/展开切换时平滑过渡宽度，避免瞬间坍缩造成的跳变
+// 注意 main-drawer 类实际落在 aside 内部的 .q-drawer__content 上
+@media (min-width: 501px) {
+  .q-drawer:has(> .main-drawer) { transition: width .18s ease; }
+}
+.main-drawer .q-item__label { white-space: nowrap; }
 .drawer-content { display: flex; flex-direction: column; height: 100%; }
 .drawer-primary { padding-top: 12px; }
 .drawer-secondary { margin-top: auto; padding-bottom: 12px; }
-.main-drawer .q-item { min-height: 48px; }
+.main-drawer .q-item {
+  min-height: 48px;
+  margin: 2px 0;
+  position: relative;
+  transition: color .16s ease;
+}
+// pill 背景用伪元素绘制，item 布局在展开/折叠两种模式下保持一致，避免切换时图标跳动
+.main-drawer .q-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  border-radius: var(--kikoeru-radius-sm);
+  background: transparent;
+  transition: background-color .16s ease;
+}
+.main-drawer .q-item .q-item__section { position: relative; z-index: 1; }
+.main-drawer .q-item:hover::before { background: var(--kikoeru-inset); }
+.main-drawer .q-item.q-router-link--active,
+.main-drawer .q-item.q-router-link--exact-active {
+  color: var(--kikoeru-accent-text);
+}
+.main-drawer .q-item.q-router-link--active::before,
+.main-drawer .q-item.q-router-link--exact-active::before {
+  background: color-mix(in srgb, var(--q-primary) 13%, transparent);
+}
+.main-drawer .q-item.q-router-link--active .q-icon,
+.main-drawer .q-item.q-router-link--exact-active .q-icon { color: var(--kikoeru-accent-text); }
 .drawer-secondary .q-item { height: 54px; min-height: 54px; }
-.q-drawer--mini .main-drawer .q-item { width: 56px; }
+// 覆盖 Quasar mini 态的 item 居中/去 padding 规则（quasar.css 中 .q-drawer--mini .q-item），
+// 保持与展开态相同的左 padding，图标位置在展开/收起间完全一致，不会左右漂移
+.q-drawer-container .q-drawer--mini .main-drawer .drawer-content .q-item {
+  margin: 2px 0;
+  padding-left: 16px;
+  padding-right: 16px;
+  justify-content: flex-start;
+}
+.q-drawer-container .q-drawer--mini .main-drawer .drawer-content .q-item__section--avatar {
+  min-width: 40px;
+  text-align: left;
+}
 .main-drawer .q-item__section--avatar { min-width: 40px; }
 .auth-dialog-card { width: 360px; max-width: 90vw; }
 .q-drawer--mini .color-scheme-toggle-section { visibility: hidden; opacity: 0; pointer-events: none; }
@@ -455,13 +500,13 @@ export default {
 }
 .page-container-style { position: absolute; left: 0; right: 0; bottom: 0; top: 0; }
 .padding-bottom-play-bar { min-height: 100vh; }
-.body--light .padding-bottom-play-bar { background-color: #fff; transition: background-color 180ms ease; }
-.body--light .works-page-container { background: #f2f3f5; }
+.body--light .padding-bottom-play-bar { background-color: var(--kikoeru-surface); transition: background-color 180ms ease; }
+.body--light .works-page-container { background: var(--kikoeru-page-bg); }
 @media (prefers-reduced-motion: reduce) {
   .body--light .padding-bottom-play-bar { transition: none; }
 }
 .padding-bottom-play-bar { padding-bottom: 80px !important; }
 .scroller { transition: .3s; }
 .scroller-show { opacity: 1; visibility: visible; }
-.scroller-hide { opacity: 0; visibility: collapse; }
+.scroller-hide { opacity: 0; visibility: hidden; }
 </style>

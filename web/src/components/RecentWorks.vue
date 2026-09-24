@@ -1,5 +1,5 @@
 <template>
-  <section class="recent-works" :class="{ 'recent-works--dark': $q.dark.isActive }" aria-labelledby="recent-works-title">
+  <section class="recent-works" aria-labelledby="recent-works-title">
     <header class="recent-works-toolbar">
       <div class="recent-works-heading">
         <q-icon name="history" size="23px" />
@@ -307,14 +307,14 @@ export default {
 }
 
 .recent-works {
-  --recent-surface: #fff;
-  --recent-border: rgba(0, 0, 0, .1);
-  --recent-muted: #686b71;
-  --recent-inset: #f5f6f7;
+  --recent-surface: var(--kikoeru-surface);
+  --recent-border: var(--kikoeru-border);
+  --recent-muted: var(--kikoeru-muted);
+  --recent-inset: var(--kikoeru-inset);
   margin: 24px 16px 0;
   padding: 16px;
   border: 1px solid var(--recent-border);
-  border-radius: 10px;
+  border-radius: var(--kikoeru-radius-md);
   background: var(--recent-surface);
 }
 .recent-works-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
@@ -336,7 +336,6 @@ export default {
 .recent-work-title { margin-top: 4px; color: #ddd; font-size: 12px; }
 .recent-work-cover:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: -2px; }
 .scroll-style-change { scrollbar-color: #888 transparent; scrollbar-width: thin; }
-.recent-works.recent-works--dark { --recent-surface: #1b1b1b; --recent-border: rgba(255,255,255,.12); --recent-muted: #aaadb3; --recent-inset: #242426; }
 @media (max-width: 699px) {
   .recent-works { margin: 20px 12px 0; padding: 14px 12px; }
   .recent-works-heading h2 { font-size: 20px; }
