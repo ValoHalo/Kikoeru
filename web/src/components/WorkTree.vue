@@ -68,12 +68,12 @@
       </q-card>
     </q-dialog>
 
-    <q-card>
+    <q-card v-if="folderEntries.length">
       <q-list separator>
         <q-item
           clickable
           v-ripple
-          v-for="item in fatherFolder"
+          v-for="item in folderEntries"
           :key="item.hash"
           :active="item.type === 'audio' && currentPlayingFile.hash === item.hash"
           active-class="text-white bg-teal"
@@ -84,8 +84,6 @@
             <q-icon size="34px" v-if="item.type === 'folder'" color="amber" name="folder" />
             <q-icon size="34px" v-else-if="isSubtitle(item)" color="info" name="subtitles" />
             <q-icon size="34px" v-else-if="item.type === 'text'" color="info" name="description" />
-            <q-icon size="34px" v-else-if="item.type === 'image'" color="orange" name="photo" />
-            <!-- <q-img width="34px" height="34px" v-else-if="item.type === 'image'" :src="imgSrc(item)" contain :ratio="1/1"  name="thumbnail" /> -->
             <q-icon size="34px" v-else-if="item.type === 'other'" color="info" name="description" />
             <q-btn v-else round dense color="primary" :icon="playIcon(item.hash)" @click="onClickPlayButton(item.hash)" />
 
@@ -128,10 +126,6 @@
                 <q-item-section>{{ $t('workTree.addToPlaylist') }}</q-item-section>
               </q-item>
 
-              <q-item clickable @click="editImg(item)" v-if="item.type === 'image' && isAdministrator">
-                <q-item-section>{{ $t('workTree.editCover') }}</q-item-section>
-              </q-item>
-
               <q-item clickable @click="download(item)" v-if="item.type !== 'folder'">
                 <q-item-section>{{ $t('workTree.download') }}</q-item-section>
               </q-item>
@@ -141,12 +135,23 @@
         </q-item>
       </q-list>
     </q-card>
+    <WorkImageGallery
+      v-if="folderImages.length"
+      :key="JSON.stringify([metadata.id, ...path])"
+      :images="folderImages"
+      :can-edit="isAdministrator"
+      :class="{ 'q-mt-sm': folderEntries.length }"
+      @preview="openPreviewImg"
+      @edit="editImg"
+      @download="download"
+    />
   </div>
 </template>
 
 <script>
 import { t } from '../i18n'
 import ImageEditor from './ImageEditor.vue'
+import WorkImageGallery from './WorkImageGallery.vue'
 import { mapState, mapGetters } from 'vuex'
 import { formatSeconds } from '../utils'
 import NotifyMixin from '../mixins/Notification.js'
@@ -159,6 +164,7 @@ export default {
 
   components: {
     ImageEditor,
+    WorkImageGallery,
   },
 
   data() {
@@ -227,6 +233,14 @@ export default {
       })
 
       return this.visibleFiles(fatherFolder)
+    },
+
+    folderEntries () {
+      return this.fatherFolder.filter(item => item.type !== 'image')
+    },
+
+    folderImages () {
+      return this.fatherFolder.filter(item => item.type === 'image')
     },
 
     queue () {
@@ -428,14 +442,6 @@ export default {
       link.click();
     },
 
-    imgSrc (imgItem) {
-      const url = imgItem.mediaStreamUrl
-        ? imgItem.mediaStreamUrl
-        : `/api/media/stream/${imgItem.hash}`;
-      console.log('imgSrc called for ', imgItem.title);
-      return url;
-    },
-
     originalImgSrc (file) {
       // Fallback to old API for an old backend 
       const url = file.mediaStreamUrl || `/api/media/stream/${file.hash}`;
@@ -443,7 +449,7 @@ export default {
     },
 
     openPreviewImg(item) {
-      const preview_img_list = this.fatherFolder.filter(item => item.type === 'image')
+      const preview_img_list = this.folderImages
       let preview_img_idx = -1;
       preview_img_list.forEach((i, idx) => {
         if (i.hash === item.hash) {
