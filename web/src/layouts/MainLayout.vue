@@ -458,6 +458,10 @@ export default {
   background: transparent;
   transition: background-color .16s ease;
 }
+.main-drawer .q-item > .q-focus-helper,
+.main-drawer .q-item > .q-ripple {
+  clip-path: inset(0 8px round var(--kikoeru-radius-sm));
+}
 .main-drawer .q-item .q-item__section { position: relative; z-index: 1; }
 .main-drawer .q-item:hover::before { background: var(--kikoeru-inset); }
 .main-drawer .q-item.q-router-link--active,
