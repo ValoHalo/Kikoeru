@@ -12,8 +12,8 @@
           <q-btn flat dense no-caps icon="grid_view" :label="$t('works.cardView')" :aria-pressed="!listMode" :class="{ 'is-selected': !listMode }" @click="listMode = false" />
           <q-btn flat dense no-caps icon="view_list" :label="$t('works.listView')" :aria-pressed="listMode" :class="{ 'is-selected': listMode }" @click="listMode = true" />
         </div>
-        <q-btn v-if="$q.screen.width > 700 && listMode" flat dense :icon="showLabel ? 'label' : 'label_off'" :aria-label="$t(showLabel ? 'works.hideTags' : 'works.showTags')" :aria-pressed="showLabel" class="works-density" @click="showLabel = !showLabel"><q-tooltip>{{ $t(showLabel ? 'works.hideTags' : 'works.showTags') }}</q-tooltip></q-btn>
-        <q-btn v-if="$q.screen.width >= 1120 && !listMode" flat dense :icon="detailMode ? 'zoom_out' : 'zoom_in'" :aria-label="$t(detailMode ? 'works.smallerCards' : 'works.largerCards')" class="works-density" @click="detailMode = !detailMode"><q-tooltip>{{ $t(detailMode ? 'works.smallerCards' : 'works.largerCards') }}</q-tooltip></q-btn>
+        <q-btn v-if="$q.screen.width > 700 && listMode" flat dense :icon="showLabel ? 'label' : 'label_off'" :aria-label="$t(showLabel ? 'works.hideTags' : 'works.showTags')" :aria-pressed="showLabel" class="works-density" @click="showLabel = !showLabel"><AppTooltip>{{ $t(showLabel ? 'works.hideTags' : 'works.showTags') }}</AppTooltip></q-btn>
+        <q-btn v-if="$q.screen.width >= 1120 && !listMode" flat dense :icon="detailMode ? 'zoom_out' : 'zoom_in'" :aria-label="$t(detailMode ? 'works.smallerCards' : 'works.largerCards')" class="works-density" @click="detailMode = !detailMode"><AppTooltip>{{ $t(detailMode ? 'works.smallerCards' : 'works.largerCards') }}</AppTooltip></q-btn>
       </div>
     </div>
     <div v-if="advanceSearchKeywords.length || searchMetas.length" class="works-search-chips">

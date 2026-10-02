@@ -15,8 +15,9 @@
       </div>
       <!-- 标题 -->
       <h2 class="work-card-title">
-        <router-link :to="`/work/${metadata.id}`" :class="fullDetails ? 'work-card-title-full' : 'ellipsis-2-lines'" :title="metadata.title">
+        <router-link :to="`/work/${metadata.id}`" :class="fullDetails ? 'work-card-title-full' : 'ellipsis-2-lines'">
           {{ metadata.title }}
+          <AppTooltip v-if="!fullDetails">{{ metadata.title }}</AppTooltip>
         </router-link>
       </h2>
 
@@ -34,7 +35,7 @@
           />
 
           <!-- 评价分布明细 -->
-          <q-tooltip v-if=metadata.rate_count_detail class="text-subtitle1">
+          <AppTooltip v-if=metadata.rate_count_detail class="text-subtitle1">
             <div>{{ $t('workCard.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
             <div v-for="(rate, index) in sortedRatings" :key=index class="row items-center">
               <div class="col">{{ $t('workCard.stars', { count: rate.review_point }) }}</div>
@@ -50,7 +51,7 @@
 
               <div class="col q-mx-sm">({{ rate.count }})</div>
             </div>
-          </q-tooltip>
+          </AppTooltip>
         </div>
 
         <div class="work-card-score">
@@ -62,7 +63,7 @@
         <div class="work-card-reviews work-card-muted">
           <q-icon name="chat_bubble_outline" size="16px" />
           <span>{{ metadata.review_count }}</span>
-          <q-tooltip>{{ $t('workCard.reviews') }}</q-tooltip>
+          <AppTooltip>{{ $t('workCard.reviews') }}</AppTooltip>
         </div>
 
         <!-- DLsite链接 -->

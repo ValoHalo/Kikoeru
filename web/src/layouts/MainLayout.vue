@@ -42,7 +42,6 @@
                   role="switch"
                   :aria-checked="colorSchemeAriaChecked"
                   :aria-label="$t('mainLayout.toggleDarkMode', { colorSchemeCaption: colorSchemeCaption })"
-                  :title="$t('mainLayout.darkModeTitle', { colorSchemeCaption: colorSchemeCaption })"
                   @click.stop="cycleColorScheme"
                 >
                   <span class="color-scheme-toggle__track" aria-hidden="true" />

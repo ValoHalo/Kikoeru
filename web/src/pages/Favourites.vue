@@ -9,7 +9,7 @@
       <div class="favourites-section-title"><h2>{{ activeSection.label }}</h2><span v-if="mode !== 'folder' && !loading" class="favourites-count">{{ $t('favourites.workCount', { count: pagination.totalCount }) }}</span></div>
       <div v-if="['review', 'progress'].includes(mode)" class="favourites-sort">
         <q-select dense outlined v-model="sortBy" :options="sortOptions" :label="$t('works.sortBy')" :display-value="sortOptions.find(option => option.order === sortBy.order)?.label" />
-        <q-btn :disable="sortButtonDisabled" flat round :icon="direction ? 'south' : 'north'" :aria-label="$t('favourites.sortDirection')" @click="switchSortMode"><q-tooltip>{{ $t('favourites.sortDirection') }}</q-tooltip></q-btn>
+        <q-btn :disable="sortButtonDisabled" flat round :icon="direction ? 'south' : 'north'" :aria-label="$t('favourites.sortDirection')" @click="switchSortMode"><AppTooltip>{{ $t('favourites.sortDirection') }}</AppTooltip></q-btn>
       </div>
       <q-btn v-if="mode === 'folder'" unelevated no-caps color="primary" icon="add" :label="$t('favourites.createCollection')" @click="openCreateDialog" />
     </div>
@@ -38,7 +38,7 @@
         <div class="collections-heading">
           <div class="text-subtitle1 text-weight-medium">{{ $t('common.collections') }}</div>
           <q-space />
-          <q-btn flat round dense icon="refresh" :aria-label="$t('favourites.refreshCollections')" :loading="collectionLoading" @click="loadCollections"><q-tooltip>{{ $t('common.refresh') }}</q-tooltip></q-btn>
+          <q-btn flat round dense icon="refresh" :aria-label="$t('favourites.refreshCollections')" :loading="collectionLoading" @click="loadCollections"><AppTooltip>{{ $t('common.refresh') }}</AppTooltip></q-btn>
         </div>
         <q-list v-if="collections.length" class="collections-list">
           <q-item v-for="collection in collections" :key="collection.id" clickable v-ripple :active="selectedCollection && selectedCollection.id === collection.id" active-class="collection-selected" @click="openCollection(collection.id)">
@@ -70,7 +70,7 @@
                   <q-badge v-if="work.archived_at" color="grey-7" :label="$t('favourites.archived')" class="collection-archive-badge" />
                   <q-item-label v-if="work.files_missing" caption :class="$q.dark.isActive ? 'text-red-4' : 'text-negative'"><q-icon name="folder_off" /> {{ $t('common.filesMissing') }}</q-item-label>
                 </q-item-section>
-                <q-item-section side class="collection-handle"><q-icon name="drag_handle" /><q-tooltip>{{ $t('favourites.reorder') }}</q-tooltip></q-item-section>
+                <q-item-section side class="collection-handle" :aria-label="$t('favourites.reorder')"><q-icon name="drag_handle" /></q-item-section>
                 <q-item-section side><q-btn flat round dense icon="close" color="negative" :aria-label="$t('favourites.removeFromCollection')" @click="removeCollectionItem(work.id)" /></q-item-section>
               </q-item>
             </template>

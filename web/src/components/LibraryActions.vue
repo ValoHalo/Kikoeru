@@ -11,7 +11,7 @@
         :label="compact ? undefined : $t('libraryActions.addToCollection')"
         :aria-label="$t('libraryActions.addToCollection')"
         @click="openCollectionDialog"
-      ><q-tooltip v-if="compact">{{ $t('libraryActions.addToCollection') }}</q-tooltip></q-btn>
+      ><AppTooltip v-if="compact">{{ $t('libraryActions.addToCollection') }}</AppTooltip></q-btn>
       <q-btn
         dense
         :flat="flat"
@@ -22,10 +22,10 @@
         :label="compact ? undefined : (archived ? $t('libraryActions.unarchive') : $t('libraryActions.archive'))"
         :aria-label="archived ? $t('libraryActions.unarchive') : $t('libraryActions.archive')"
         @click="toggleArchive"
-      ><q-tooltip v-if="compact">{{ archived ? $t('libraryActions.unarchive') : $t('libraryActions.archive') }}</q-tooltip></q-btn>
+      ><AppTooltip v-if="compact">{{ archived ? $t('libraryActions.unarchive') : $t('libraryActions.archive') }}</AppTooltip></q-btn>
     </template>
     <q-btn v-else flat round dense icon="more_vert" :aria-label="$t('libraryActions.organize')" @click="loadCollections">
-      <q-tooltip>{{ $t('libraryActions.organize') }}</q-tooltip>
+      <AppTooltip>{{ $t('libraryActions.organize') }}</AppTooltip>
       <q-menu>
         <q-list dense style="min-width: 170px">
           <q-item clickable v-close-popup @click="toggleArchive">
@@ -47,7 +47,7 @@
           <q-select v-model="selectedCollectionId" outlined emit-value map-options :options="collectionOptions" :label="$t('libraryActions.selectCollection')" :loading="loading" />
           <div class="row q-col-gutter-sm q-mt-sm">
             <div class="col"><q-input v-model.trim="newCollectionName" outlined dense maxlength="80" :label="$t('libraryActions.newCollectionName')" @keyup.enter="createCollection" /></div>
-            <div class="col-auto"><q-btn outline color="primary" icon="add" :aria-label="$t('libraryActions.newCollection')" :disable="!newCollectionName" @click="createCollection"><q-tooltip>{{ $t('libraryActions.newCollection') }}</q-tooltip></q-btn></div>
+            <div class="col-auto"><q-btn outline color="primary" icon="add" :aria-label="$t('libraryActions.newCollection')" :disable="!newCollectionName" @click="createCollection"><AppTooltip>{{ $t('libraryActions.newCollection') }}</AppTooltip></q-btn></div>
           </div>
         </q-card-section>
         <q-card-actions align="right">

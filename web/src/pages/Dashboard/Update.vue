@@ -42,7 +42,7 @@
           <q-item-section side>
             <div class="row items-center q-gutter-sm">
               <q-badge :color="status.updateAvailable ? 'primary' : 'positive'" :label="latestVersionLabel" />
-              <q-btn v-if="status.release && status.release.url" flat round dense icon="open_in_new" type="a" target="_blank" :href="status.release.url" :aria-label="$t('update.releaseNotes')"><q-tooltip>{{ $t('update.releaseNotes') }}</q-tooltip></q-btn>
+              <q-btn v-if="status.release && status.release.url" flat round dense icon="open_in_new" type="a" target="_blank" :href="status.release.url" :aria-label="$t('update.releaseNotes')"><AppTooltip>{{ $t('update.releaseNotes') }}</AppTooltip></q-btn>
             </div>
           </q-item-section>
         </q-item>

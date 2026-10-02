@@ -89,7 +89,7 @@
             :aria-label="isDeletableUser(scope.row) ? $t('userManage.selectUser', { name: scope.row.name }) : $t('userManage.adminProtected')"
             @update:model-value="scope.selected = $event"
           >
-            <q-tooltip v-if="!isDeletableUser(scope.row)">{{ $t('userManage.adminProtected') }}</q-tooltip>
+            <AppTooltip v-if="!isDeletableUser(scope.row)">{{ $t('userManage.adminProtected') }}</AppTooltip>
           </q-checkbox>
         </template>
       </q-table>

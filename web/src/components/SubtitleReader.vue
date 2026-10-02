@@ -10,16 +10,16 @@
             <template #prepend><q-icon name="search" size="20px" /></template>
           </q-input>
           <div class="reader-size">
-            <q-btn flat round icon="text_decrease" :disable="fontSize <= 14" :aria-label="$t('subtitleReader.smaller')" @click="fontSize -= 2"><q-tooltip>{{ $t('subtitleReader.smaller') }}</q-tooltip></q-btn>
-            <q-btn flat round icon="text_increase" :disable="fontSize >= 26" :aria-label="$t('subtitleReader.larger')" @click="fontSize += 2"><q-tooltip>{{ $t('subtitleReader.larger') }}</q-tooltip></q-btn>
+            <q-btn flat round icon="text_decrease" :disable="fontSize <= 14" :aria-label="$t('subtitleReader.smaller')" @click="fontSize -= 2"><AppTooltip>{{ $t('subtitleReader.smaller') }}</AppTooltip></q-btn>
+            <q-btn flat round icon="text_increase" :disable="fontSize >= 26" :aria-label="$t('subtitleReader.larger')" @click="fontSize += 2"><AppTooltip>{{ $t('subtitleReader.larger') }}</AppTooltip></q-btn>
           </div>
         </div>
         <div class="reader-summary">
           <span class="reader-count" role="status">{{ loading || error ? '' : $t('subtitleReader.lineCount', { count: filteredLines.length, total: lines.length }) }}</span>
           <nav v-if="files.length > 1" class="reader-navigation" :aria-label="$t('subtitleReader.files')">
-            <q-btn flat round dense icon="chevron_left" :disable="fileIndex <= 0" :aria-label="$t('workTree.previous')" @click="$emit('select', files[fileIndex - 1])"><q-tooltip>{{ $t('workTree.previous') }}</q-tooltip></q-btn>
+            <q-btn flat round dense icon="chevron_left" :disable="fileIndex <= 0" :aria-label="$t('workTree.previous')" @click="$emit('select', files[fileIndex - 1])"><AppTooltip>{{ $t('workTree.previous') }}</AppTooltip></q-btn>
             <span class="reader-position">{{ fileIndex + 1 }} / {{ files.length }}</span>
-            <q-btn flat round dense icon="chevron_right" :disable="fileIndex < 0 || fileIndex >= files.length - 1" :aria-label="$t('workTree.next')" @click="$emit('select', files[fileIndex + 1])"><q-tooltip>{{ $t('workTree.next') }}</q-tooltip></q-btn>
+            <q-btn flat round dense icon="chevron_right" :disable="fileIndex < 0 || fileIndex >= files.length - 1" :aria-label="$t('workTree.next')" @click="$emit('select', files[fileIndex + 1])"><AppTooltip>{{ $t('workTree.next') }}</AppTooltip></q-btn>
           </nav>
         </div>
         <q-separator />

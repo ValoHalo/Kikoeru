@@ -42,7 +42,7 @@
                 :aria-label="$t('preferences.chooseAccent')"
                 :style="{ backgroundColor: appliedAccentColor }"
               >
-                <q-tooltip>{{ $t('preferences.chooseColor') }}</q-tooltip>
+                <AppTooltip>{{ $t('preferences.chooseColor') }}</AppTooltip>
                 <q-popup-proxy transition-show="scale" transition-hide="scale">
                   <q-color
                     :model-value="appliedAccentColor"
@@ -81,7 +81,7 @@
                 :disable="appliedAccentColor === defaultAccentColor"
                 @click="resetAccentColor"
               >
-                <q-tooltip>{{ $t('common.reset') }}</q-tooltip>
+                <AppTooltip>{{ $t('common.reset') }}</AppTooltip>
               </q-btn>
             </div>
           </q-item-section>

@@ -23,7 +23,7 @@
             <div class="tag-language-control">
               <q-btn-toggle v-model="config.tagLanguage" dense unelevated no-caps toggle-color="primary" :options="tagLanguageOptions" />
               <q-btn flat no-caps color="primary" icon="refresh" :label="$t('advanced.refreshTags')" :loading="refreshTagsLoading" @click="refreshTagNames">
-                <q-tooltip>{{ $t('advanced.refreshTagsHint') }}</q-tooltip>
+                <AppTooltip>{{ $t('advanced.refreshTagsHint') }}</AppTooltip>
               </q-btn>
             </div>
           </q-item-section>
@@ -56,7 +56,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('dlsiteTimeout') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetDlsiteTimeout', { dlsiteTimeout: numericDefaults.dlsiteTimeout })" @click="restoreNumericDefault('dlsiteTimeout')">
-                  <q-tooltip>{{ $t('advanced.resetDlsiteTimeoutHint', { dlsiteTimeout: numericDefaults.dlsiteTimeout }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetDlsiteTimeoutHint', { dlsiteTimeout: numericDefaults.dlsiteTimeout }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -80,7 +80,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('hvdbTimeout') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetHvdbTimeout', { hvdbTimeout: numericDefaults.hvdbTimeout })" @click="restoreNumericDefault('hvdbTimeout')">
-                  <q-tooltip>{{ $t('advanced.resetHvdbTimeoutHint', { hvdbTimeout: numericDefaults.hvdbTimeout }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetHvdbTimeoutHint', { hvdbTimeout: numericDefaults.hvdbTimeout }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -104,7 +104,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('retryDelay') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetRetryDelay', { retryDelay: numericDefaults.retryDelay })" @click="restoreNumericDefault('retryDelay')">
-                  <q-tooltip>{{ $t('advanced.resetRetryDelayHint', { retryDelay: numericDefaults.retryDelay }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetRetryDelayHint', { retryDelay: numericDefaults.retryDelay }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -128,7 +128,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('retry') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetRetry', { retry: numericDefaults.retry })" @click="restoreNumericDefault('retry')">
-                  <q-tooltip>{{ $t('advanced.resetRetryHint', { retry: numericDefaults.retry }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetRetryHint', { retry: numericDefaults.retry }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -152,7 +152,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('maxParallelism') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetParallelism', { maxParallelism: numericDefaults.maxParallelism })" @click="restoreNumericDefault('maxParallelism')">
-                  <q-tooltip>{{ $t('advanced.resetParallelismHint', { maxParallelism: numericDefaults.maxParallelism }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetParallelismHint', { maxParallelism: numericDefaults.maxParallelism }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -203,7 +203,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('httpProxyPort') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetProxyPort', { httpProxyPort: numericDefaults.httpProxyPort })" @click="restoreNumericDefault('httpProxyPort')">
-                  <q-tooltip>{{ $t('advanced.resetProxyPortHint', { httpProxyPort: numericDefaults.httpProxyPort }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetProxyPortHint', { httpProxyPort: numericDefaults.httpProxyPort }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -250,7 +250,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('scannerMaxRecursionDepth') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetRecursionDepth', { scannerMaxRecursionDepth: numericDefaults.scannerMaxRecursionDepth })" @click="restoreNumericDefault('scannerMaxRecursionDepth')">
-                  <q-tooltip>{{ $t('advanced.resetRecursionDepthHint', { scannerMaxRecursionDepth: numericDefaults.scannerMaxRecursionDepth }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetRecursionDepthHint', { scannerMaxRecursionDepth: numericDefaults.scannerMaxRecursionDepth }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -324,7 +324,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('listenPort') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetListenPort', { listenPort: numericDefaults.listenPort })" @click="restoreNumericDefault('listenPort')">
-                  <q-tooltip>{{ $t('advanced.resetListenPortHint', { listenPort: numericDefaults.listenPort }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetListenPortHint', { listenPort: numericDefaults.listenPort }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -359,7 +359,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('expiresIn') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetTokenExpiry', { expiresIn: numericDefaults.expiresIn })" @click="restoreNumericDefault('expiresIn')">
-                  <q-tooltip>{{ $t('advanced.resetTokenExpiryHint', { expiresIn: numericDefaults.expiresIn }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetTokenExpiryHint', { expiresIn: numericDefaults.expiresIn }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -383,7 +383,7 @@
             >
               <template #before>
                 <q-btn class="settings-number-reset" :class="{ 'settings-number-reset--active': isNumericSettingModified('pageSize') }" flat round dense icon="restart_alt" :aria-label="$t('advanced.resetPageSize', { pageSize: numericDefaults.pageSize })" @click="restoreNumericDefault('pageSize')">
-                  <q-tooltip>{{ $t('advanced.resetPageSizeHint', { pageSize: numericDefaults.pageSize }) }}</q-tooltip>
+                  <AppTooltip>{{ $t('advanced.resetPageSizeHint', { pageSize: numericDefaults.pageSize }) }}</AppTooltip>
                 </q-btn>
               </template>
             </q-input>
@@ -483,7 +483,7 @@
         type="submit"
         :aria-label="$t('advanced.saveSettings')"
       >
-        <q-tooltip>{{ hasUnsavedChanges ? $t('advanced.saveChanges') : $t('advanced.saveSettings') }}</q-tooltip>
+        <AppTooltip>{{ hasUnsavedChanges ? $t('advanced.saveChanges') : $t('advanced.saveSettings') }}</AppTooltip>
       </q-btn>
     </div>
   </q-form>

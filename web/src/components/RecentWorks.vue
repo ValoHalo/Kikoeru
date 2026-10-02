@@ -6,7 +6,7 @@
         <h2 id="recent-works-title">{{ $t('recentWorks.title') }}</h2>
         <q-btn flat round dense :aria-label="$t(expanded ? 'recentWorks.collapse' : 'recentWorks.expand')" :aria-expanded="expanded" aria-controls="recent-works-list" @click="toggleExpanded">
           <q-icon name="expand_more" class="recent-works-chevron" :class="{ 'is-expanded': expanded }" />
-          <q-tooltip>{{ $t(expanded ? 'recentWorks.collapse' : 'recentWorks.expand') }}</q-tooltip>
+          <AppTooltip>{{ $t(expanded ? 'recentWorks.collapse' : 'recentWorks.expand') }}</AppTooltip>
         </q-btn>
       </div>
       <div class="recent-works-actions">

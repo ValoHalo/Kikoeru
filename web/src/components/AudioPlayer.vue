@@ -73,11 +73,11 @@
         </div>
 
         <div class="player-transport">
-          <q-btn flat round icon="skip_previous" :aria-label="$t('audioPlayer.previousTrack')" @click="previousTrack()"><q-tooltip>{{ $t('audioPlayer.previousTrack') }}</q-tooltip></q-btn>
-          <q-btn flat round :icon="rewindIcon" :aria-label="$t('audioPlayer.rewind')" @click="rewind(true)"><q-tooltip>{{ $t('audioPlayer.rewind') }}</q-tooltip></q-btn>
-          <q-btn flat round class="player-toggle" size="24px" :icon="playingIcon" :aria-label="$t('audioPlayer.playPause')" @click="togglePlaying()"><q-tooltip>{{ $t('audioPlayer.playPause') }}</q-tooltip></q-btn>
-          <q-btn flat round :icon="forwardIcon" :aria-label="$t('audioPlayer.fastForward')" @click="forward(true)"><q-tooltip>{{ $t('audioPlayer.fastForward') }}</q-tooltip></q-btn>
-          <q-btn flat round icon="skip_next" :aria-label="$t('audioPlayer.nextTrack')" @click="nextTrack()"><q-tooltip>{{ $t('audioPlayer.nextTrack') }}</q-tooltip></q-btn>
+          <q-btn flat round icon="skip_previous" :aria-label="$t('audioPlayer.previousTrack')" @click="previousTrack()"><AppTooltip>{{ $t('audioPlayer.previousTrack') }}</AppTooltip></q-btn>
+          <q-btn flat round :icon="rewindIcon" :aria-label="$t('audioPlayer.rewind')" @click="rewind(true)"><AppTooltip>{{ $t('audioPlayer.rewind') }}</AppTooltip></q-btn>
+          <q-btn flat round class="player-toggle" size="24px" :icon="playingIcon" :aria-label="$t('audioPlayer.playPause')" @click="togglePlaying()"><AppTooltip>{{ $t('audioPlayer.playPause') }}</AppTooltip></q-btn>
+          <q-btn flat round :icon="forwardIcon" :aria-label="$t('audioPlayer.fastForward')" @click="forward(true)"><AppTooltip>{{ $t('audioPlayer.fastForward') }}</AppTooltip></q-btn>
+          <q-btn flat round icon="skip_next" :aria-label="$t('audioPlayer.nextTrack')" @click="nextTrack()"><AppTooltip>{{ $t('audioPlayer.nextTrack') }}</AppTooltip></q-btn>
         </div>
 
         <!-- HTML5 volume in iOS is read-only -->
@@ -88,22 +88,7 @@
         </div>
 
         <!-- 设置菜单 -->
-        <div
-          class="player-tools"
-          @pointerover="updatePlayerToolHint"
-          @pointerleave="playerToolHint = ''"
-          @focusin="updatePlayerToolHint"
-          @focusout="leavePlayerTools"
-          @click="playerToolHint = ''"
-        >
-          <q-tooltip
-            :model-value="Boolean(playerToolHint)"
-            @update:model-value="value => { if (!value) playerToolHint = '' }"
-            no-parent-event
-            anchor="top middle"
-            self="bottom middle"
-            :transition-duration="0"
-          >{{ playerToolHint }}</q-tooltip>
+        <div class="player-tools">
           <!-- 顶在前面 -->
             <!-- 曲目列表 -->
             <q-btn 
@@ -115,6 +100,7 @@
               :aria-label="$t('audioPlayer.switchTrack')"
               @click="showCurrentPlayList = !showCurrentPlayList" 
             >
+              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.switchTrack') }}</AppTooltip>
             </q-btn>
 
             <!--播放顺序切换-->
@@ -128,6 +114,7 @@
               :aria-label="playModeString"
               @click="changePlayMode()"
             >
+              <AppTooltip anchor="top middle" self="bottom middle">{{ playModeString }}</AppTooltip>
             </q-btn>
 
             <q-btn
@@ -141,7 +128,9 @@
               :aria-label="$t('audioPlayer.pipLyrics')"
               :aria-pressed="enablePIPLyrics"
               @click="setPIPLyrics"
-            />
+            >
+              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.pipLyrics') }}</AppTooltip>
+            </q-btn>
 
             <q-btn
               flat
@@ -151,7 +140,9 @@
               icon="subtitles"
               :aria-label="$t('audioPlayer.selectLyrics')"
               @click="showLyricSelection = true"
-            />
+            >
+              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.selectLyrics') }}</AppTooltip>
+            </q-btn>
 
           <!-- 放在尾部 -->
             <q-btn
@@ -162,6 +153,7 @@
               icon="more_horiz"
               :aria-label="$t('audioPlayer.moreSettings')"
             >
+              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.moreSettings') }}</AppTooltip>
               <q-menu class="player-settings-menu" anchor="top right" self="bottom right">
                 <q-item>
                   <q-item-section avatar><q-icon name="speed" /></q-item-section>
@@ -241,14 +233,14 @@
             :aria-label="editCurrentPlayList ? $t('audioPlayer.doneEditing') : $t('audioPlayer.editPlaylist')"
             :aria-pressed="editCurrentPlayList"
             @click="editCurrentPlayList = !editCurrentPlayList"
-          ><q-tooltip>{{ editCurrentPlayList ? $t('audioPlayer.doneEditing') : $t('audioPlayer.editPlaylist') }}</q-tooltip></q-btn>
+          ><AppTooltip>{{ editCurrentPlayList ? $t('audioPlayer.doneEditing') : $t('audioPlayer.editPlaylist') }}</AppTooltip></q-btn>
           <q-btn
             flat round dense
             icon="save"
             :disable="queueCopy.length === 0"
             :aria-label="$t('audioPlayer.saveQueue')"
             @click="openSaveQueueDialog"
-          ><q-tooltip>{{ $t('audioPlayer.saveQueue') }}</q-tooltip></q-btn>
+          ><AppTooltip>{{ $t('audioPlayer.saveQueue') }}</AppTooltip></q-btn>
           <q-space />
           <q-btn
             flat round dense
@@ -257,7 +249,7 @@
             :disable="queueCopy.length === 0"
             :aria-label="$t('audioPlayer.clearQueue')"
             @click="emptyQueue()"
-          ><q-tooltip>{{ $t('audioPlayer.clearQueue') }}</q-tooltip></q-btn>
+          ><AppTooltip>{{ $t('audioPlayer.clearQueue') }}</AppTooltip></q-btn>
         </div>
         
         <q-separator />
@@ -397,7 +389,6 @@ export default {
       fixStartMills: 0,
       fixStopMills: 0,
       showLyricSelection: false,
-      playerToolHint: '',
     }
   },
 
@@ -634,18 +625,6 @@ export default {
   },
 
   methods: {
-    updatePlayerToolHint (event) {
-      if (event.pointerType === 'touch') return
-      const button = event.target.closest('button[aria-label]')
-      if (button && event.currentTarget.contains(button)) {
-        this.playerToolHint = button.getAttribute('aria-label')
-      }
-    },
-
-    leavePlayerTools (event) {
-      if (!event.currentTarget.contains(event.relatedTarget)) this.playerToolHint = ''
-    },
-
     formatSeconds,
 
     startFixLyricSync(whoStartFirst) {

@@ -1,13 +1,13 @@
 <template>
   <q-badge
     :color="color"
-    :title="failureDetails || null"
     class="transcoding-status q-px-sm"
     role="status"
     aria-live="polite"
   >
     <q-spinner v-if="isIndeterminate" size="12px" class="q-mr-xs" />
     {{ showMessage }}
+    <AppTooltip v-if="failureDetails">{{ failureDetails }}</AppTooltip>
   </q-badge>
 </template>
 

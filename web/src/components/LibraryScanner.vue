@@ -26,7 +26,7 @@
           <div class="text-caption text-grey-7">{{ $t('libraryScanner.failureCount', { count: persistedFailures.length }) }}</div>
         </div>
         <q-btn outline dense class="settings-icon-button" color="negative" icon="delete_sweep" :aria-label="$t('libraryScanner.clearFailures')" :loading="failureLoading" @click="clearFailures">
-          <q-tooltip>{{ $t('libraryScanner.clearAllFailures') }}</q-tooltip>
+          <AppTooltip>{{ $t('libraryScanner.clearAllFailures') }}</AppTooltip>
         </q-btn>
       </div>
       <q-separator />

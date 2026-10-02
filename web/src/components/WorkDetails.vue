@@ -47,7 +47,7 @@
             />
 
             <!-- 评价分布明细 -->
-            <q-tooltip v-if=metadata.rate_count_detail class="text-subtitle1">
+            <AppTooltip v-if=metadata.rate_count_detail class="text-subtitle1">
               <div>{{ $t('workDetails.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
               <div v-for="(rate, index) in sortedRatings" :key=index class="row items-center">
                 <div class="col"> {{ $t('workDetails.stars', { count: rate.review_point }) }}</div>
@@ -63,7 +63,7 @@
 
                 <div class="col q-mx-sm"> ({{rate.count}}) </div>
               </div>
-            </q-tooltip>
+            </AppTooltip>
           </div>
 
           <span class="work-muted work-fact-note">{{ $t('workDetails.reviewCounts', { rate_count: metadata.rate_count, review_count: metadata.review_count }) }}</span>
@@ -152,9 +152,9 @@
             icon="history"
             :aria-label="$t('workDetails.resume')"
             @click="resumeThisHistroy"
-          ><q-tooltip>{{ $t('workDetails.resume') }}</q-tooltip></q-btn>
+          ><AppTooltip>{{ $t('workDetails.resume') }}</AppTooltip></q-btn>
           <q-btn flat round icon="rate_review" :aria-label="$t('workDetails.writeReview')" @click="showReviewDialog = true">
-            <q-tooltip>{{ $t('workDetails.writeReview') }}</q-tooltip>
+            <AppTooltip>{{ $t('workDetails.writeReview') }}</AppTooltip>
           </q-btn>
 
           <LibraryActions
@@ -168,7 +168,7 @@
 
           <slot name="folder-action" />
           <q-btn flat round icon="more_horiz" :aria-label="$t('workDetails.moreActions')">
-            <q-tooltip>{{ $t('workDetails.moreActions') }}</q-tooltip>
+            <AppTooltip>{{ $t('workDetails.moreActions') }}</AppTooltip>
             <q-menu anchor="bottom right" self="top right">
               <q-list class="work-manage-menu">
                 <q-item v-if="isAdministrator" clickable v-close-popup @click="showEditMetaDialog = true">

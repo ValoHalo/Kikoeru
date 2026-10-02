@@ -11,7 +11,7 @@
         </q-breadcrumbs-el>
       </q-breadcrumbs>
 
-      <q-btn flat round class="work-tree-playlist" icon="playlist_add" :disable="allAudioTracks.length === 0" :aria-label="$t('workTree.addWorkToPlaylist')" @click="openPlaylistPicker(allAudioTracks)"><q-tooltip>{{ $t('workTree.addWorkToPlaylist') }}</q-tooltip></q-btn>
+      <q-btn flat round class="work-tree-playlist" icon="playlist_add" :disable="allAudioTracks.length === 0" :aria-label="$t('workTree.addWorkToPlaylist')" @click="openPlaylistPicker(allAudioTracks)"><AppTooltip>{{ $t('workTree.addWorkToPlaylist') }}</AppTooltip></q-btn>
     </div>
 
     <q-dialog v-model="showPlaylistPicker">

@@ -38,7 +38,7 @@
                   :aria-label="$t('defaultPreferences.chooseAccent')"
                   :style="{ backgroundColor: accentColorPreview }"
                 >
-                  <q-tooltip>{{ $t('defaultPreferences.chooseColor') }}</q-tooltip>
+                  <AppTooltip>{{ $t('defaultPreferences.chooseColor') }}</AppTooltip>
                   <q-popup-proxy transition-show="scale" transition-hide="scale">
                     <q-color
                       :model-value="accentColorPreview"
@@ -76,7 +76,7 @@
                   :disable="normalizeAccentColor(config.accentColor) === defaultAccentColor"
                   @click="setAccentColor(defaultAccentColor)"
                 >
-                  <q-tooltip>{{ $t('common.reset') }}</q-tooltip>
+                  <AppTooltip>{{ $t('common.reset') }}</AppTooltip>
                 </q-btn>
               </div>
             </q-item-section>
@@ -195,7 +195,7 @@
           type="submit"
           :aria-label="$t('defaultPreferences.saveDefaults')"
         >
-          <q-tooltip>{{ hasUnsavedChanges ? $t('defaultPreferences.saveChanges') : $t('defaultPreferences.saveDefaults') }}</q-tooltip>
+          <AppTooltip>{{ hasUnsavedChanges ? $t('defaultPreferences.saveChanges') : $t('defaultPreferences.saveDefaults') }}</AppTooltip>
         </q-btn>
       </div>
     </q-form>

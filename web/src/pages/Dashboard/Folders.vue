@@ -37,7 +37,7 @@
             </q-item-section>
             <q-item-section side class="settings-control">
               <q-btn outline dense class="settings-icon-button" color="negative" icon="delete_outline" :aria-label="$t('folders.deleteNamed', { name: rootFolder.name })" @click="removeFromRootFolders(index)">
-                <q-tooltip>{{ $t('folders.delete') }}</q-tooltip>
+                <AppTooltip>{{ $t('folders.delete') }}</AppTooltip>
               </q-btn>
             </q-item-section>
           </q-item>

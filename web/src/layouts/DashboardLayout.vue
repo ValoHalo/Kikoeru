@@ -30,7 +30,7 @@
             >
               <q-item-section avatar><q-icon :name="link.icon" /></q-item-section>
               <q-item-section><q-item-label class="text-subtitle1">{{ link.title }}</q-item-label></q-item-section>
-              <q-tooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ link.title }}</q-tooltip>
+              <AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ link.title }}</AppTooltip>
             </q-item>
           </q-list>
 
@@ -38,7 +38,7 @@
             <q-item clickable v-ripple exact to="/" active-class="text-primary text-weight-medium">
               <q-item-section avatar><q-icon name="home" /></q-item-section>
               <q-item-section><q-item-label class="text-subtitle1">{{ $t('dashboardLayout.home') }}</q-item-label></q-item-section>
-              <q-tooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('dashboardLayout.home') }}</q-tooltip>
+              <AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('dashboardLayout.home') }}</AppTooltip>
             </q-item>
           </q-list>
         </div>

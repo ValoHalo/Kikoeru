@@ -3,8 +3,8 @@
     <div class="row items-center q-mb-sm">
       <div class="text-h5">{{ $t('common.playlists') }}</div>
       <q-space />
-      <q-btn v-if="activeTab === 'current'" flat round icon="save" :disable="queue.length === 0" :aria-label="$t('playlist.saveQueue')" @click="openSaveDialog"><q-tooltip>{{ $t('playlist.saveQueue') }}</q-tooltip></q-btn>
-      <q-btn v-if="activeTab === 'current'" flat round color="negative" icon="delete_sweep" :disable="queue.length === 0" :aria-label="$t('playlist.clearQueue')" @click="EMPTY_QUEUE"><q-tooltip>{{ $t('playlist.clearQueue') }}</q-tooltip></q-btn>
+      <q-btn v-if="activeTab === 'current'" flat round icon="save" :disable="queue.length === 0" :aria-label="$t('playlist.saveQueue')" @click="openSaveDialog"><AppTooltip>{{ $t('playlist.saveQueue') }}</AppTooltip></q-btn>
+      <q-btn v-if="activeTab === 'current'" flat round color="negative" icon="delete_sweep" :disable="queue.length === 0" :aria-label="$t('playlist.clearQueue')" @click="EMPTY_QUEUE"><AppTooltip>{{ $t('playlist.clearQueue') }}</AppTooltip></q-btn>
     </div>
 
     <q-tabs v-model="activeTab" dense align="left" active-color="primary" indicator-color="primary" class="playlist-tabs q-mb-md">
@@ -32,7 +32,7 @@
       <q-tab-panel name="saved" class="q-pa-none">
         <div class="row q-col-gutter-md">
           <div v-if="!selectedPlaylist || $q.screen.gt.sm" class="col-12 col-md-4">
-            <div class="row items-center q-mb-sm"><div class="text-subtitle1 text-weight-medium">{{ $t('playlist.savedPlaylists') }}</div><q-space /><q-btn flat round dense icon="refresh" :loading="loadingPlaylists" :aria-label="$t('playlist.refresh')" @click="loadPlaylists"><q-tooltip>{{ $t('common.refresh') }}</q-tooltip></q-btn></div>
+            <div class="row items-center q-mb-sm"><div class="text-subtitle1 text-weight-medium">{{ $t('playlist.savedPlaylists') }}</div><q-space /><q-btn flat round dense icon="refresh" :loading="loadingPlaylists" :aria-label="$t('playlist.refresh')" @click="loadPlaylists"><AppTooltip>{{ $t('common.refresh') }}</AppTooltip></q-btn></div>
             <q-list v-if="playlists.length" bordered separator>
               <q-item v-for="playlist in playlists" :key="playlist.id" clickable v-ripple :active="selectedPlaylist && selectedPlaylist.id === playlist.id" active-class="bg-primary text-white" @click="openPlaylist(playlist.id)">
                 <q-item-section avatar><q-icon name="library_music" /></q-item-section>
@@ -48,8 +48,8 @@
               <q-btn v-if="$q.screen.lt.md" flat round dense icon="arrow_back" :aria-label="$t('playlist.back')" @click="closePlaylist" />
               <div class="col text-subtitle1 text-weight-medium ellipsis q-ml-sm">{{ selectedPlaylist.name }}</div>
               <q-space />
-              <q-btn flat round dense icon="play_arrow" :disable="availableItems.length === 0" :aria-label="$t('playlist.playList')" @click="playSelected"><q-tooltip>{{ $t('playlist.play') }}</q-tooltip></q-btn>
-              <q-btn flat round dense icon="playlist_add" :disable="availableItems.length === 0" :aria-label="$t('playlist.append')" @click="appendSelected"><q-tooltip>{{ $t('playlist.append') }}</q-tooltip></q-btn>
+              <q-btn flat round dense icon="play_arrow" :disable="availableItems.length === 0" :aria-label="$t('playlist.playList')" @click="playSelected"><AppTooltip>{{ $t('playlist.play') }}</AppTooltip></q-btn>
+              <q-btn flat round dense icon="playlist_add" :disable="availableItems.length === 0" :aria-label="$t('playlist.append')" @click="appendSelected"><AppTooltip>{{ $t('playlist.append') }}</AppTooltip></q-btn>
               <q-btn flat round dense icon="more_vert" :aria-label="$t('playlist.moreActions')"><q-menu><q-list dense style="min-width: 140px"><q-item clickable v-close-popup @click="openRenameDialog"><q-item-section avatar><q-icon name="edit" /></q-item-section><q-item-section>{{ $t('common.rename') }}</q-item-section></q-item><q-item clickable v-close-popup class="text-negative" @click="confirmDeletePlaylist"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>{{ $t('common.delete') }}</q-item-section></q-item></q-list></q-menu></q-btn>
             </div>
             <q-list v-if="playlistItems.length" bordered separator>

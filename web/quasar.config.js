@@ -5,6 +5,7 @@ export default defineConfig(function () {
   return {
     boot: [
       'i18n',
+      'tooltips',
       'store',
       'axios',
       'socket.io'

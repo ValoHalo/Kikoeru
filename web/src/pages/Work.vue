@@ -28,7 +28,7 @@
               :disable="loadingData"
               @click="toggleDefaultFolder"
             >
-              <q-tooltip>{{ $t(isDefaultFolder ? 'workTree.clearDefaultFolder' : 'workTree.setDefaultFolder') }}</q-tooltip>
+              <AppTooltip>{{ $t(isDefaultFolder ? 'workTree.clearDefaultFolder' : 'workTree.setDefaultFolder') }}</AppTooltip>
             </q-btn>
           </template>
         </WorkDetails>

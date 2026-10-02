@@ -13,7 +13,6 @@
         class="work-image-tile"
         :style="{ flexGrow: ratio(item) / totalRatio(row), aspectRatio: ratio(item) }"
         :aria-label="item.title"
-        :title="item.title"
         @click="$emit('preview', item)"
       >
         <img

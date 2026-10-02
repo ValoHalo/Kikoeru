@@ -26,7 +26,7 @@
     <div v-if="mode === 'histroy' && historyTrack" class="favourite-work__detail favourite-work__resume">
       <div class="favourite-work__track">
         <div class="favourite-work__position"><q-icon name="headphones" size="18px" /><span>{{ metadata.state.index + 1 }} / {{ metadata.state.queue.length }}</span><span class="favourite-work__time">{{ humanReadableSeconds(metadata.state.seconds) }}</span></div>
-        <div class="favourite-work__filename" :title="historyTrack.title">{{ historyTrack.title }}</div>
+        <div class="favourite-work__filename">{{ historyTrack.title }}<AppTooltip>{{ historyTrack.title }}</AppTooltip></div>
       </div>
       <q-btn unelevated no-caps color="primary" icon="play_arrow" :label="$t('favListItem.resume')" :disable="Boolean(metadata.files_missing)" class="favourite-work__play" @click="playHistroy(metadata.id, metadata.state)" />
     </div>

@@ -108,7 +108,7 @@
           <q-item-section v-if="isAdministrator && isEditingLyrics" side>
             <div class="row no-wrap q-gutter-xs">
               <q-btn flat round dense icon="edit" color="primary" @click.stop="openLineEditor(index)">
-                <q-tooltip>{{ $t('lyricSelection.editLine') }}</q-tooltip>
+                <AppTooltip>{{ $t('lyricSelection.editLine') }}</AppTooltip>
               </q-btn>
               <q-btn
                 v-if="!line.deleted"
@@ -119,7 +119,7 @@
                 color="negative"
                 @click.stop="deleteLyricLine(index)"
               >
-                <q-tooltip>{{ $t('lyricSelection.deleteLine') }}</q-tooltip>
+                <AppTooltip>{{ $t('lyricSelection.deleteLine') }}</AppTooltip>
               </q-btn>
               <q-btn
                 v-else
@@ -130,7 +130,7 @@
                 color="positive"
                 @click.stop="recoverDeletedLyricLine(index)"
               >
-                <q-tooltip>{{ $t('lyricSelection.restoreLine') }}</q-tooltip>
+                <AppTooltip>{{ $t('lyricSelection.restoreLine') }}</AppTooltip>
               </q-btn>
             </div>
           </q-item-section>
