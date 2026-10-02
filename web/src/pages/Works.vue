@@ -108,7 +108,7 @@
     <div class="works-results row justify-center">
       <q-infinite-scroll ref="infiniteScroller" @load="onLoad" :offset="250" :disable="stopLoad || workListMode === WORK_LIST_MODES.PAGINATION" class="col">
 
-        <div v-if="workListMode === WORK_LIST_MODES.PAGINATION" class="row justify-center q-pb-lg">
+        <div v-if="workListMode === WORK_LIST_MODES.PAGINATION && pagination.totalCount > 0" class="row justify-center q-pb-lg">
           <q-pagination :model-value="displayPage" :max="maxPages" :max-pages="7" boundary-links direction-links color="primary" @update:model-value="gotoPage" />
         </div>
 
@@ -117,7 +117,7 @@
         </div>
 
         <q-virtual-scroll
-          v-if="listMode && workListMode === WORK_LIST_MODES.WATERFALL"
+          v-if="listMode && works.length && workListMode === WORK_LIST_MODES.WATERFALL"
           ref="virtualList"
           :items="works"
           scroll-target="body"
@@ -128,12 +128,12 @@
             <WorkListItem :key="item.id" :metadata="item" :showLabel="showLabel && $q.screen.width > 700" />
           </template>
         </q-virtual-scroll>
-        <q-list v-else-if="listMode" bordered separator class="shadow-2">
+        <q-list v-else-if="listMode && works.length" bordered separator class="shadow-2">
           <WorkListItem v-for="work in works" :key="work.id" :metadata="work" :showLabel="showLabel && $q.screen.width > 700" />
         </q-list>
 
         <!--完整作品卡片-->
-        <div v-if="!listMode && oldWorkCardUIStyle" class="row q-col-gutter-x-md q-col-gutter-y-lg">
+        <div v-if="!listMode && works.length && oldWorkCardUIStyle" class="row q-col-gutter-x-md q-col-gutter-y-lg">
           <div class="col-xs-12 col-sm-6 col-md-4" v-for="work in works" :key="work.id"
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
           >
@@ -142,7 +142,7 @@
         </div>
 
         <!--解决android平台hover事件不像safari那样及时响应的问题，需要手动添加触摸响应时间-->
-        <div v-else-if="!listMode && $q.platform.is.android && $q.platform.has.touch" class="row q-col-gutter-x-md q-col-gutter-y-lg">
+        <div v-else-if="!listMode && works.length && $q.platform.is.android && $q.platform.has.touch" class="row q-col-gutter-x-md q-col-gutter-y-lg">
           <div class="col-xs-12 col-sm-6 col-md-4" v-for="work in works" :key="work.id"
             @touchstart="()=>onWorkCardTouch(work.id)"
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
@@ -153,7 +153,7 @@
         </div>
 
         <!--正常的workCard展示-->
-        <div v-else-if="!listMode" class="row q-col-gutter-x-md q-col-gutter-y-lg">
+        <div v-else-if="!listMode && works.length" class="row q-col-gutter-x-md q-col-gutter-y-lg">
           <div class="col-xs-12 col-sm-6 col-md-4" v-for="work in works" :key="work.id"
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
             style="--sim-hover-work-card: 0"
@@ -166,7 +166,17 @@
           <q-pagination :model-value="displayPage" :max="maxPages" :max-pages="7" boundary-links direction-links color="primary" @update:model-value="gotoPage" />
         </div>
 
-        <div v-show="workListMode === WORK_LIST_MODES.WATERFALL && stopLoad" class="q-mt-lg q-mb-xl text-h6 text-bold text-center">{{ $t('works.noMoreWorks') }}</div>
+        <section v-if="!isLoading && worksLoadState === 'success' && pagination.totalCount === 0" class="works-empty" role="status" aria-live="polite">
+          <q-icon :name="hasSearch || hasFilters ? 'search_off' : 'library_music'" size="32px" aria-hidden="true" />
+          <h3>{{ $t(hasSearch || hasFilters ? 'works.noResults' : 'works.emptyLibrary') }}</h3>
+          <p v-if="hasSearch || hasFilters">{{ $t(hasSearch ? 'works.emptySearchHint' : 'works.emptyFiltersHint') }}</p>
+          <div v-if="hasSearch || hasFilters" class="works-empty-actions">
+            <q-btn v-if="hasSearch" unelevated no-caps color="primary" :label="$t('appHeader.clearSearch')" @click="recoverEmptyResults('search')" />
+            <q-btn v-if="hasFilters" outline no-caps color="primary" :label="$t('works.resetFilters')" @click="recoverEmptyResults('filters')" />
+          </div>
+        </section>
+
+        <div v-if="workListMode === WORK_LIST_MODES.WATERFALL && stopLoad && !isLoading && worksLoadState === 'success' && works.length" class="q-mt-lg q-mb-xl text-h6 text-bold text-center">{{ $t('works.noMoreWorks') }}</div>
 
         <template v-slot:loading>
           <div class="row justify-center q-my-md">
@@ -209,6 +219,8 @@ export default {
       detailMode: true,
       stopLoad: false,
       isLoading: false,
+      worksLoadState: 'idle',
+      resettingSearchControls: false,
       worksRequestId: 0,
       titleRequestId: 0,
       activeWorkListMode: null,
@@ -295,6 +307,17 @@ export default {
   },
 
   computed: {
+    hasSearch () {
+      return Boolean(this.$route.query.keyword || (this.isAdvanceSearch && this.advanceSearchKeywords.length))
+    },
+
+    hasFilters () {
+      const query = this.$route.query
+      return Boolean(query.circleId || query.tagId || query.vaId || this.collectionId
+        || this.lyricOption?.length
+        || (!this.$store.getters['AudioPlayer/sfwOnly'] && this.nsfwOption !== 'nsfw_0'))
+    },
+
     collectionId () {
       const id = this.$route.query.collectionId
       return typeof id === 'string' && /^[1-9]\d*$/.test(id) ? id : null
@@ -479,6 +502,7 @@ export default {
       if (this.isLoading && pageOverride === undefined) return Promise.resolve(false)
       const requestId = ++this.worksRequestId
       this.isLoading = true
+      this.worksLoadState = 'loading'
       const params = {
         page: pageOverride || this.pagination.currentPage + 1 || 1,
         sort: this.sortInDesc ? "desc" : "asc",
@@ -504,12 +528,14 @@ export default {
             ? works.concat()
             : this.works.concat(works)
           this.pagination = response.data.pagination
+          this.worksLoadState = 'success'
 
           this.stopLoad = this.works.length >= this.pagination.totalCount
           return true
         })
         .catch((error) => {
           if (requestId !== this.worksRequestId) return false
+          this.worksLoadState = 'error'
           if (error.response) {
             // 请求已发出，但服务器响应的状态码不在 2xx 范围内
             if (error.response.status !== 401) {
@@ -587,6 +613,8 @@ export default {
 
     async reset (page = 1) {
       const requestId = ++this.worksRequestId
+      this.worksLoadState = 'idle'
+      if (this.resettingSearchControls) return
       // Coalesce filter watchers and invalidate responses before the next request.
       await this.$nextTick()
       if (requestId !== this.worksRequestId) return
@@ -595,6 +623,30 @@ export default {
       this.pagination = { currentPage: page - 1, pageSize: this.pagination.pageSize || 12, totalCount: this.pagination.totalCount || 0 }
       this.works = []
       this.requestWorksQueue(this.workListMode === WORK_LIST_MODES.PAGINATION ? page : 1)
+    },
+
+    async recoverEmptyResults (action) {
+      this.resettingSearchControls = true
+      this.worksRequestId++
+      this.worksLoadState = 'idle'
+      const query = { ...this.$route.query }
+      delete query.page
+      if (this.workListMode === WORK_LIST_MODES.PAGINATION) query.page = '1'
+      if (action === 'search') {
+        delete query.keyword
+        if (this.isAdvanceSearch) this.advanceSearchKeywords = []
+      } else {
+        for (const key of ['circleId', 'tagId', 'vaId', 'collectionId']) delete query[key]
+        this.lyricOption = []
+        if (!this.$store.getters['AudioPlayer/sfwOnly']) this.nsfwOption = 'nsfw_0'
+      }
+      try {
+        await this.$router.push({ query })
+      } finally {
+        await this.$nextTick()
+        this.resettingSearchControls = false
+        this.reset()
+      }
     },
 
     gotoPage (page) {
@@ -687,6 +739,12 @@ export default {
 
 <style lang="scss" scoped>
 .works-results { margin: 0 16px; }
+.works-empty { padding: 40px 20px; margin: 8px 0 32px; text-align: center; background: var(--kikoeru-surface); border: 1px solid var(--kikoeru-border); border-radius: var(--kikoeru-radius-md); }
+.works-empty > .q-icon { color: var(--kikoeru-muted); }
+.works-empty h3 { margin: 14px 0 8px; font-size: 20px; line-height: 28px; font-weight: 500; }
+.works-empty p { margin: 0 auto; max-width: 480px; color: var(--kikoeru-muted); line-height: 1.6; }
+.works-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 20px; }
+.works-empty-actions .q-btn { min-height: 40px; }
 .works-toolbar {
   --toolbar-surface: var(--kikoeru-surface);
   --toolbar-border: var(--kikoeru-border);

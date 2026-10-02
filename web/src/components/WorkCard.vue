@@ -86,6 +86,8 @@
       </router-link>
     </div>
 
+    <WorkSearchMatch v-if="metadata.searchMatch" :match="metadata.searchMatch" class="q-mx-md q-mb-sm" />
+
     <div class="work-card-footer">
       <!-- 声优 -->
       <div
@@ -110,6 +112,7 @@
 <script>
 import CoverSFW from 'components/CoverSFW.vue'
 import LibraryActions from 'components/LibraryActions.vue'
+import WorkSearchMatch from 'components/WorkSearchMatch.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { idNumberToCode } from 'src/utils'
 
@@ -120,7 +123,8 @@ export default {
 
   components: {
     CoverSFW,
-    LibraryActions
+    LibraryActions,
+    WorkSearchMatch
   },
 
   props: {

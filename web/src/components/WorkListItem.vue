@@ -13,6 +13,8 @@
         </router-link>
       </q-item-label>
 
+      <WorkSearchMatch v-if="metadata.searchMatch" :match="metadata.searchMatch" class="q-mt-xs" />
+
       <q-item-label>
         <div class="row q-gutter-x-sm q-gutter-y-xs">
           <router-link :to="`/works?circleId=${metadata.circle.id}`" class="col-auto text-grey">
@@ -49,9 +51,11 @@
 </template>
 
 <script>
+import WorkSearchMatch from './WorkSearchMatch.vue'
 
 export default {
   name: 'WorkListItem',
+  components: { WorkSearchMatch },
 
   props: {
     metadata: {

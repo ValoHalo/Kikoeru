@@ -43,6 +43,7 @@ exports.collectionFilter = collectionFilter;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const config_1 = require("../config");
+const { localWorkIds, localSearchMatch } = require('./localWorkSearch');
 const idConverter_1 = require("../filesystem/idConverter");
 const dlsite_tag_uncensored_lut_1 = require("../scraper/dlsite_tag_uncensored_lut");
 const knexfile_1 = require("./knexfile");
@@ -504,6 +505,7 @@ function advanceSearch(conditions, username, idsOnly = false) {
             const workIdQuery = knex('t_work').select('id as work_id')
                 .where('title', 'like', `%${data}%`)
                 .orWhere('circle_id', 'in', circleIdQuery)
+                .orWhere('id', 'in', localWorkIds(knex, data))
                 .union([
                 knex('r_tag_work').select('work_id').where('tag_id', 'in', tagIdQuery),
                 knex('r_va_work').select('work_id').where('va_id', 'in', vaIdQuery),
@@ -581,12 +583,13 @@ const getWorksByKeyWord = (username = 'admin', keyword, idsOnly = false) => {
         .where((builder) => builder
         .where('title', 'like', `%${keyword}%`)
         .orWhere('circle_id', 'in', circleIdQuery)
-        .orWhere('id', 'in', workIdQuery));
+        .orWhere('id', 'in', workIdQuery)
+        .orWhere('id', 'in', localWorkIds(knex, keyword)));
     return archiveFilter(query, username);
 };
 exports.getWorksByKeyWord = getWorksByKeyWord;
 
-async function getWorksPage(query, { order, sort, seed, offset, limit }) {
+async function getWorksPage(query, { order, sort, seed, offset, limit, searchKeywords = [] }) {
     const [{ count }] = await query.clone().clearSelect().clearOrder().count('staticMetadata.id as count');
     const pageQuery = query.clone();
     if (order === 'betterRandom') {
@@ -607,11 +610,18 @@ async function getWorksPage(query, { order, sort, seed, offset, limit }) {
     const columns = ['id', 'created_at', 'updated_at', 'title', 'circle_id', 'nsfw', 'release',
         'dl_count', 'price', 'review_count', 'rate_count', 'rate_average_2dp', 'rate_count_detail',
         'rank', 'lyric_status', 'original_work_id', 'memo'];
+    if (searchKeywords.length) columns.push('dir');
     const works = await knex('t_work').whereIn('t_work.id', ids)
         .leftJoin('t_circle', 't_circle.id', 't_work.circle_id')
         .select(columns.map(column => `t_work.${column}`))
         .select('t_circle.name')
         .select(knex.raw("json_object('id', t_work.circle_id, 'name', t_circle.name) AS circleObj"));
+    if (searchKeywords.length) {
+        for (const work of works) {
+            work.searchMatch = localSearchMatch(work, searchKeywords);
+            delete work.dir;
+        }
+    }
     const byId = new Map(works.map(work => [String(work.id), work]));
     for (const [field, table, key] of [['va', 'r_va_work', 'va_id'], ['tag', 'r_tag_work', 'tag_id']]) {
         const rows = await knex(table).whereIn(`${table}.work_id`, ids)

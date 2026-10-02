@@ -45,6 +45,18 @@ test.before(async () => {
         { user_name: "listener", work_id: 100001, rating: 4 },
     ]);
     await db.archiveWork("admin", 100003);
+    await db.knex('t_work').where('id', 100001).update({ dir: '中文目录\\RJ100001' });
+    for (const [id, memo] of [
+        [100002, { mtime: { 'mp3\\右侧掏耳.mp3': 123 }, duration: { 'wav\\右侧掏耳.wav': 12 } }],
+        [100003, { mtime: { '归档掏耳.mp3': 123 } }],
+        [100004, { duration: { 'MP3/左侧掏耳.mp3': 12, '100%_! 特典.mp3': 10 } }],
+        [100005, { mtime: { '时长未知/掏耳.mp3': 123 }, duration: {} }],
+        [100006, { duration: { '100XYZ 特典.mp3': 10 }, note: '不要匹配这段掏耳说明' }],
+    ]) {
+        await db.knex('t_work').where('id', id).update({ memo: JSON.stringify(memo) });
+    }
+    await db.knex('t_work_collection').insert({ id: 1, user_name: 'admin', name: 'Selected' });
+    await db.knex('t_work_collection_item').insert({ collection_id: 1, work_id: 100004, position: 0 });
 });
 
 test.after(async () => {
@@ -102,6 +114,72 @@ test("random single-work selection keeps count and returns complete metadata", a
     assert.equal(result.works.length, 1);
     const expected = await db.getWorksBy("admin").where("id", result.works[0].id);
     assert.deepEqual(normalize(result.works), normalize(expected));
+});
+
+test('local directory and track search handles cached paths, legacy memos and literal punctuation', async () => {
+    for (const [keyword, expected] of [
+        ['中文目录', [100001]],
+        ['掏耳', [100002, 100004, 100005]],
+        ['MP3/右侧', [100002]],
+        ['mp3\\左侧', [100004]],
+        ['时长未知', [100005]],
+        ['100%_!', [100004]],
+        ['不要匹配这段', []],
+        ["' OR 1=1 --", []],
+    ]) {
+        for (const idsOnly of [false, true]) {
+            const rows = await db.getWorksByKeyWord('admin', keyword, idsOnly).orderBy('id');
+            assert.deepEqual(rows.map(work => work.id), expected, keyword);
+        }
+        await comparePage(idsOnly => db.getWorksByKeyWord('admin', keyword, idsOnly), { limit: 1, offset: 1 });
+    }
+    const result = await db.getWorksPage(db.getWorksByKeyWord('admin', '掏耳', true), {
+        order: 'id', sort: 'asc', offset: 0, limit: 2, searchKeywords: ['掏耳'],
+    });
+    assert.equal(result.totalCount, 3, 'multiple matching audio formats must not duplicate a work');
+    const works = normalize(result.works);
+    assert.deepEqual(works.map(work => work.searchMatch), [
+        { type: 'track', name: 'mp3/右侧掏耳.mp3' },
+        { type: 'track', name: 'MP3/左侧掏耳.mp3' },
+    ]);
+    assert.ok(works.every(work => !('dir' in work) && !('root_folder' in work)));
+    const directory = await db.getWorksPage(db.getWorksByKeyWord('admin', '中文目录', true), {
+        order: 'id', sort: 'asc', offset: 0, limit: 2, searchKeywords: ['中文目录'],
+    });
+    assert.deepEqual(directory.works[0].searchMatch, { type: 'directory', name: '中文目录/RJ100001' });
+});
+
+test('local search keeps archive, missing-file, collection and content filters', async () => {
+    const query = () => db.getWorksByKeyWord('admin', '掏耳', true);
+    const ids = async query => (await query.orderBy('id')).map(work => work.id);
+    assert.deepEqual(await ids(db.getWorksByKeyWord('listener', '掏耳', true)), [100002, 100003, 100004, 100005]);
+    assert.deepEqual(await ids(db.nsfwFilter(1, query())), [100005]);
+    assert.deepEqual(await ids(db.lyricFilter('local', query())), [100002, 100004]);
+    assert.deepEqual(await ids(db.collectionFilter(1, 'admin', query())), [100004]);
+    assert.deepEqual(await ids(db.collectionFilter(1, 'listener', query())), []);
+    await db.knex('t_work_availability').insert({ work_id: 100005 });
+    try {
+        assert.deepEqual(await ids(query()), [100002, 100004]);
+        await comparePage(idsOnly => db.getWorksByKeyWord('admin', '掏耳', idsOnly));
+    } finally {
+        await db.knex('t_work_availability').where('work_id', 100005).del();
+    }
+});
+
+test('advanced fuzzy search includes local names and retains related-work intersection semantics', async () => {
+    const conditions = [{ t: 1, d: '掏耳' }, { t: 4, d: 2 }];
+    const rows = await db.advanceSearch(conditions, 'admin', true).orderBy('id');
+    assert.deepEqual(rows.map(work => work.id), [100001, 100002, 100004]);
+    await comparePage(idsOnly => db.advanceSearch(conditions, 'admin', idsOnly), { offset: 1, limit: 1 });
+});
+
+test('unrelated missing or malformed memo data does not break local search', async () => {
+    for (const memo of [null, '{invalid', 'null', JSON.stringify({ mtime: ['掏耳'], duration: '掏耳' })]) {
+        await db.knex('t_work').where('id', 100008).update({ memo });
+        const rows = await db.getWorksByKeyWord('admin', '掏耳', true).orderBy('id');
+        assert.deepEqual(rows.map(work => work.id), [100002, 100004, 100005]);
+    }
+    await db.knex('t_work').where('id', 100008).update({ memo: JSON.stringify({ duration: { 'track.mp3': 123 } }) });
 });
 
 test("upgraded indexes match a fresh database and retain query results", async () => {

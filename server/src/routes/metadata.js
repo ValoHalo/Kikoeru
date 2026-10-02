@@ -223,14 +223,17 @@ router.get('/search', async (req, res) => {
     const shuffleSeed = req.query.seed ? req.query.seed : 7;
     try {
         let query = null;
+        let searchKeywords = [];
         if (isAdvance) {
             const conditions = JSON.parse(keyword);
+            searchKeywords = conditions.filter(condition => condition.t === 1).map(condition => condition.d);
             query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.advanceSearch(conditions, username, true)));
         }
         else {
+            if (keyword && !/(RJ|BJ|VJ)?(\d{6,8})/i.test(keyword)) searchKeywords = [keyword];
             query = db.lyricFilter(lyric, db.nsfwFilter(nsfw, db.getWorksByKeyWord(username, keyword, true)));
         }
-        const result = await db.getWorksPage(db.collectionFilter(req.query.collectionId, username, query), { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE });
+        const result = await db.getWorksPage(db.collectionFilter(req.query.collectionId, username, query), { order, sort, seed: shuffleSeed, offset, limit: PAGE_SIZE, searchKeywords });
         const works = (0, normalize_1.default)(result.works);
         await prepareWorks(works, nsfw === 1);
         const totalCount = result.totalCount;
