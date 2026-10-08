@@ -34,7 +34,7 @@
         @waiting="onWaiting"
         @pause="onPause"
       >
-        <source v-if="source" :src="source" />
+        <source v-if="source" :src="source" @error="onMediaError" />
       </video>
       <audio
         v-else
@@ -48,7 +48,7 @@
         @waiting="onWaiting"
         @pause="onPause"
       >
-        <source v-if="source" :src="source" />
+        <source v-if="source" :src="source" @error="onMediaError" />
       </audio>
     </div>
   </div>
@@ -202,6 +202,7 @@ export default {
       'forwardSeekMode',
       'enableVisualizer',
       'resumeHistroySeconds',
+      'notifyHistoryRestore',
       'playWorkId',
       'visualPlayerCoverUrl',
       'duration',
@@ -319,6 +320,13 @@ export default {
   methods: {
     formatSeconds,
 
+    onMediaError () {
+      this.PAUSE()
+      this.RESUME_HISTROY_SECONDS_DONE()
+      this.clearPreTranscodeTimer()
+      this.showErrNotif(t('audioElement.loadFailed'))
+    },
+
     initializePlayer () {
       if (this.playerInstance) this.playerInstance.destroy()
       this.playerInstance = new Plyr(this.$refs.media, {
@@ -424,6 +432,7 @@ export default {
     onCanplay () {
       // 缓冲至可播放状态时触发 (只有缓冲至可播放状态, 才能获取媒体文件的播放时长)
       this.SET_DURATION(this.player.duration)
+      this.player.media.playbackRate = this.playbackRate
 
       // 播放
       if (this.playing && this.player.currentTime !== this.player.duration) {
@@ -436,7 +445,7 @@ export default {
       if (!this.resumeHistroyDone) {
         this.player.currentTime = this.resumeHistroySeconds;
         this.RESUME_HISTROY_SECONDS_DONE()
-        this.$q.notify({message: t('audioElement.historyRestored'), timeout: 1000})
+        if (this.notifyHistoryRestore) this.$q.notify({message: t('audioElement.historyRestored'), timeout: 1000})
       }
     },
 

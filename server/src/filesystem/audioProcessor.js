@@ -12,6 +12,7 @@ exports.calculateLUFS = calculateLUFS;
 exports.calculateLUFSSplit = calculateLUFSSplit;
 exports.getAudioPeaks = getAudioPeaks;
 const path_1 = __importDefault(require("path"));
+const { createHash } = require('crypto');
 const fs_1 = __importDefault(require("fs"));
 const os_1 = __importDefault(require("os"));
 const child_process_1 = require("child_process");
@@ -119,11 +120,13 @@ function createProgressReader(duration, onProgress) {
         }
     };
 }
-function genTranscodeTaskIdentifier(workId, hashIndex, targetBitRate) {
-    return `${workId}_${hashIndex}_${targetBitRate}`;
+function genTranscodeTaskIdentifier(workId, trackReference, targetBitRate) {
+    // Hash only the path reference to keep cache file names within filesystem limits.
+    const pathKey = createHash('sha256').update(String(trackReference)).digest('hex');
+    return `${workId}_path_${pathKey}_${targetBitRate}`;
 }
-function genTranscodeOutputPath(workId, hashIndex, targetBitRate, transcodeOutputDirectory) {
-    const transcodeName = `${workId}_${hashIndex}_${targetBitRate}.m4a`;
+function genTranscodeOutputPath(workId, trackReference, targetBitRate, transcodeOutputDirectory) {
+    const transcodeName = `${genTranscodeTaskIdentifier(workId, trackReference, targetBitRate)}.m4a`;
     return path_1.default.join(transcodeOutputDirectory, transcodeName);
 }
 function genTranscodeTempOutputPath(transcodeTempOutputDirectory) {

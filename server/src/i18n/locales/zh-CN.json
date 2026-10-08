@@ -1,4 +1,9 @@
 {
+  "bookmark": {
+    "missing": "书签不存在",
+    "fileMissing": "文件不存在，已删除该书签",
+    "trackUnavailable": "无法读取书签对应的曲目"
+  },
   "validation": {
     "invalidValue": "字段 {field} 的值无效"
   },
@@ -62,6 +67,8 @@
     "orderSaved": "作品顺序已保存"
   },
   "media": {
+    "linkExpired": "文件链接已失效，请重新打开作品选择文件",
+    "fileMissing": "文件不存在",
     "unsupportedType": "不支持的媒体类型",
     "pretranscodeReady": "预转码已就绪",
     "pretranscodeStarted": "预转码已开始",

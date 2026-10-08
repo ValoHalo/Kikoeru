@@ -1,4 +1,9 @@
 {
+  "bookmark": {
+    "missing": "書籤不存在",
+    "fileMissing": "檔案不存在，已刪除該書籤",
+    "trackUnavailable": "無法讀取書籤對應的曲目"
+  },
   "validation": {
     "invalidValue": "欄位 {field} 的值無效"
   },
@@ -62,6 +67,8 @@
     "orderSaved": "作品順序已儲存"
   },
   "media": {
+    "linkExpired": "檔案連結已失效，請重新開啟作品選擇檔案",
+    "fileMissing": "檔案不存在",
     "unsupportedType": "不支援的媒體類型",
     "pretranscodeReady": "預轉碼已就緒",
     "pretranscodeStarted": "預轉碼已開始",

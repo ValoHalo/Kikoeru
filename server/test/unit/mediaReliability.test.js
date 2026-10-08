@@ -17,6 +17,8 @@ const { config } = require("../../src/config");
 const db = require("../../src/database/db");
 const filesystemUtils = require("../../src/filesystem/utils");
 const mediaTesting = require("../../src/routes/media").__testing;
+const { encodeTrackPath } = require("../../src/filesystem/trackReference");
+const trackReference = encodeTrackPath("track.wav");
 const { transcodeTaskQueue } = require("../../src/utils/TaskQueue");
 
 const originals = {
@@ -126,17 +128,17 @@ test("matching transcode requests share one promise and publish waiting, progres
     };
 
     const [first, second] = await Promise.all([
-        mediaTesting.startTranscodeTask(1001, 0, 128),
-        mediaTesting.startTranscodeTask(1001, 0, 128),
+        mediaTesting.startTranscodeTask(1001, trackReference, 128),
+        mediaTesting.startTranscodeTask(1001, trackReference, 128),
     ]);
     assert.equal([first, second].filter(task => task.started).length, 1);
     assert.strictEqual(first.promise, second.promise);
-    assert.equal((await mediaTesting.getTranscodeStatusResponse(1001, 0, 128)).status, "waiting");
+    assert.equal((await mediaTesting.getTranscodeStatusResponse(1001, trackReference, 128)).status, "waiting");
 
     await conversionStarted.promise;
     progressGate.resolve();
-    await waitFor(() => mediaTesting.transcodeTaskStatus.get("1001_0_128")?.state === "progress", "transcode progress was not published");
-    const progressStatus = await mediaTesting.getTranscodeStatusResponse(1001, 0, 128);
+    await waitFor(() => mediaTesting.transcodeTaskStatus.get(audioProcessor.genTranscodeTaskIdentifier(1001, trackReference, 128))?.state === "progress", "transcode progress was not published");
+    const progressStatus = await mediaTesting.getTranscodeStatusResponse(1001, trackReference, 128);
     assert.equal(progressStatus.status, "progress");
     assert.equal(progressStatus.progress.percent, 42);
     conversionGate.resolve();
@@ -148,12 +150,12 @@ test("matching transcode requests share one promise and publish waiting, progres
     assert.equal(fs.existsSync(tempOutputPath), false);
     assert.equal(fs.readdirSync(transcodeTempFolder).length, 0);
     assert.equal(mediaTesting.transcodeTasks.size, 0);
-    assert.equal((await mediaTesting.getTranscodeStatusResponse(1001, 0, 128)).status, "ready");
+    assert.equal((await mediaTesting.getTranscodeStatusResponse(1001, trackReference, 128)).status, "ready");
 });
 
 test("cached transcodes bypass a full queue", async () => {
     const { sourcePath, transcodeFolder } = configureSyntheticWork("cached-while-full");
-    const cachedPath = audioProcessor.genTranscodeOutputPath(1004, 0, 128, transcodeFolder);
+    const cachedPath = audioProcessor.genTranscodeOutputPath(1004, trackReference, 128, transcodeFolder);
     fs.mkdirSync(path.dirname(cachedPath), { recursive: true });
     fs.writeFileSync(cachedPath, "cached transcoded output");
     mediaTesting.writeTranscodeCacheMetadata(cachedPath, await mediaTesting.getSourceFingerprint(sourcePath));
@@ -165,7 +167,7 @@ test("cached transcodes bypass a full queue", async () => {
     }
     try {
         assert.equal(transcodeTaskQueue.isFull(), true);
-        const task = await mediaTesting.startTranscodeTask(1004, 0, 128);
+        const task = await mediaTesting.startTranscodeTask(1004, trackReference, 128);
         assert.equal(task.accepted, true);
         assert.equal(task.cached, true);
         assert.equal(await task.promise, cachedPath);
@@ -184,19 +186,19 @@ test("replacing a source file at the same path invalidates and rebuilds its tran
         fs.writeFileSync(output, `converted:${fs.readFileSync(input, "utf8")}`);
     };
 
-    const firstTask = await mediaTesting.startTranscodeTask(1005, 0, 128);
+    const firstTask = await mediaTesting.startTranscodeTask(1005, trackReference, 128);
     const outputPath = await firstTask.promise;
     const metadataPath = mediaTesting.getTranscodeCacheMetadataPath(outputPath);
     assert.equal(fs.existsSync(metadataPath), true);
     assert.match(fs.readFileSync(outputPath, "utf8"), /synthetic audio input/);
-    assert.equal((await mediaTesting.getTranscodeStatusResponse(1005, 0, 128)).status, "ready");
+    assert.equal((await mediaTesting.getTranscodeStatusResponse(1005, trackReference, 128)).status, "ready");
 
     fs.writeFileSync(sourcePath, "replacement audio input with a different size");
-    assert.equal((await mediaTesting.getTranscodeStatusResponse(1005, 0, 128)).status, "waiting");
+    assert.equal((await mediaTesting.getTranscodeStatusResponse(1005, trackReference, 128)).status, "waiting");
     assert.equal(fs.existsSync(outputPath), false);
     assert.equal(fs.existsSync(metadataPath), false);
 
-    const replacementTask = await mediaTesting.startTranscodeTask(1005, 0, 128);
+    const replacementTask = await mediaTesting.startTranscodeTask(1005, trackReference, 128);
     assert.equal(replacementTask.cached, undefined);
     assert.equal(await replacementTask.promise, outputPath);
     assert.match(fs.readFileSync(outputPath, "utf8"), /replacement audio input/);
@@ -205,19 +207,19 @@ test("replacing a source file at the same path invalidates and rebuilds its tran
 
 test("a missing source removes its previous transcode instead of reporting ready", async () => {
     const { sourcePath, transcodeFolder } = configureSyntheticWork("source-missing");
-    const outputPath = audioProcessor.genTranscodeOutputPath(1006, 0, 128, transcodeFolder);
+    const outputPath = audioProcessor.genTranscodeOutputPath(1006, trackReference, 128, transcodeFolder);
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, "cached transcoded output");
     mediaTesting.writeTranscodeCacheMetadata(outputPath, await mediaTesting.getSourceFingerprint(sourcePath));
     const metadataPath = mediaTesting.getTranscodeCacheMetadataPath(outputPath);
     fs.unlinkSync(sourcePath);
 
-    const status = await mediaTesting.getTranscodeStatusResponse(1006, 0, 128);
+    const status = await mediaTesting.getTranscodeStatusResponse(1006, trackReference, 128);
     assert.equal(status.status, "failed");
     assert.match(status.error, /\u6e90\u97f3\u9891\u6587\u4ef6\u4e0d\u5b58\u5728/);
     assert.equal(fs.existsSync(outputPath), false);
     assert.equal(fs.existsSync(metadataPath), false);
-    await assert.rejects(mediaTesting.startTranscodeTask(1006, 0, 128), /\u6e90\u97f3\u9891\u6587\u4ef6\u4e0d\u5b58\u5728/);
+    await assert.rejects(mediaTesting.startTranscodeTask(1006, trackReference, 128), /\u6e90\u97f3\u9891\u6587\u4ef6\u4e0d\u5b58\u5728/);
 });
 
 test("failed transcodes release in-flight state, remove partial files, and can be retried", async () => {
@@ -230,28 +232,28 @@ test("failed transcodes release in-flight state, remove partial files, and can b
         throw new Error("synthetic conversion failure");
     };
 
-    const failedTask = await mediaTesting.startTranscodeTask(1002, 0, 320);
+    const failedTask = await mediaTesting.startTranscodeTask(1002, trackReference, 320);
     await assert.rejects(failedTask.promise, /synthetic conversion failure/);
     assert.equal(mediaTesting.transcodeTasks.size, 0);
     assert.equal(fs.existsSync(tempOutputPath), false);
-    const failedStatus = await mediaTesting.getTranscodeStatusResponse(1002, 0, 320);
+    const failedStatus = await mediaTesting.getTranscodeStatusResponse(1002, trackReference, 320);
     assert.equal(failedStatus.status, "failed");
     assert.match(failedStatus.error, /synthetic conversion failure/);
 
     audioProcessor.convertAudioToM4a = async (_input, output) => {
         fs.writeFileSync(output, "retry completed");
     };
-    const retryTask = await mediaTesting.startTranscodeTask(1002, 0, 320);
+    const retryTask = await mediaTesting.startTranscodeTask(1002, trackReference, 320);
     assert.equal(retryTask.started, true);
     const outputPath = await retryTask.promise;
     assert.equal(fs.readFileSync(outputPath, "utf8"), "retry completed");
     assert.equal(mediaTesting.transcodeTasks.size, 0);
-    assert.equal((await mediaTesting.getTranscodeStatusResponse(1002, 0, 320)).status, "ready");
+    assert.equal((await mediaTesting.getTranscodeStatusResponse(1002, trackReference, 320)).status, "ready");
 });
 
 test("expired failed status returns to waiting instead of remaining stuck", async () => {
     const { sourcePath } = configureSyntheticWork("failed-status-expiry");
-    const identifier = audioProcessor.genTranscodeTaskIdentifier(1003, 0, 128);
+    const identifier = audioProcessor.genTranscodeTaskIdentifier(1003, trackReference, 128);
     mediaTesting.transcodeTaskStatus.set(identifier, {
         state: "failed",
         progress: null,
@@ -260,8 +262,8 @@ test("expired failed status returns to waiting instead of remaining stuck", asyn
         sourceFingerprint: await mediaTesting.getSourceFingerprint(sourcePath),
     });
 
-    assert.equal((await mediaTesting.getTranscodeStatusResponse(1003, 0, 128, 60_999)).status, "failed");
-    assert.equal((await mediaTesting.getTranscodeStatusResponse(1003, 0, 128, 61_000)).status, "waiting");
+    assert.equal((await mediaTesting.getTranscodeStatusResponse(1003, trackReference, 128, 60_999)).status, "failed");
+    assert.equal((await mediaTesting.getTranscodeStatusResponse(1003, trackReference, 128, 61_000)).status, "waiting");
     assert.equal(mediaTesting.transcodeTaskStatus.has(identifier), false);
 });
 

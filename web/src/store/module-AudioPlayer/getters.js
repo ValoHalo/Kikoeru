@@ -5,10 +5,11 @@ const getters = {
   coverUrl: (state, getters) => (workId, type = 'main', customUrl = '') => {
     if (!workId) return ''
     const coverPath = `/api/cover/${workId}?${new URLSearchParams({ type })}`
+    if (customUrl && /\/api\/media\/(?:download|stream)\/\d+\/\d+(?:\?|$)/.test(customUrl)) customUrl = ''
     if (!getters.shouldBlurCover(workId)) return customUrl || coverPath
     const url = new URL(customUrl || coverPath, window.location.origin)
     const localCover = url.pathname === `/api/cover/${workId}`
-      || new RegExp(`^/api/media/(download|stream)/${Number(workId)}/[0-9]+$`).test(url.pathname)
+      || new RegExp(`^/api/media/(download|stream)/${Number(workId)}/(?:[0-9]+|p_[A-Za-z0-9_-]+)$`).test(url.pathname)
     if (url.origin !== window.location.origin || !localCover) {
       return `${coverPath}&blurNsfw=1`
     }

@@ -33,6 +33,10 @@
           </template>
         </WorkDetails>
         <RelatedWorks :metadata="metadata" />
+        <div class="q-px-md q-pt-sm">
+          <q-btn flat no-caps icon="bookmarks" :label="$t('bookmark.currentWork')" @click="showBookmarks = true" />
+        </div>
+        <BookmarksDialog v-if="showBookmarks" :work-id="Number(workid)" @close="showBookmarks = false" />
         <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
         <WorkTree
           v-if="!metadata.files_missing"
@@ -55,6 +59,7 @@ import WorkDetails from 'components/WorkDetails.vue'
 import WorkTree from 'components/WorkTree.vue'
 import SubtitleReader from 'components/SubtitleReader.vue'
 import RelatedWorks from 'components/RelatedWorks.vue'
+import BookmarksDialog from 'components/BookmarksDialog.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { mapState } from 'vuex'
 import { getImportantTreePath } from 'src/utils'
@@ -70,12 +75,14 @@ export default {
     WorkDetails,
     // WorkQueue,
     WorkTree,
-    RelatedWorks
+    RelatedWorks,
+    BookmarksDialog
   },
 
   data () {
     return {
       workid: this.$route.params.id,
+      showBookmarks: false,
       metadata: {
         id: parseInt(this.$route.params.id),
         circle: {}

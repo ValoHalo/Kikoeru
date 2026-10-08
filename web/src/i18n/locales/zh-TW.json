@@ -1,4 +1,33 @@
 {
+  "bookmark": {
+    "add": "新增書籤",
+    "addForTrack": "為 {title} 新增書籤",
+    "edit": "編輯書籤",
+    "name": "名稱",
+    "seconds": "播放位置（秒）",
+    "position": "播放位置：{time}",
+    "invalidSeconds": "請輸入非負整數秒數",
+    "title": "書籤",
+    "currentTrack": "本曲書籤",
+    "currentWork": "本作書籤",
+    "refresh": "重新整理書籤",
+    "close": "關閉",
+    "record": "記錄目前位置",
+    "loading": "正在讀取書籤",
+    "loadFailed": "書籤讀取失敗",
+    "empty": "尚無書籤",
+    "root": "根目錄",
+    "actions": "書籤操作",
+    "editNote": "編輯備註",
+    "delete": "刪除",
+    "note": "備註（選填）",
+    "cancel": "取消",
+    "save": "儲存",
+    "saved": "書籤已儲存",
+    "noteSaved": "備註已儲存",
+    "deleted": "書籤已刪除",
+    "fileMissing": "檔案不存在，已刪除該書籤"
+  },
   "appHeader": {
     "menu": "選單",
     "navigation": "導航選單",
@@ -54,6 +83,7 @@
     "back": "返回"
   },
   "audioElement": {
+    "loadFailed": "無法載入音訊，請重新開啟作品選擇曲目",
     "historyRestored": "已恢復播放歷史",
     "safariVisualizerWarning": "監測到safari平臺上開啟了音訊視覺化功能，注意移動端safari有bug，如果沒有聲音的話，請關閉音訊視覺化功能"
   },
@@ -339,6 +369,7 @@
     "deleteHistoryFailed": "刪除歷史失敗："
   },
   "workTree": {
+    "backToTop": "回到頂端",
     "setDefaultFolder": "設為預設資料夾",
     "clearDefaultFolder": "取消預設資料夾",
     "defaultFolderSaved": "已設為預設資料夾",

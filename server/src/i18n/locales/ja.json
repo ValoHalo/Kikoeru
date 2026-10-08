@@ -1,4 +1,9 @@
 {
+  "bookmark": {
+    "missing": "ブックマークが見つかりません",
+    "fileMissing": "ファイルが見つからないため、ブックマークを削除しました",
+    "trackUnavailable": "ブックマークの曲を読み込めません"
+  },
   "validation": {
     "invalidValue": "フィールド {field} の値が無効です"
   },
@@ -62,6 +67,8 @@
     "orderSaved": "作品の順序を保存しました"
   },
   "media": {
+    "linkExpired": "このファイルリンクは無効です。作品を開き直してファイルを選択してください。",
+    "fileMissing": "ファイルが見つかりません",
     "unsupportedType": "未対応のメディア形式です",
     "pretranscodeReady": "事前変換が完了しています",
     "pretranscodeStarted": "事前変換を開始しました",

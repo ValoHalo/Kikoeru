@@ -1,6 +1,7 @@
 "use strict";
 
 const db = require('../../database/db');
+const { restoreTrackReference } = require('../../filesystem/trackReference');
 
 function trackWorkId(track, fallback) {
     return Number(track.workId) || Number(String(track.hash || '').split('/')[0]) || Number(fallback);
@@ -32,6 +33,7 @@ async function prepareWorks(works, sfwOnly = false) {
         const current = state.queue[originalIndex];
         for (const track of state.queue) {
             track.workId = trackWorkId(track, work.id);
+            restoreTrackReference(track, track.workId);
             const nsfw = ratings.get(track.workId);
             track.nsfw = nsfw == null ? null : Boolean(nsfw);
         }

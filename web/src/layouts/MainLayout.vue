@@ -101,7 +101,7 @@
           <component :is="Component" />
         </keep-alive>
       </router-view>
-      <q-page-scroller v-if="!isFullScreenPage" position="bottom-right" :scroll-offset="150" :offset="[18, 90]" class="scroller" :class="{'scroller-hide': !showScroller, 'scroller-show': showScroller}"><q-btn dense fab icon="keyboard_arrow_up" color="primary" padding="sm" /></q-page-scroller>
+      <q-page-scroller v-if="!isFullScreenPage && (!isWorkPage || $route.name === 'lyrics')" position="bottom-right" :scroll-offset="150" :offset="[18, 90]" class="scroller" :class="{'scroller-hide': !showScroller, 'scroller-show': showScroller}"><q-btn dense fab icon="keyboard_arrow_up" color="primary" padding="sm" /></q-page-scroller>
     </q-page-container>
     <div style="position: fixed; bottom: 0; z-index: 3001;"><PlayerBar /><AudioPlayer v-if="preferencesLoaded" /><LyricsBar v-if="!enablePIPLyrics" /><PIPLyrics /></div>
     <q-footer class="q-pa-none" />

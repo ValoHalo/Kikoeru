@@ -56,7 +56,33 @@ const PersistentCache_1 = require("../utils/PersistentCache");
 const TaskQueue_1 = require("../utils/TaskQueue");
 const pathSafety_1 = require("../filesystem/pathSafety");
 const accessControl_1 = require("../auth/accessControl");
+const { decodeTrackPath } = require('../filesystem/trackReference');
+const minimatch = require('minimatch');
 const supportedLyricExtensions = [".lrc", ".srt", ".vtt"];
+function trackReferenceValidator(name) {
+    return (0, express_validator_1.param)(name, () => t('media.linkExpired')).custom(value => {
+        decodeTrackPath(value);
+        return true;
+    });
+}
+async function resolveMediaSource(workId, reference) {
+    const relativePath = decodeTrackPath(reference);
+    const work = await db.knex('t_work').select('root_folder', 'dir', 'memo', 'nsfw').where('id', workId).first();
+    if (!work) throw Object.assign(new Error(t('media.workMissing', { work_id: workId })), { status: 404 });
+    const rootFolder = config_1.config.rootFolders.find(folder => folder.name === work.root_folder);
+    if (!rootFolder) throw new Error(t('media.folderMissing', { root_folder: work.root_folder }));
+    const workDirectory = (0, pathSafety_1.resolvePathInside)(rootFolder.path, work.dir);
+    const fileName = (0, pathSafety_1.resolvePathInside)(workDirectory, relativePath);
+    const ext = path_1.default.extname(fileName).toLowerCase();
+    const supported = utils_1.supportedMediaExtList.includes(ext)
+        || ['.lrc', '.srt', '.ass', '.vtt', '.jpg', '.jpeg', '.png', '.webp', '.txt', '.pdf'].includes(ext);
+    if (!supported || (config_1.config.excludeFolderGlobs || []).some(rule => minimatch(fileName, rule))) {
+        throw Object.assign(new Error(t('media.fileMissing')), { status: 404 });
+    }
+    const directory = path_1.default.relative(workDirectory, path_1.default.dirname(fileName));
+    const track = { title: path_1.default.posix.basename(relativePath), subtitle: directory || null, relativePath, ext };
+    return { work, rootFolder, workDirectory, fileName, track };
+}
 async function addSubtitleLanguages(lyricTracks, rootFolder, workDir) {
     return Promise.all(lyricTracks.map(async (lyricTrack) => {
         const fileName = path_1.default.join(rootFolder.path, workDir, lyricTrack.subtitle || '', lyricTrack.title);
@@ -97,102 +123,46 @@ const lufsPersistentCache = new PersistentCache_1.PersistentCache(config_1.confi
         && Array.isArray(data.audioInfo.peakLevels);
 });
 const { sendHiddenCover } = require("./utils/coverVisibility");
-router.get('/stream/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (req, res, next) => {
+router.get('/stream/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
-    db.knex('t_work')
-        .select('root_folder', 'dir', 'memo', 'nsfw')
-        .where('id', '=', req.params.id)
-        .first()
-        .then((work) => {
+    try {
+        const { work, rootFolder, track, fileName } = await resolveMediaSource(req.params.id, req.params.reference);
         if (sendHiddenCover(req, res, next, work)) return;
-        const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
-        if (rootFolder) {
-            (0, utils_1.getTrackList)(req.params.id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo))
-                .then(async (tracks) => {
-                const track = tracks[req.params.index];
-                const fileName = path_1.default.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
-                const extName = path_1.default.extname(fileName).toLocaleLowerCase();
-                if (extName === '.txt' || extName === '.lrc') {
-                    const fileBuffer = await fs_1.default.promises.readFile(fileName);
-                    const charsetMatch = jschardet_1.default.detect(fileBuffer).encoding;
-                    if (charsetMatch) {
-                        res.setHeader('Content-Type', `text/plain; charset=${charsetMatch}`);
-                    }
-                }
-                if (extName === '.flac') {
-                    res.setHeader('Content-Type', `audio/flac`);
-                }
-                if (config_1.config.offloadMedia && extName !== '.txt' && extName !== '.lrc') {
-                    const baseUrl = config_1.config.offloadStreamPath;
-                    let offloadUrl = (0, url_1.joinFragments)(baseUrl, rootFolder.name, work.dir, track.subtitle || '', track.title);
-                    if (process.platform === 'win32') {
-                        offloadUrl = offloadUrl.replace(/\\/g, '/');
-                    }
-                    res.redirect(offloadUrl);
-                }
-                else {
-                    res.sendFile(fileName);
-                }
-            })
-                .catch(err => next(err));
+        if (track.ext === '.txt' || track.ext === '.lrc') {
+            const fileBuffer = await fs_1.default.promises.readFile(fileName);
+            const charsetMatch = jschardet_1.default.detect(fileBuffer).encoding;
+            if (charsetMatch) res.setHeader('Content-Type', `text/plain; charset=${charsetMatch}`);
         }
-        else {
-            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
+        if (track.ext === '.flac') res.setHeader('Content-Type', 'audio/flac');
+        if (config_1.config.offloadMedia && track.ext !== '.txt' && track.ext !== '.lrc') {
+            const offloadUrl = (0, url_1.joinFragments)(config_1.config.offloadStreamPath, rootFolder.name, work.dir, track.subtitle || '', track.title);
+            res.redirect(process.platform === 'win32' ? offloadUrl.replace(/\\/g, '/') : offloadUrl);
         }
-    })
-        .catch(err => next(err));
+        else res.sendFile(fileName, error => { if (error) next(error); });
+    }
+    catch (error) { next(error); }
 });
-router.get('/download/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (req, res, next) => {
-    if (!(0, validate_1.isValidRequest)(req, res))
-        return;
-    db.knex('t_work')
-        .select('root_folder', 'dir', 'memo', 'nsfw')
-        .where('id', '=', req.params.id)
-        .first()
-        .then((work) => {
+router.get('/download/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
+    if (!(0, validate_1.isValidRequest)(req, res)) return;
+    try {
+        const { work, rootFolder, track, fileName } = await resolveMediaSource(req.params.id, req.params.reference);
         if (sendHiddenCover(req, res, next, work)) return;
-        const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
-        if (rootFolder) {
-            (0, utils_1.getTrackList)(req.params.id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo))
-                .then((tracks) => {
-                const track = tracks[req.params.index];
-                if (config_1.config.offloadMedia) {
-                    const baseUrl = config_1.config.offloadDownloadPath;
-                    let offloadUrl = (0, url_1.joinFragments)(baseUrl, rootFolder.name, work.dir, track.subtitle || '', track.title);
-                    if (process.platform === 'win32') {
-                        offloadUrl = offloadUrl.replace(/\\/g, '/');
-                    }
-                    res.redirect(offloadUrl);
-                }
-                else {
-                    res.download(path_1.default.join(rootFolder.path, work.dir, track.subtitle || '', track.title));
-                }
-            })
-                .catch(err => next(err));
+        if (config_1.config.offloadMedia) {
+            const offloadUrl = (0, url_1.joinFragments)(config_1.config.offloadDownloadPath, rootFolder.name, work.dir, track.subtitle || '', track.title);
+            res.redirect(process.platform === 'win32' ? offloadUrl.replace(/\\/g, '/') : offloadUrl);
         }
-        else {
-            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
-        }
-    }).catch(err => next(err));
+        else res.download(fileName, error => { if (error) next(error); });
+    }
+    catch (error) { next(error); }
 });
-router.get('/query-lrc/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
+router.get('/query-lrc/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
-    const track_index = req.params.index;
     try {
-        const work = await db.knex('t_work')
-            .select('root_folder', 'dir', 'memo')
-            .where('id', '=', work_id)
-            .first();
-        const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
-        if (!rootFolder) {
-            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
-            return;
-        }
+        const { work, rootFolder, track } = await resolveMediaSource(work_id, req.params.reference);
         const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
-        const track = tracks[track_index];
         console.log("[find-lrc]", track.subtitle, track.title);
         const lyricTracks = tracks.filter((track) => {
             const ext = path_1.default.extname(track.title).toLowerCase();
@@ -232,24 +202,13 @@ router.get('/query-lrc/:id/:index', (0, express_validator_1.param)('id', (_value
         next(err);
     }
 });
-router.get('/fetch-lrc/:id/:hash', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('hash', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
+router.get('/fetch-lrc/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
-    const hash = req.params.hash;
+    const hash = req.params.reference;
     try {
-        const work = await db.knex('t_work')
-            .select('root_folder', 'dir', 'memo')
-            .where('id', '=', work_id)
-            .first();
-        const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
-        if (!rootFolder) {
-            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
-            return;
-        }
-        const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
-        const track = tracks[hash];
-        const fileName = path_1.default.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
+        const { track, fileName } = await resolveMediaSource(work_id, req.params.reference);
         const fileBuffer = await fs_1.default.promises.readFile(fileName);
         const charsetMatch = jschardet_1.default.detect(fileBuffer).encoding;
         const fileContent = iconv_lite_1.default.decode(fileBuffer, charsetMatch);
@@ -338,23 +297,13 @@ router.post('/save-lrc/:id', accessControl_1.requireAdministrator, (0, express_v
         next(e);
     }
 });
-router.get('/check-lrc/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
+router.get('/check-lrc/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
-    const track_index = req.params.index;
     try {
-        const work = await db.knex('t_work')
-            .select('root_folder', 'dir', 'memo')
-            .where('id', '=', work_id)
-            .first();
-        const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
-        if (!rootFolder) {
-            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
-            return;
-        }
+        const { work, rootFolder, track } = await resolveMediaSource(work_id, req.params.reference);
         const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
-        const track = tracks[track_index];
         console.log("[find-lrc]", track.subtitle, track.title);
         const lyricTracks = tracks.filter((track) => {
             const ext = path_1.default.extname(track.title).toLowerCase();
@@ -588,43 +537,21 @@ function scheduleTranscodeCacheCleanup() {
         timer.unref();
     }
 }
-function createUnavailableSourceError(message) {
-    const error = new Error(message);
-    error.code = 'SOURCE_MEDIA_UNAVAILABLE';
-    return error;
-}
-async function resolveTranscodeSource(workId, hashIndex) {
-    const work = await db.knex('t_work')
-        .select('root_folder', 'dir', 'memo')
-        .where('id', '=', workId)
-        .first();
-    if (!work) {
-        throw createUnavailableSourceError(t('media.missingWork', { workId: workId }));
-    }
-    const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
-    if (!rootFolder) {
-        throw createUnavailableSourceError(t('media.folderMissing', { root_folder: work.root_folder }));
-    }
-    const tracks = await (0, utils_1.getTrackList)(workId, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
-    const track = tracks[hashIndex];
-    if (!track) {
-        throw createUnavailableSourceError(t('media.missingTrack', { hashIndex: hashIndex }));
-    }
-    const fileFullPath = path_1.default.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
-    const extName = path_1.default.extname(fileFullPath).toLocaleLowerCase();
-    if (!utils_1.supportedMediaExtList.includes(extName)) {
+async function resolveTranscodeSource(workId, trackReference) {
+    const { fileName, track } = await resolveMediaSource(workId, trackReference);
+    if (!utils_1.supportedMediaExtList.includes(track.ext)) {
         throw new Error(t('media.unsupportedType'));
     }
     return {
-        fileFullPath,
-        sourceFingerprint: await getSourceFingerprint(fileFullPath),
+        fileFullPath: fileName,
+        sourceFingerprint: await getSourceFingerprint(fileName),
     };
 }
-async function doTranscodeOrReadFromCache(workId, hashIndex, targetBitRate, readOnly = false, onProgress = () => { }, preparedSource = null) {
-    const transcodePath = audioProcessor.genTranscodeOutputPath(workId, hashIndex, targetBitRate, config_1.config.transcodeFolderDir);
+async function doTranscodeOrReadFromCache(workId, trackReference, targetBitRate, readOnly = false, onProgress = () => { }, preparedSource = null) {
+    const transcodePath = audioProcessor.genTranscodeOutputPath(workId, trackReference, targetBitRate, config_1.config.transcodeFolderDir);
     let source;
     try {
-        source = preparedSource || await resolveTranscodeSource(workId, hashIndex);
+        source = preparedSource || await resolveTranscodeSource(workId, trackReference);
         await assertSourceFingerprintCurrent(source.fileFullPath, source.sourceFingerprint);
     }
     catch (error) {
@@ -668,12 +595,12 @@ async function doTranscodeOrReadFromCache(workId, hashIndex, targetBitRate, read
         removeFileIfExists(transcodeTempPath, '转码临时文件');
     }
 }
-async function startTranscodeTask(workId, hashIndex, targetBitRate) {
-    const transcodeTaskIdentifier = audioProcessor.genTranscodeTaskIdentifier(workId, hashIndex, targetBitRate);
-    const cachedTranscodePath = audioProcessor.genTranscodeOutputPath(workId, hashIndex, targetBitRate, config_1.config.transcodeFolderDir);
+async function startTranscodeTask(workId, trackReference, targetBitRate) {
+    const transcodeTaskIdentifier = audioProcessor.genTranscodeTaskIdentifier(workId, trackReference, targetBitRate);
+    const cachedTranscodePath = audioProcessor.genTranscodeOutputPath(workId, trackReference, targetBitRate, config_1.config.transcodeFolderDir);
     let source;
     try {
-        source = await resolveTranscodeSource(workId, hashIndex);
+        source = await resolveTranscodeSource(workId, trackReference);
     }
     catch (error) {
         invalidateTranscodeCache(cachedTranscodePath);
@@ -701,7 +628,7 @@ async function startTranscodeTask(workId, hashIndex, targetBitRate) {
             return { promise: existingTask, started: false, accepted: true };
         }
         const retryPromise = existingTask.catch(() => undefined).then(async () => {
-            const retryTask = await startTranscodeTask(workId, hashIndex, targetBitRate);
+            const retryTask = await startTranscodeTask(workId, trackReference, targetBitRate);
             return retryTask.promise;
         });
         return { promise: retryPromise, started: false, accepted: true };
@@ -726,7 +653,7 @@ async function startTranscodeTask(workId, hashIndex, targetBitRate) {
             sourceFingerprint: source.sourceFingerprint,
         });
         try {
-            const transcodePath = await TaskQueue_1.transcodeTaskQueue.add(() => doTranscodeOrReadFromCache(workId, hashIndex, targetBitRate, false, (progress) => {
+            const transcodePath = await TaskQueue_1.transcodeTaskQueue.add(() => doTranscodeOrReadFromCache(workId, trackReference, targetBitRate, false, (progress) => {
                 transcodeTaskStatus.set(transcodeTaskIdentifier, {
                     state: 'progress',
                     progress,
@@ -759,11 +686,11 @@ async function startTranscodeTask(workId, hashIndex, targetBitRate) {
     taskPromise.then(clearTask, clearTask);
     return { promise: taskPromise, started: true, accepted: true };
 }
-async function getTranscodeStatusResponse(workId, hashIndex, targetBitRate, now = Date.now()) {
-    const transcodePath = audioProcessor.genTranscodeOutputPath(workId, hashIndex, targetBitRate, config_1.config.transcodeFolderDir);
+async function getTranscodeStatusResponse(workId, trackReference, targetBitRate, now = Date.now()) {
+    const transcodePath = audioProcessor.genTranscodeOutputPath(workId, trackReference, targetBitRate, config_1.config.transcodeFolderDir);
     let source;
     try {
-        source = await resolveTranscodeSource(workId, hashIndex);
+        source = await resolveTranscodeSource(workId, trackReference);
     }
     catch (error) {
         invalidateTranscodeCache(transcodePath);
@@ -772,7 +699,7 @@ async function getTranscodeStatusResponse(workId, hashIndex, targetBitRate, now 
     if (readValidatedTranscodeCache(transcodePath, source.sourceFingerprint)) {
         return { status: 'ready', ready: true, progress: null, error: null };
     }
-    const transcodeTaskIdentifier = audioProcessor.genTranscodeTaskIdentifier(workId, hashIndex, targetBitRate);
+    const transcodeTaskIdentifier = audioProcessor.genTranscodeTaskIdentifier(workId, trackReference, targetBitRate);
     let taskStatus = transcodeTaskStatus.get(transcodeTaskIdentifier);
     if (taskStatus && (!taskStatus.sourceFingerprint || !sourceFingerprintsEqual(taskStatus.sourceFingerprint, source.sourceFingerprint))) {
         transcodeTaskStatus.delete(transcodeTaskIdentifier);
@@ -812,16 +739,16 @@ function sendTaskQueueFull(res, error) {
     });
     return true;
 }
-router.get('/transcode/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
+router.get('/transcode/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const workId = parseInt(req.params.id);
-    const hashIndex = parseInt(req.params.index);
+    const trackReference = req.params.reference;
     const targetBitRate = readTranscodeBitRate(req, res);
     if (targetBitRate === null)
         return;
     try {
-        const { promise } = await startTranscodeTask(workId, hashIndex, targetBitRate);
+        const { promise } = await startTranscodeTask(workId, trackReference, targetBitRate);
         const transcodePath = await promise;
         res.sendFile(transcodePath);
     }
@@ -831,26 +758,26 @@ router.get('/transcode/:id/:index', (0, express_validator_1.param)('id', (_value
         next(err);
     }
 });
-router.get('/pre-transcode/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res) => {
+router.get('/pre-transcode/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const workId = parseInt(req.params.id);
-    const hashIndex = parseInt(req.params.index);
+    const trackReference = req.params.reference;
     const targetBitRate = readTranscodeBitRate(req, res);
     if (targetBitRate === null)
         return;
-    res.send(await getTranscodeStatusResponse(workId, hashIndex, targetBitRate));
+    res.send(await getTranscodeStatusResponse(workId, trackReference, targetBitRate));
 });
-router.post('/pre-transcode/:id/:index', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('index', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
+router.post('/pre-transcode/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const workId = parseInt(req.params.id);
-    const hashIndex = parseInt(req.params.index);
+    const trackReference = req.params.reference;
     const targetBitRate = readTranscodeBitRate(req, res);
     if (targetBitRate === null)
         return;
     try {
-        const currentStatus = await getTranscodeStatusResponse(workId, hashIndex, targetBitRate);
+        const currentStatus = await getTranscodeStatusResponse(workId, trackReference, targetBitRate);
         if (currentStatus.ready) {
             res.send(Object.assign({
                 message: t('media.pretranscodeReady'),
@@ -858,7 +785,7 @@ router.post('/pre-transcode/:id/:index', (0, express_validator_1.param)('id', (_
             }, currentStatus));
             return;
         }
-        const task = await startTranscodeTask(workId, hashIndex, targetBitRate);
+        const task = await startTranscodeTask(workId, trackReference, targetBitRate);
         if (!task.accepted) {
             void task.promise.catch(() => { });
             sendTaskQueueFull(res, task.error);
@@ -867,7 +794,7 @@ router.post('/pre-transcode/:id/:index', (0, express_validator_1.param)('id', (_
         res.send(Object.assign({
             message: task.started ? t('media.pretranscodeStarted') : t('media.pretranscodeRunning'),
             alreadyTranscoding: !task.started,
-        }, await getTranscodeStatusResponse(workId, hashIndex, targetBitRate)));
+        }, await getTranscodeStatusResponse(workId, trackReference, targetBitRate)));
         void task.promise.catch((error) => {
             console.error('pre-transcode failed: ', error);
         });
@@ -948,25 +875,12 @@ async function getOrCalculateAudioInfo(fileName) {
     }));
     return loudnormTask.promise;
 }
-router.get('/calculate/loudnorm/:id/:hash', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), (0, express_validator_1.param)('hash', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), async (req, res, next) => {
+router.get('/calculate/loudnorm/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
-    const hash = req.params.hash;
     try {
-        const work = await db.knex('t_work')
-            .select('root_folder', 'dir', 'memo')
-            .where('id', '=', work_id)
-            .first();
-        const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
-        if (!rootFolder) {
-            res.status(500).send({ error: t('media.folderMissing', { root_folder: work.root_folder }) });
-            return;
-        }
-        let fileName = "";
-        const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
-        const track = tracks[hash];
-        fileName = path_1.default.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
+        const { fileName } = await resolveMediaSource(work_id, req.params.reference);
         const audioInfo = await getOrCalculateAudioInfo(fileName);
         res.send(audioInfo);
     }
@@ -975,6 +889,13 @@ router.get('/calculate/loudnorm/:id/:hash', (0, express_validator_1.param)('id',
             return;
         next(e);
     }
+});
+router.use((error, req, res, next) => {
+    if (!res.headersSent && (error.status === 404 || error.code === 'ENOENT' || error.code === 'ENOTDIR')) {
+        res.status(404).send({ error: t('media.fileMissing') });
+        return;
+    }
+    next(error);
 });
 exports.__testing = {
     doTranscodeOrReadFromCache,

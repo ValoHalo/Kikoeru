@@ -1,4 +1,33 @@
 {
+  "bookmark": {
+    "add": "ブックマークを追加",
+    "addForTrack": "{title} にブックマークを追加",
+    "edit": "ブックマークを編集",
+    "name": "名前",
+    "seconds": "再生位置（秒）",
+    "position": "再生位置：{time}",
+    "invalidSeconds": "0 以上の整数で秒数を入力してください",
+    "title": "ブックマーク",
+    "currentTrack": "この曲のブックマーク",
+    "currentWork": "この作品のブックマーク",
+    "refresh": "ブックマークを更新",
+    "close": "閉じる",
+    "record": "現在の位置を記録",
+    "loading": "ブックマークを読み込み中",
+    "loadFailed": "ブックマークを読み込めませんでした",
+    "empty": "ブックマークはありません",
+    "root": "ルートフォルダー",
+    "actions": "ブックマークの操作",
+    "editNote": "メモを編集",
+    "delete": "削除",
+    "note": "メモ（任意）",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "saved": "ブックマークを保存しました",
+    "noteSaved": "メモを保存しました",
+    "deleted": "ブックマークを削除しました",
+    "fileMissing": "ファイルが見つからないため、ブックマークを削除しました"
+  },
   "appHeader": {
     "menu": "メニュー",
     "navigation": "ナビゲーションメニュー",
@@ -54,6 +83,7 @@
     "back": "戻る"
   },
   "audioElement": {
+    "loadFailed": "音声を読み込めません。作品を開き直して曲を選択してください。",
     "historyRestored": "再生履歴を復元しました",
     "safariVisualizerWarning": "Safariで音声ビジュアライザーが有効になっています。モバイル版Safariには不具合があるため、音が出ない場合は音声ビジュアライザーを無効にしてください"
   },
@@ -339,6 +369,7 @@
     "deleteHistoryFailed": "再生履歴の削除に失敗しました："
   },
   "workTree": {
+    "backToTop": "ページの先頭へ",
     "setDefaultFolder": "デフォルトフォルダに設定",
     "clearDefaultFolder": "デフォルトフォルダを解除",
     "defaultFolderSaved": "デフォルトフォルダを保存しました",

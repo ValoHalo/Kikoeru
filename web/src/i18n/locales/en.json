@@ -1,4 +1,33 @@
 {
+  "bookmark": {
+    "add": "Add bookmark",
+    "addForTrack": "Add bookmark for {title}",
+    "edit": "Edit bookmark",
+    "name": "Name",
+    "seconds": "Position (seconds)",
+    "position": "Position: {time}",
+    "invalidSeconds": "Enter a non-negative whole number of seconds",
+    "title": "Bookmarks",
+    "currentTrack": "Track bookmarks",
+    "currentWork": "Work bookmarks",
+    "refresh": "Refresh bookmarks",
+    "close": "Close",
+    "record": "Bookmark this position",
+    "loading": "Loading bookmarks",
+    "loadFailed": "Failed to load bookmarks",
+    "empty": "No bookmarks",
+    "root": "Root folder",
+    "actions": "Bookmark actions",
+    "editNote": "Edit note",
+    "delete": "Delete",
+    "note": "Note (optional)",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saved": "Bookmark saved",
+    "noteSaved": "Note saved",
+    "deleted": "Bookmark deleted",
+    "fileMissing": "File not found. Bookmark deleted."
+  },
   "appHeader": {
     "menu": "Menu",
     "navigation": "Navigation menu",
@@ -54,6 +83,7 @@
     "back": "Back"
   },
   "audioElement": {
+    "loadFailed": "Unable to load audio. Reopen the work and select a track.",
     "historyRestored": "Playback progress restored",
     "safariVisualizerWarning": "Audio visualization is enabled in Safari. If playback is silent on mobile Safari, disable audio visualization."
   },
@@ -339,6 +369,7 @@
     "deleteHistoryFailed": "Failed to delete playback history: "
   },
   "workTree": {
+    "backToTop": "Back to top",
     "setDefaultFolder": "Set as default folder",
     "clearDefaultFolder": "Clear default folder",
     "defaultFolderSaved": "Default folder saved",

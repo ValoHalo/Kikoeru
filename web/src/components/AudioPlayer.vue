@@ -117,6 +117,10 @@
               <AppTooltip anchor="top middle" self="bottom middle">{{ playModeString }}</AppTooltip>
             </q-btn>
 
+            <q-btn flat dense size="md" padding="none sm" icon="bookmark_border" :aria-label="$t('bookmark.title')" @click="showBookmarks = true">
+              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('bookmark.title') }}</AppTooltip>
+            </q-btn>
+
             <q-btn
               v-if="hasLyric || enablePIPLyrics"
               :flat="!enablePIPLyrics"
@@ -339,6 +343,7 @@
     <q-dialog v-model="showLyricSelection">
       <LyricSelection />
     </q-dialog>
+    <BookmarksDialog v-if="showBookmarks && currentPlayingFile.hash" :work-id="Number(playWorkId)" :track="currentPlayingFile" @close="showBookmarks = false" />
   </div>
 </template>
 
@@ -351,6 +356,7 @@ import Scrollable from 'components/Scrollable.vue'
 import AudioEqualizer from 'components/AudioEqualizer.vue'
 import LyricSelection from 'components/LyricSelection.vue'
 import TranscodingStatus from 'components/TranscodingStatus.vue'
+import BookmarksDialog from 'components/BookmarksDialog.vue'
 import { mapState, mapGetters, mapMutations } from 'vuex'
 import { formatSeconds } from '../utils'
 import { debounce } from 'quasar'
@@ -366,11 +372,13 @@ export default {
     AudioEqualizer,
     LyricSelection,
     TranscodingStatus,
+    BookmarksDialog,
   },
 
   data () {
     return {
       showCurrentPlayList: false,
+      showBookmarks: false,
       editCurrentPlayList: false,
       queueCopy: [],
       histroyCheckIntervalId: -1,

@@ -33,6 +33,7 @@ const config_1 = require("../config");
 const minimatch_1 = __importDefault(require("minimatch"));
 const natural_compare_lite_1 = __importDefault(require("natural-compare-lite"));
 const { getAudioEffectState } = require("./audioEffects");
+const { encodeTrackPath } = require("./trackReference");
 const crypto_1 = __importDefault(require("crypto"));
 const supportedMediaExtList = ['.mp3', '.ogg', '.opus', '.wav', '.aac', '.flac', '.webm', '.mp4', '.m4a', '.mka', '.aiff', '.avi'];
 exports.supportedMediaExtList = supportedMediaExtList;
@@ -158,12 +159,12 @@ const getTrackList = async function (id, dir, readMemo) {
             };
         });
         const sortedFiles = (0, natural_orderby_1.orderBy)(mappedFiles, [v => v.subtitle, v => v.title, v => v.ext]);
-        const sortedHashedFiles = sortedFiles.map((file, index) => ({
+        const sortedHashedFiles = sortedFiles.map((file) => ({
             workId: Number(id),
             title: file.title,
             subtitle: file.subtitle,
             relativePath: file.shortFilePath.replace(/\\/g, '/'),
-            hash: `${id}/${index}`,
+            hash: `${id}/${encodeTrackPath(file.shortFilePath)}`,
             ext: file.ext,
             fullPath: file.fullPath,
             shortFilePath: file.shortFilePath,

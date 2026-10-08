@@ -1,4 +1,9 @@
 {
+  "bookmark": {
+    "missing": "Bookmark not found",
+    "fileMissing": "File not found. Bookmark deleted.",
+    "trackUnavailable": "Unable to read the bookmarked track"
+  },
   "validation": {
     "invalidValue": "Invalid value for field {field}"
   },
@@ -65,6 +70,8 @@
     "orderSaved": "Work order saved"
   },
   "media": {
+    "linkExpired": "This file link is no longer valid. Reopen the work and select the file.",
+    "fileMissing": "File not found",
     "unsupportedType": "Unsupported media type",
     "pretranscodeReady": "Pre-transcoding is ready",
     "pretranscodeStarted": "Pre-transcoding started",

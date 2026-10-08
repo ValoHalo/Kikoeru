@@ -159,6 +159,7 @@ const mutations = {
     syncCurrentTrackContext(state, payload.workId)
     if (Object.prototype.hasOwnProperty.call(payload, "resumeHistroySeconds")) {
       state.resumeHistroySeconds = payload.resumeHistroySeconds
+      state.notifyHistoryRestore = payload.notifyHistoryRestore !== false
     }
     mutations.FILTER_CURRENT_QUEUE(state)
   },
@@ -330,6 +331,7 @@ const mutations = {
 
   SET_RESUME_HISTROY_SECONDS: (state, value) => {
     state.resumeHistroySeconds = value
+    state.notifyHistoryRestore = true
   },
 
   RESUME_HISTROY_SECONDS_DONE: (state) => {

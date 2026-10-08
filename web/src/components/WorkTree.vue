@@ -11,7 +11,10 @@
         </q-breadcrumbs-el>
       </q-breadcrumbs>
 
-      <q-btn flat round class="work-tree-playlist" icon="playlist_add" :disable="allAudioTracks.length === 0" :aria-label="$t('workTree.addWorkToPlaylist')" @click="openPlaylistPicker(allAudioTracks)"><AppTooltip>{{ $t('workTree.addWorkToPlaylist') }}</AppTooltip></q-btn>
+      <div class="work-tree-actions">
+        <q-btn flat round class="work-tree-playlist" icon="keyboard_arrow_up" :aria-label="$t('workTree.backToTop')" @click="scrollToTop"><AppTooltip>{{ $t('workTree.backToTop') }}</AppTooltip></q-btn>
+        <q-btn flat round class="work-tree-playlist" icon="playlist_add" :disable="allAudioTracks.length === 0" :aria-label="$t('workTree.addWorkToPlaylist')" @click="openPlaylistPicker(allAudioTracks)"><AppTooltip>{{ $t('workTree.addWorkToPlaylist') }}</AppTooltip></q-btn>
+      </div>
     </div>
 
     <q-dialog v-model="showPlaylistPicker">
@@ -89,7 +92,7 @@
 
           </q-item-section>
 
-          <q-item-section>
+          <q-item-section class="work-tree-filename">
             <q-item-label>{{ item.title }}</q-item-label>
             <q-item-label v-if="item.children" caption lines="1">{{ $t('workTree.itemCount', { count: visibleFiles(item.children).length }) }}</q-item-label>
 
@@ -102,6 +105,15 @@
               <q-icon size="0.8rem" name="schedule" class="q-mr-xs"></q-icon>
               {{ formatSeconds(item.duration) }}
             </q-item-label>
+          </q-item-section>
+
+          <q-item-section v-if="item.type === 'audio'" side class="work-tree-bookmark">
+            <q-btn
+              flat round dense icon="bookmark_add"
+              :color="currentPlayingFile.hash === item.hash ? 'white' : 'primary'"
+              :aria-label="$t('bookmark.addForTrack', { title: item.title })"
+              @click.stop="openBookmarkEditor(item)"
+            ><AppTooltip>{{ $t('bookmark.add') }}</AppTooltip></q-btn>
           </q-item-section>
 
           <!-- 上下文菜单 -->
@@ -135,6 +147,7 @@
         </q-item>
       </q-list>
     </q-card>
+    <BookmarkEditor v-if="bookmarkDraft" :bookmark="bookmarkDraft" @close="bookmarkDraft = null" />
     <WorkImageGallery
       v-if="folderImages.length"
       :key="JSON.stringify([metadata.id, ...path])"
@@ -152,6 +165,7 @@
 import { t } from '../i18n'
 import ImageEditor from './ImageEditor.vue'
 import WorkImageGallery from './WorkImageGallery.vue'
+import BookmarkEditor from './BookmarkEditor.vue'
 import { mapState, mapGetters } from 'vuex'
 import { formatSeconds } from '../utils'
 import NotifyMixin from '../mixins/Notification.js'
@@ -165,6 +179,7 @@ export default {
   components: {
     ImageEditor,
     WorkImageGallery,
+    BookmarkEditor,
   },
 
   data() {
@@ -182,6 +197,7 @@ export default {
       newPlaylistName: '',
       loadingPlaylists: false,
       addingToPlaylist: false,
+      bookmarkDraft: null,
     }
   },
 
@@ -205,6 +221,8 @@ export default {
   },
 
   watch: {
+    'metadata.id' () { this.bookmarkDraft = null },
+    '$store.state.User.name' () { this.bookmarkDraft = null },
     tree (value) {
       this.internalTree = value;
       this.initPath();
@@ -271,6 +289,8 @@ export default {
     ...mapState('AudioPlayer', [
       'playing',
       'playWorkId',
+      'currentTime',
+      'resumeHistroySeconds',
     ]),
 
     ...mapGetters('AudioPlayer', [
@@ -280,6 +300,19 @@ export default {
 
   methods: {
     formatSeconds,
+
+    scrollToTop () { window.scrollTo({ top: 0, behavior: 'smooth' }) },
+
+    openBookmarkEditor (track) {
+      const position = this.resumeHistroySeconds >= 0 ? this.resumeHistroySeconds : this.currentTime
+      this.bookmarkDraft = {
+        work_id: Number(track.workId || this.metadata.id),
+        relative_path: String(track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/')).replace(/\\/g, '/'),
+        seconds: this.currentPlayingFile.hash === track.hash ? Math.max(0, Math.floor(position)) : 0,
+        name: '',
+        note: '',
+      }
+    },
 
     isSubtitle (item) {
       return item.type !== 'folder' && /\.(lrc|srt|vtt|ass|ssa)$/i.test(item.title || '')
@@ -487,9 +520,14 @@ export default {
 </script>
 
 <style scoped>
+.work-tree-filename { min-width: 0; overflow-wrap: anywhere; }
+.work-tree-bookmark { padding-left: 8px; }
+.work-tree-bookmark .q-btn { width: 32px; height: 32px; min-width: 32px; min-height: 32px; }
+.work-tree-actions { display: flex; gap: 4px; }
+
 .work-tree-toolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 40px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: 12px;
   margin-bottom: 8px;

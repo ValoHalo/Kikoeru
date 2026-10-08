@@ -15,6 +15,7 @@ const db = require("../../src/database/db");
 const { getCoverPath } = require("../../src/filesystem/utils");
 const metadata = require("../../src/routes/metadata").default;
 const media = require("../../src/routes/media").default;
+const { encodeTrackPath } = require("../../src/filesystem/trackReference");
 const placeholder = fs.readFileSync(path.join(__dirname, "../../src/static/no-image.jpg"));
 let server;
 let baseUrl;
@@ -58,7 +59,8 @@ test.after(async () => {
 });
 
 test("cover visibility applies to every size and local custom cover, including unknown works", async () => {
-    const paths = ["cover/ID?type=main", "cover/ID?type=sam", "cover/ID?type=240x240", "media/stream/ID/0?", "media/download/ID/0?"];
+    const reference = encodeTrackPath("custom.jpg");
+    const paths = ["cover/ID?type=main", "cover/ID?type=sam", "cover/ID?type=240x240", `media/stream/ID/${reference}?`, `media/download/ID/${reference}?`];
     for (const id of [1, 2, 3]) {
         for (const pattern of paths) {
             const url = `${baseUrl}/api/${pattern.replace("ID", id)}`;

@@ -1,4 +1,33 @@
 {
+  "bookmark": {
+    "add": "添加书签",
+    "addForTrack": "为 {title} 添加书签",
+    "edit": "编辑书签",
+    "name": "名称",
+    "seconds": "播放位置（秒）",
+    "position": "播放位置：{time}",
+    "invalidSeconds": "请输入非负整数秒数",
+    "title": "书签",
+    "currentTrack": "本曲书签",
+    "currentWork": "本作书签",
+    "refresh": "刷新书签",
+    "close": "关闭",
+    "record": "记录当前位置",
+    "loading": "正在读取书签",
+    "loadFailed": "书签读取失败",
+    "empty": "暂无书签",
+    "root": "根目录",
+    "actions": "书签操作",
+    "editNote": "编辑备注",
+    "delete": "删除",
+    "note": "备注（可选）",
+    "cancel": "取消",
+    "save": "保存",
+    "saved": "书签已保存",
+    "noteSaved": "备注已保存",
+    "deleted": "书签已删除",
+    "fileMissing": "文件不存在，已删除该书签"
+  },
   "appHeader": {
     "menu": "菜单",
     "navigation": "导航菜单",
@@ -54,6 +83,7 @@
     "back": "返回"
   },
   "audioElement": {
+    "loadFailed": "无法加载音频，请重新打开作品选择曲目",
     "historyRestored": "已恢复播放历史",
     "safariVisualizerWarning": "监测到safari平台上开启了音频可视化功能，注意移动端safari有bug，如果没有声音的话，请关闭音频可视化功能"
   },
@@ -339,6 +369,7 @@
     "deleteHistoryFailed": "删除历史失败："
   },
   "workTree": {
+    "backToTop": "返回顶部",
     "setDefaultFolder": "设置为默认文件夹",
     "clearDefaultFolder": "取消默认文件夹",
     "defaultFolderSaved": "已设置为默认文件夹",
