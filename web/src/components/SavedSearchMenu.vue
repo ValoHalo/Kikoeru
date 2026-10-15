@@ -5,7 +5,7 @@
       <q-item clickable v-close-popup @click="edit(null)"><q-item-section avatar><q-icon name="bookmark_add" /></q-item-section><q-item-section>{{ $t('savedSearch.save') }}</q-item-section></q-item>
       <q-separator />
       <q-item v-if="loading"><q-item-section><q-spinner /></q-item-section></q-item>
-      <q-item v-for="item in searches" :key="item.id" clickable v-close-popup @click="$emit('apply', item.query)"><q-item-section class="saved-search-name">{{ item.name }}</q-item-section><q-item-section side><div class="row no-wrap"><q-btn flat round dense icon="edit" :aria-label="$t('common.rename')" @click.stop="edit(item)" /><q-btn flat round dense icon="delete_outline" :aria-label="$t('common.delete')" @click.stop="remove(item)" /></div></q-item-section></q-item>
+      <q-item v-for="item in searches" :key="item.id" clickable v-close-popup @click="$emit('apply', item.query)"><q-item-section class="saved-search-name">{{ $privateText(item.name) }}</q-item-section><q-item-section side><div class="row no-wrap"><q-btn flat round dense icon="edit" :aria-label="$t('common.rename')" @click.stop="edit(item)" /><q-btn flat round dense icon="delete_outline" :aria-label="$t('common.delete')" @click.stop="remove(item)" /></div></q-item-section></q-item>
       <q-item v-if="!loading && !searches.length"><q-item-section>{{ $t('savedSearch.empty') }}</q-item-section></q-item>
     </q-list></q-menu>
   </q-btn>

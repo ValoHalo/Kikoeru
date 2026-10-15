@@ -1,6 +1,6 @@
 <template>
   <q-card class="card hover-show" :class="{ 'card--thumbnail': thumbnailMode }">
-    <router-link :to="`/work/${metadata.id}`" class="work-card-cover" :aria-label="metadata.title">
+    <router-link :to="`/work/${metadata.id}`" class="work-card-cover" :aria-label="$privateText(metadata.title)">
       <CoverSFW :workid="metadata.id" :nsfw="false" :release="thumbnailMode ? metadata.release : ''" :lyric_status="metadata.lyric_status" :tags="fullDetails ? [] : metadata.tags" />
     </router-link>
 
@@ -9,15 +9,15 @@
     <div v-if="!thumbnailMode" class="work-card-info">
       <div class="work-card-byline">
         <router-link :to="`/works?circleId=${metadata.circle.id}`" class="work-card-circle ellipsis">
-          {{ metadata.circle.name }}
+          {{ $privateText(metadata.circle.name) }}
         </router-link>
         <time v-if="metadata.release">{{ metadata.release }}</time>
       </div>
       <!-- 标题 -->
       <h2 class="work-card-title">
         <router-link :to="`/work/${metadata.id}`" :class="fullDetails ? 'work-card-title-full' : 'ellipsis-2-lines'">
-          {{ metadata.title }}
-          <AppTooltip v-if="!fullDetails">{{ metadata.title }}</AppTooltip>
+          {{ $privateText(metadata.title) }}
+          <AppTooltip v-if="!fullDetails">{{ $privateText(metadata.title) }}</AppTooltip>
         </router-link>
       </h2>
 
@@ -82,7 +82,7 @@
 
     <div v-if="fullDetails && !thumbnailMode && visibleTags.length" class="work-card-tags">
       <router-link v-for="tag in visibleTags" :key="tag.id" :to="`/works?tagId=${tag.id}`" class="work-card-tag">
-        {{ tag.name }}
+        {{ $privateText(tag.name) }}
       </router-link>
     </div>
 
@@ -101,7 +101,7 @@
           class="work-card-va"
         >
           <q-icon name="mic_none" size="16px" />
-          <span>{{ va.name }}</span>
+          <span>{{ $privateText(va.name) }}</span>
         </router-link>
       </div>
       <LibraryActions class="work-card-actions" :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('library-changed')" />

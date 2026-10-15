@@ -1,9 +1,10 @@
 const getters = {
   hideNsfwCovers: (state) => state.contentDisplayMode === 'blur',
   sfwOnly: (state) => state.contentDisplayMode === 'sfw',
-  shouldBlurCover: (state) => (workId) => state.contentDisplayMode === 'blur' && state.workNsfw[workId] !== false,
+  shouldBlurCover: (state) => (workId) => state.privacyMode || (state.contentDisplayMode === 'blur' && state.workNsfw[workId] !== false),
   coverUrl: (state, getters) => (workId, type = 'main', customUrl = '') => {
     if (!workId) return ''
+    if (state.privacyMode) return '/statics/app-logo-128x128.png'
     const coverPath = `/api/cover/${workId}?${new URLSearchParams({ type })}`
     if (customUrl && /\/api\/media\/(?:download|stream)\/\d+\/\d+(?:\?|$)/.test(customUrl)) customUrl = ''
     if (!getters.shouldBlurCover(workId)) return customUrl || coverPath

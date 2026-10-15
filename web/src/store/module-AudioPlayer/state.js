@@ -114,6 +114,8 @@ export default function () {
     historyRevision: 0,
     historySavedRevision: 0,
     historySaveStatus: 'idle',
+    privacyMode: LocalStorage.getItem('privacy-mode') === true,
+    swapChannels: LocalStorage.getItem('swap-audio-channels') === true,
     historySavedAt: null,
     playbackReadyHash: '',
     seekUndo: [],

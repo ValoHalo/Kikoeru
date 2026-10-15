@@ -53,14 +53,14 @@
         
         <q-item-section>
           <Scrollable class="full-width" :stop="!hide">
-            <span class="audio-name relative-position">{{ currentPlayingFile.title }}</span>
+            <span class="audio-name relative-position">{{ $privateText(currentPlayingFile.title) }}</span>
           </Scrollable>
           <Scrollable class="full-width" :stop="!hide">
-            <span class="work-name relative-position">{{ currentPlayingFile.workTitle }}</span>
+            <span class="work-name relative-position">{{ $privateText(currentPlayingFile.workTitle) }}</span>
           </Scrollable>
           <!--
-          <q-item-label lines="2">{{ currentPlayingFile.title }}</q-item-label>
-          <q-item-label caption lines="1">{{ currentPlayingFile.workTitle }}</q-item-label>
+          <q-item-label lines="2">{{ $privateText(currentPlayingFile.title) }}</q-item-label>
+          <q-item-label caption lines="1">{{ $privateText(currentPlayingFile.workTitle) }}</q-item-label>
           -->
         </q-item-section>
       </q-item>

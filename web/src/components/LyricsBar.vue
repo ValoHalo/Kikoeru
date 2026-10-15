@@ -1,6 +1,6 @@
 <template>
     <div
-      v-if="currentLyric !== ''"
+      v-if="currentLyric !== '' && !$store.state.AudioPlayer.privacyMode"
       class="lyric-container"
       ref="draggable"
     >

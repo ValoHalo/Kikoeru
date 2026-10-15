@@ -7,7 +7,7 @@
         </q-breadcrumbs-el>
 
         <q-breadcrumbs-el v-for="(folderName, index) in path" :key="index" class="cursor-pointer">
-          <q-btn no-caps flat dense size="md" icon="folder" :label="folderName" @click="onClickBreadcrumb(index)" />
+          <q-btn no-caps flat dense size="md" icon="folder" :label="$privateText(folderName)" @click="onClickBreadcrumb(index)" />
         </q-breadcrumbs-el>
       </q-breadcrumbs>
 
@@ -45,7 +45,7 @@
       <q-card v-if="preview_img_list.length" class="image-preview-dialog">
         <q-card-section class="image-preview-header">
           <div class="image-preview-title">
-            <div class="text-h6">{{ preview_img_name }}</div>
+            <div class="text-h6">{{ $privateText(preview_img_name) }}</div>
             <div class="text-subtitle2">{{ preview_img_idx+1 }}/{{ preview_img_list.length }}</div>
           </div>
           <div v-if="isAdministrator || playWorkId > 0" class="image-preview-actions">
@@ -60,7 +60,7 @@
         </q-card-section>
 
         <q-card-section class="image-preview-stage">
-          <q-img class="image-preview-media" :src="preview_img_url" fit="contain" />
+          <q-img class="image-preview-media" :src="$privateImage(preview_img_url)" fit="contain" />
         </q-card-section>
 
         <q-card-actions align="around">
@@ -93,7 +93,7 @@
           </q-item-section>
 
           <q-item-section class="work-tree-filename">
-            <q-item-label>{{ item.title }}</q-item-label>
+            <q-item-label>{{ $privateText(item.title) }}</q-item-label>
             <q-item-label v-if="item.children" caption lines="1">{{ $t('workTree.itemCount', { count: visibleFiles(item.children).length }) }}</q-item-label>
 
             <!--音频文件时长-->
@@ -111,7 +111,7 @@
             <q-btn
               flat round dense icon="bookmark_add"
               :color="currentPlayingFile.hash === item.hash ? 'white' : 'primary'"
-              :aria-label="$t('bookmark.addForTrack', { title: item.title })"
+              :aria-label="$t('bookmark.addForTrack', { title: $privateText(item.title) })"
               @click.stop="openBookmarkEditor(item)"
             ><AppTooltip>{{ $t('bookmark.add') }}</AppTooltip></q-btn>
           </q-item-section>

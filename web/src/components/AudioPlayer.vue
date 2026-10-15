@@ -54,10 +54,10 @@
 
         <div class="player-titles column non-selectable">
           <Scrollable class="full-width" :stop="hide" name="audioTitle">
-            <span class="audio-name">{{ currentPlayingFile.title }}</span>
+            <span class="audio-name">{{ $privateText(currentPlayingFile.title) }}</span>
           </Scrollable>
           <Scrollable class="full-width" :stop="hide" name="workTitle">
-            <span class="work-name">{{ currentPlayingFile.workTitle }}</span>
+            <span class="work-name">{{ $privateText(currentPlayingFile.workTitle) }}</span>
           </Scrollable>
         </div>
 
@@ -164,6 +164,7 @@
             >
               <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.moreSettings') }}</AppTooltip>
               <q-menu class="player-settings-menu" anchor="top right" self="bottom right">
+                <q-item tag="label"><q-item-section avatar><q-icon name="sync_alt" /></q-item-section><q-item-section>{{ $t('audioEqualizer.swapChannels') }}</q-item-section><q-item-section side><q-toggle :model-value="$store.state.AudioPlayer.swapChannels" :aria-label="$t('audioEqualizer.swapChannels')" @update:model-value="$store.commit('AudioPlayer/SET_SWAP_CHANNELS', $event)" /></q-item-section></q-item>
                 <q-item>
                   <q-item-section avatar><q-icon name="speed" /></q-item-section>
                   <q-item-section>
@@ -178,7 +179,7 @@
                     />
                   </q-item-section>
                 </q-item>
-                <q-item v-if="enableVideoSource && isCurrentPlayingFileVideo" clickable v-close-popup @click="onSetEnableVideoSourcePIP(!enableVideoSourcePIP)">
+                <q-item v-if="enableVideoSource && isCurrentPlayingFileVideo && !$store.state.AudioPlayer.privacyMode" clickable v-close-popup @click="onSetEnableVideoSourcePIP(!enableVideoSourcePIP)">
                   <q-item-section avatar><q-icon name="picture_in_picture_alt" /></q-item-section>
                   <q-item-section>{{ $t('audioPlayer.videoPip') }}</q-item-section>
                   <q-item-section side v-if="enableVideoSourcePIP"><q-icon name="done" /></q-item-section>
@@ -286,8 +287,8 @@
                 </q-item-section>
 
                 <q-item-section>
-                  <q-item-label lines="1">{{ track.title }}</q-item-label>
-                  <q-item-label caption lines="1">{{ track.workTitle }}</q-item-label>
+                  <q-item-label lines="1">{{ $privateText(track.title) }}</q-item-label>
+                  <q-item-label caption lines="1">{{ $privateText(track.workTitle) }}</q-item-label>
                 </q-item-section>
 
                 <q-item-section v-show="editCurrentPlayList" side class="handle current-play-list-handle">

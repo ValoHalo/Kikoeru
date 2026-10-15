@@ -19,7 +19,7 @@
             <template #item="{ element: track, index }">
               <q-item clickable v-ripple :active="queueIndex === index" active-class="bg-primary text-white" @click="SET_TRACK(index)">
                 <q-item-section avatar><q-img :key="coverUrl(track)" :src="coverUrl(track)" ratio="1" class="playlist-cover rounded-borders" /></q-item-section>
-                <q-item-section><q-item-label lines="1">{{ track.title }}</q-item-label><q-item-label caption lines="1" :class="{ 'text-white': queueIndex === index }">{{ track.workTitle }}</q-item-label></q-item-section>
+                <q-item-section><q-item-label lines="1">{{ $privateText(track.title) }}</q-item-label><q-item-label caption lines="1" :class="{ 'text-white': queueIndex === index }">{{ $privateText(track.workTitle) }}</q-item-label></q-item-section>
                 <q-item-section side class="current-queue-handle"><q-icon name="drag_handle" :color="queueIndex === index ? 'white' : 'grey-7'" /></q-item-section>
                 <q-item-section side><q-btn flat round dense icon="close" :color="queueIndex === index ? 'white' : 'negative'" :aria-label="$t('playlist.removeFromQueue')" @click.stop="REMOVE_FROM_QUEUE(index)" /></q-item-section>
               </q-item>
@@ -57,7 +57,7 @@
                 <template #item="{ element: track }">
                   <q-item :class="{ 'text-grey-6': !track.available }">
                     <q-item-section avatar><q-img v-if="track.available" :key="coverUrl(track)" :src="coverUrl(track)" ratio="1" class="playlist-cover rounded-borders" /><q-icon v-else name="link_off" size="28px" /></q-item-section>
-                    <q-item-section><q-item-label lines="1">{{ track.title }}</q-item-label><q-item-label caption lines="1">{{ track.workTitle }}{{ track.available ? '' : $t('playlist.unavailable') }}</q-item-label></q-item-section>
+                    <q-item-section><q-item-label lines="1">{{ $privateText(track.title) }}</q-item-label><q-item-label caption lines="1">{{ $privateText(track.workTitle) }}{{ track.available ? '' : $t('playlist.unavailable') }}</q-item-label></q-item-section>
                     <q-item-section side class="saved-playlist-handle"><q-icon name="drag_handle" /></q-item-section>
                     <q-item-section side><q-btn flat round dense icon="close" color="negative" :aria-label="$t('playlist.removeTrack')" @click="removeSavedItem(track)" /></q-item-section>
                   </q-item>

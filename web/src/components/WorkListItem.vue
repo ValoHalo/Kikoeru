@@ -9,7 +9,7 @@
     <q-item-section>
       <q-item-label lines="2" class="text">
         <router-link :to="`/work/${metadata.id}`" class="text-secondary">
-          {{ metadata.title }}
+          {{ $privateText(metadata.title) }}
         </router-link>
       </q-item-label>
 
@@ -18,7 +18,7 @@
       <q-item-label>
         <div class="row q-gutter-x-sm q-gutter-y-xs">
           <router-link :to="`/works?circleId=${metadata.circle.id}`" class="col-auto text-grey">
-            {{ metadata.circle.name }}
+            {{ $privateText(metadata.circle.name) }}
           </router-link>
 
           <span class="col-auto">/</span>
@@ -29,7 +29,7 @@
             :key=index
             class="col-auto text-primary"
           >
-            {{ va.name }}
+            {{ $privateText(va.name) }}
           </router-link>
         </div>
       </q-item-label>
@@ -42,7 +42,7 @@
             :key=index
             class="col-auto text-grey"
           >
-            {{ tag.name }}
+            {{ $privateText(tag.name) }}
           </router-link>
         </div>
       </q-item-label>

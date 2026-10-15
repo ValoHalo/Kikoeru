@@ -1,5 +1,5 @@
 <template>
-  <q-card class="image-editor-card">
+  <q-card v-if="!$store.state.AudioPlayer.privacyMode" class="image-editor-card">
     <q-card-section>
       <div class="text-h6">{{ $t('imageEditor.title') }}</div>
     </q-card-section>
@@ -36,6 +36,7 @@
       </div>
     </q-card-actions>
   </q-card>
+  <q-card v-else class="q-pa-md"><q-icon name="visibility_off" class="q-mr-sm" />{{ $t('privacy.hidden') }}<q-btn v-close-popup flat round icon="close" :aria-label="$t('common.close')" /></q-card>
 </template>
 
 <script>
@@ -102,6 +103,7 @@ export default {
   },
 
   mounted () {
+    if (this.$store.state.AudioPlayer.privacyMode) return
     const canvas = this.$refs.canvas
     this.context = canvas.getContext('2d')
 

@@ -1,7 +1,7 @@
 <template>
   <div v-if="match" class="work-search-match">
     <q-icon :name="match.type === 'directory' ? 'folder_open' : 'audio_file'" size="16px" aria-hidden="true" />
-    <span class="ellipsis-2-lines">{{ label }}<AppTooltip>{{ label }}</AppTooltip></span>
+    <span class="ellipsis-2-lines">{{ $privateText(label) }}<AppTooltip>{{ $privateText(label) }}</AppTooltip></span>
   </div>
 </template>
 

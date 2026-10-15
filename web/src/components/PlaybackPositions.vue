@@ -6,7 +6,7 @@
       <q-banner v-if="error" class="text-negative">{{ error }}</q-banner>
       <q-list separator class="position-list">
         <q-item v-for="position in positions" :key="position.id" clickable :disable="restoring" @click="restore(position)">
-          <q-item-section><q-item-label lines="1">{{ position.title }}</q-item-label><q-item-label caption class="position-path">{{ position.relative_path }}</q-item-label><q-item-label caption>{{ dateLabel(position.created_at) }}</q-item-label></q-item-section>
+          <q-item-section><q-item-label lines="1">{{ $privateText(position.title) }}</q-item-label><q-item-label caption class="position-path">{{ $privateText(position.relative_path) }}</q-item-label><q-item-label caption>{{ dateLabel(position.created_at) }}</q-item-label></q-item-section>
           <q-item-section side>{{ formatSeconds(position.seconds) }}<q-icon name="restore" /></q-item-section>
         </q-item>
         <q-item v-if="!loading && !positions.length"><q-item-section>{{ $t('playbackProtection.empty') }}</q-item-section></q-item>

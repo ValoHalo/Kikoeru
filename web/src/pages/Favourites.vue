@@ -65,7 +65,7 @@
               <q-item>
                 <q-item-section avatar><router-link :to="`/work/${work.id}`"><q-img :key="$store.getters['AudioPlayer/coverUrl'](work.id, '240x240')" :src="$store.getters['AudioPlayer/coverUrl'](work.id, '240x240')" ratio="1" class="collection-cover" /></router-link></q-item-section>
                 <q-item-section>
-                  <q-item-label lines="2"><router-link :to="`/work/${work.id}`" class="collection-work-title">{{ work.title }}</router-link></q-item-label>
+                  <q-item-label lines="2"><router-link :to="`/work/${work.id}`" class="collection-work-title">{{ $privateText(work.title) }}</router-link></q-item-label>
                   <q-item-label caption>{{ work.circle && work.circle.name }}</q-item-label>
                   <q-badge v-if="work.archived_at" color="grey-7" :label="$t('favourites.archived')" class="collection-archive-badge" />
                   <q-item-label v-if="work.files_missing" caption :class="$q.dark.isActive ? 'text-red-4' : 'text-negative'"><q-icon name="folder_off" /> {{ $t('common.filesMissing') }}</q-item-label>

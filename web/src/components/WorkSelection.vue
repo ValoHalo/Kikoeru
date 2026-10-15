@@ -1,6 +1,6 @@
 <template>
   <div class="work-selection" :class="{ 'work-selection--enabled': enabled, 'work-selection--checked': selected, 'work-selection--list': list }" @click.capture="select">
-    <q-checkbox v-if="enabled" class="work-selection-check" :model-value="selected" :aria-label="$t('batchWorks.selectNamed', { name: label })" @update:model-value="$emit('select', { shiftKey: false })" />
+    <q-checkbox v-if="enabled" class="work-selection-check" :model-value="selected" :aria-label="$t('batchWorks.selectNamed', { name: $privateText(label) })" @update:model-value="$emit('select', { shiftKey: false })" />
     <div class="work-selection-content" :inert="enabled ? '' : null"><slot /></div>
   </div>
 </template>

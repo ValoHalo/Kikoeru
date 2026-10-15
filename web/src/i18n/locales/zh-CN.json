@@ -1,4 +1,10 @@
 {
+  "privacy": {
+    "enable": "开启隐私模式",
+    "disable": "关闭隐私模式",
+    "hidden": "内容已隐藏",
+    "channelUnavailable": "当前浏览器无法切换音频声道"
+  },
   "batchWorks": {
     "selectNamed": "选择作品：{name}",
     "selectWork": "选择作品",

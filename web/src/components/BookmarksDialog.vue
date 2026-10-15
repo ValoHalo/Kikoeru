@@ -8,8 +8,8 @@
         <q-btn flat round dense icon="close" :aria-label="$t('bookmark.close')" v-close-popup><AppTooltip>{{ $t('bookmark.close') }}</AppTooltip></q-btn>
       </q-card-section>
       <q-card-section v-if="track" class="q-pt-none">
-        <div class="text-subtitle1 bookmark-text">{{ track.title }}</div>
-        <div v-if="track.subtitle" class="text-caption text-grey bookmark-text">{{ track.subtitle }}</div>
+        <div class="text-subtitle1 bookmark-text">{{ $privateText(track.title) }}</div>
+        <div v-if="track.subtitle" class="text-caption text-grey bookmark-text">{{ $privateText(track.subtitle) }}</div>
         <q-btn class="q-mt-sm" outline color="primary" icon="bookmark_add" :label="$t('bookmark.record')" :disable="!relativePath || jumping" :loading="saving" @click="recordPosition" />
       </q-card-section>
       <q-separator />
@@ -20,16 +20,16 @@
           <div v-else-if="!bookmarks.length" class="q-pa-lg text-center text-grey">{{ $t('bookmark.empty') }}</div>
           <section v-for="group in groups" :key="group.path">
             <div v-if="!track" class="q-px-md q-pt-md q-pb-xs">
-              <div class="text-subtitle2 bookmark-text">{{ group.title }}</div>
+              <div class="text-subtitle2 bookmark-text">{{ $privateText(group.title) }}</div>
               <div class="text-caption text-grey bookmark-text">{{ group.directory || $t('bookmark.root') }}</div>
             </div>
             <q-list>
               <q-item v-for="bookmark in group.items" :key="bookmark.id" clickable v-ripple :disable="jumping" @click="jumpToBookmark(bookmark)">
                 <q-item-section avatar><q-icon name="bookmark_border" color="primary" /></q-item-section>
                 <q-item-section>
-                  <q-item-label class="bookmark-text">{{ bookmark.name || formatSeconds(bookmark.seconds) }}</q-item-label>
+                  <q-item-label class="bookmark-text">{{ bookmark.name ? $privateText(bookmark.name) : formatSeconds(bookmark.seconds) }}</q-item-label>
                   <q-item-label v-if="bookmark.name && bookmark.name !== formatSeconds(bookmark.seconds)" caption>{{ formatSeconds(bookmark.seconds) }}</q-item-label>
-                  <q-item-label v-if="bookmark.note" caption class="bookmark-text">{{ bookmark.note }}</q-item-label>
+                  <q-item-label v-if="bookmark.note" caption class="bookmark-text">{{ $privateText(bookmark.note) }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-btn flat round dense icon="more_vert" :aria-label="$t('bookmark.actions')" @click.stop>

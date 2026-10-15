@@ -481,6 +481,7 @@ export default {
     },
 
     drawVideoInCanvas(canvas, canvasCtx) {
+      if (this.$store.state.AudioPlayer.privacyMode) { canvasCtx.clearRect(0, 0, canvas.width, canvas.height); return }
       const containerRatio = canvas.width / canvas.height;
       const video = this.video;
       const videoRatio = video.videoWidth / video.videoHeight;
@@ -548,6 +549,7 @@ export default {
     ]),
 
     title() {
+      if (this.$store.state.AudioPlayer.privacyMode) return this.$t('privacy.hidden')
       const org = this.currentPlayingFile.title;
       return org.substring(0, org.lastIndexOf("."));
     }

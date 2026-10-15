@@ -17,13 +17,14 @@
       <q-btn flat round dense :icon="searchOpen ? 'close' : 'search'" class="app-header-button app-search-toggle" :aria-label="searchOpen ? $t('appHeader.closeSearch') : $t('appHeader.searchWorks')" :aria-expanded="searchOpen" @click="toggleSearch" />
       <form class="app-search" :class="{ 'app-search--open': searchOpen }" role="search" @submit.prevent="submitSearch">
         <q-btn flat round dense icon="search" type="submit" class="app-search-button" :aria-label="$t('appHeader.submitSearch')"><AppTooltip>{{ $t('appHeader.searchWorks') }}</AppTooltip></q-btn>
-        <input ref="searchInput" v-model="keyword" type="search" :placeholder="isAdvanceSearch ? $t('appHeader.advancedPlaceholder') : $t('appHeader.searchPlaceholder')" :aria-label="isAdvanceSearch ? $t('appHeader.addSearchTerm') : $t('appHeader.searchWorks')" @keydown.esc="closeSearch" @keydown.enter="onSearchEnter" />
+        <input ref="searchInput" v-model="keyword" :type="$store.state.AudioPlayer.privacyMode ? 'password' : 'search'" :placeholder="isAdvanceSearch ? $t('appHeader.advancedPlaceholder') : $t('appHeader.searchPlaceholder')" :aria-label="isAdvanceSearch ? $t('appHeader.addSearchTerm') : $t('appHeader.searchWorks')" @keydown.esc="closeSearch" @keydown.enter="onSearchEnter" />
         <q-btn v-if="keyword" flat round dense icon="close" class="app-search-button" :aria-label="$t('appHeader.clearSearch')" @click="clearSearch"><AppTooltip>{{ $t('appHeader.clearSearch') }}</AppTooltip></q-btn>
         <span class="app-search-divider" aria-hidden="true" />
         <q-btn flat round dense :icon="isAdvanceSearch ? 'add' : 'tune'" class="app-search-button" :class="{ 'app-search-active': isAdvanceSearch }" :aria-label="isAdvanceSearch ? $t('appHeader.addKeyword') : $t('common.advancedSearch')" @click="isAdvanceSearch ? submitSearch() : openAdvanceSearch()">
           <AppTooltip>{{ isAdvanceSearch ? $t('appHeader.addKeyword') : $t('common.advancedSearch') }}</AppTooltip>
         </q-btn>
       </form>
+      <q-btn flat round dense :icon="$store.state.AudioPlayer.privacyMode ? 'visibility_off' : 'visibility'" :color="$store.state.AudioPlayer.privacyMode ? 'primary' : undefined" :aria-label="$t($store.state.AudioPlayer.privacyMode ? 'privacy.disable' : 'privacy.enable')" :aria-pressed="$store.state.AudioPlayer.privacyMode" @click="$store.commit('AudioPlayer/SET_PRIVACY_MODE', !$store.state.AudioPlayer.privacyMode)"><AppTooltip>{{ $t($store.state.AudioPlayer.privacyMode ? 'privacy.disable' : 'privacy.enable') }}</AppTooltip></q-btn>
     </q-toolbar>
   </q-header>
 </template>

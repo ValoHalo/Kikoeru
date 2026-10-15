@@ -9,7 +9,7 @@
     @mouseover="toggleBlurFlag()"
     @mouseout="toggleBlurFlag()"
   >
-    <div class="absolute-top-left transparent" style="padding: 0;">
+    <div v-if="!$store.state.AudioPlayer.privacyMode" class="absolute-top-left transparent" style="padding: 0;">
       <q-chip dense square color="brown" text-color="white" class="q-ma-sm shadow-3">
         {{ workCode }}
       </q-chip>
@@ -26,7 +26,7 @@
     </div>
 
     <!-- 标签 -->
-    <div class="q-pa-none q-ma-sm absolute-bottom-left tags-panel">
+    <div v-if="!$store.state.AudioPlayer.privacyMode" class="q-pa-none q-ma-sm absolute-bottom-left tags-panel">
       <router-link
         v-for="tag in tags"
         :key='tag.id'

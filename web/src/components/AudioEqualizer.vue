@@ -12,68 +12,13 @@
 </template>
 
 <script>
-
-import { mapState } from 'vuex'
-
 export default {
   name: 'AudioEqualizer',
-
-  props: {
-    disable: {
-      type: Boolean,
-      required: true
-    },
-  },
-
-  data () {
-    return {
-      isFlipLeftRightChannel: false,
-    }
-  },
-
-  watch: {
-    isFlipLeftRightChannel(v) {
-      this.flipLeftRightChannel(v);
-    }
-  },
-
+  props: { disable: { type: Boolean, required: true } },
   computed: {
-    ...mapState("AudioPlayer", [
-      "enableVisualizer",
-      "audioAnalyser",
-    ])
-  },
-
-  methods: {
-    flipLeftRightChannel(flip) {
-      const {audioSrc, merger, splitter, audioCtx, left, right} = this.audioAnalyser;
-      if (flip) {
-        // disconnect direct source
-        audioSrc.disconnect(audioCtx.destination);
-
-        // analyser flip
-        splitter.disconnect();
-        splitter.connect(right, 0); // 0 for output of right
-        splitter.connect(left, 1); // 1 for output of left
-
-        // audio flip and merge
-        splitter.connect(merger, 0, 1);
-        splitter.connect(merger, 1, 0);
-        merger.connect(audioCtx.destination);
-
-      } else {
-        // disconnect flipped source
-        merger.disconnect();
-
-        splitter.disconnect(); // break up analyser and merger
-
-        // reconnect analyser
-        splitter.connect(left, 0);
-        splitter.connect(right, 1);
-
-        // normal source
-        audioSrc.connect(audioCtx.destination);
-      }
+    isFlipLeftRightChannel: {
+      get () { return this.$store.state.AudioPlayer.swapChannels },
+      set (value) { this.$store.commit('AudioPlayer/SET_SWAP_CHANNELS', value) }
     }
   }
 }

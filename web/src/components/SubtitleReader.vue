@@ -4,8 +4,8 @@
     <div class="reader-document">
       <header class="reader-header">
         <h1>{{ $t('subtitleReader.title') }}</h1>
-        <p class="reader-file">{{ file.title }}</p>
-        <div class="reader-tools">
+        <p class="reader-file">{{ $privateText(file.title) }}</p>
+        <div v-if="!$store.state.AudioPlayer.privacyMode" class="reader-tools">
           <q-input v-model="query" outlined dense clearable :debounce="150" :placeholder="$t('subtitleReader.search')" :aria-label="$t('subtitleReader.search')" class="reader-search">
             <template #prepend><q-icon name="search" size="20px" /></template>
           </q-input>
@@ -25,7 +25,7 @@
         <q-separator />
       </header>
 
-      <section class="reader-content" :aria-label="$t('subtitleReader.title')" :aria-busy="loading" :style="{ '--reader-font-size': fontSize + 'px' }">
+      <section v-if="!$store.state.AudioPlayer.privacyMode" class="reader-content" :aria-label="$t('subtitleReader.title')" :aria-busy="loading" :style="{ '--reader-font-size': fontSize + 'px' }">
         <div v-if="loading" class="reader-state" role="status"><q-spinner size="36px" color="primary" /><p>{{ $t('subtitleReader.loading') }}</p></div>
         <div v-else-if="error" class="reader-state" role="alert"><q-icon name="cloud_off" size="40px" /><p>{{ $t('subtitleReader.failed') }}</p><q-btn outline color="primary" icon="refresh" :label="$t('subtitleReader.retry')" @click="load" /></div>
         <div v-else-if="!filteredLines.length" class="reader-state" role="status"><q-icon :name="searchTerm ? 'search_off' : 'subtitles_off'" size="40px" /><p>{{ $t(searchTerm ? 'subtitleReader.noMatches' : 'subtitleReader.empty') }}</p></div>
@@ -36,6 +36,7 @@
           </li>
         </ol>
       </section>
+      <p v-else class="reader-state">{{ $t('privacy.hidden') }}</p>
     </div>
   </q-page>
 </template>

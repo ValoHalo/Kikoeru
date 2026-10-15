@@ -1,15 +1,15 @@
 <template>
   <article class="favourite-work">
-    <router-link :to="`/work/${metadata.id}`" class="favourite-work__cover" :aria-label="metadata.title">
+    <router-link :to="`/work/${metadata.id}`" class="favourite-work__cover" :aria-label="$privateText(metadata.title)">
       <q-img :key="coverUrl" :src="coverUrl" :ratio="4 / 3" />
     </router-link>
 
     <div class="favourite-work__main">
-      <router-link :to="`/work/${metadata.id}`" class="favourite-work__title">{{ metadata.title }}</router-link>
+      <router-link :to="`/work/${metadata.id}`" class="favourite-work__title">{{ $privateText(metadata.title) }}</router-link>
       <div class="favourite-work__meta">
-        <router-link v-if="metadata.circle" :to="`/works?circleId=${metadata.circle.id}`">{{ metadata.circle.name }}</router-link>
+        <router-link v-if="metadata.circle" :to="`/works?circleId=${metadata.circle.id}`">{{ $privateText(metadata.circle.name) }}</router-link>
         <span v-if="metadata.release">{{ metadata.release }}</span>
-        <router-link v-for="va in metadata.vas" :key="va.id" :to="`/works?vaId=${va.id}`">{{ va.name }}</router-link>
+        <router-link v-for="va in metadata.vas" :key="va.id" :to="`/works?vaId=${va.id}`">{{ $privateText(va.name) }}</router-link>
       </div>
       <div class="favourite-work__status">
         <q-rating v-if="!hideRating" v-model="rating" @update:model-value="setRating" size="20px" color="primary" icon="star_border" icon-selected="star" :aria-label="$t('favourites.rating')" />
@@ -26,7 +26,7 @@
     <div v-if="mode === 'histroy' && historyTrack" class="favourite-work__detail favourite-work__resume">
       <div class="favourite-work__track">
         <div class="favourite-work__position"><q-icon name="headphones" size="18px" /><span>{{ metadata.state.index + 1 }} / {{ metadata.state.queue.length }}</span><span class="favourite-work__time">{{ humanReadableSeconds(metadata.state.seconds) }}</span></div>
-        <div class="favourite-work__filename">{{ historyTrack.title }}<AppTooltip>{{ historyTrack.title }}</AppTooltip></div>
+        <div class="favourite-work__filename">{{ $privateText(historyTrack.title) }}<AppTooltip>{{ $privateText(historyTrack.title) }}</AppTooltip></div>
       </div>
       <q-btn unelevated no-caps color="primary" icon="play_arrow" :label="$t('favListItem.resume')" :disable="Boolean(metadata.files_missing)" class="favourite-work__play" @click="playHistroy(metadata.id, metadata.state)" />
     </div>

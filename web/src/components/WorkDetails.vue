@@ -15,7 +15,7 @@
         <div class="work-circle">
           <q-icon name="album" size="16px" />
           <router-link :to="`/works?circleId=${metadata.circle.id}`">
-            {{metadata.circle.name}}
+            {{ $privateText(metadata.circle.name) }}
           </router-link>
           <span v-if="metadata.archived_at" class="work-archived"><q-icon name="archive" size="14px" />{{ $t('workDetails.archived') }}</span>
           <span v-if="metadata.files_missing" class="work-archived" :class="$q.dark.isActive ? 'text-red-4' : 'text-negative'"><q-icon name="folder_off" size="14px" />{{ $t('common.filesMissing') }}</span>
@@ -24,7 +24,7 @@
         <!-- 标题 -->
         <h1 class="work-title">
           <router-link :to="`/work/${metadata.id}`">
-            {{metadata.title}}
+            {{ $privateText(metadata.title) }}
           </router-link>
         </h1>
 
@@ -88,7 +88,7 @@
             :key=index
           >
             <q-chip square size="md" class="work-voice" icon="mic">
-              {{va.name}}
+              {{ $privateText(va.name) }}
             </q-chip>
           </router-link>
         </div>
@@ -104,7 +104,7 @@
             :key=index
           >
             <q-chip square size="md">
-              {{tag.name}}
+              {{ $privateText(tag.name) }}
             </q-chip>
           </router-link>
         </div>

@@ -47,12 +47,12 @@
         <div
           class="recent-work-item"
         >
-          <button class="recent-work-cover" type="button" :aria-label="`${$t('favListItem.resume')} · ${item.title}`" :disabled="!item.state?.queue?.[item.state.index]" @click="resumeThisHistroy(item)">
+          <button class="recent-work-cover" type="button" :aria-label="`${$t('favListItem.resume')} · ${$privateText(item.title)}`" :disabled="!item.state?.queue?.[item.state.index]" @click="resumeThisHistroy(item)">
             <CoverSFW :workid="item.id" :nsfw="false" :release="''" :lyric_status="item.lyric_status">
               <template #cover>
                 <div class="recent-work-overlay absolute-bottom">
-                  <div class="recent-work-track ellipsis-2-lines">{{ getWorkHistoryInfo(item) }}</div>
-                  <div class="recent-work-title ellipsis">{{ item.title }}</div>
+                  <div class="recent-work-track ellipsis-2-lines">{{ $privateText(getWorkHistoryInfo(item)) }}</div>
+                  <div class="recent-work-title ellipsis">{{ $privateText(item.title) }}</div>
                 </div>
               </template>
             </CoverSFW>

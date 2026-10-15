@@ -1,7 +1,7 @@
 <template>
   <q-dialog :model-value="true" :persistent="saving" @update:model-value="$emit('close')">
     <q-card class="bookmark-editor app-form-dialog">
-      <q-form @submit.prevent="saveBookmark">
+      <q-form v-if="!$store.state.AudioPlayer.privacyMode" @submit.prevent="saveBookmark">
         <q-card-section>
           <div class="text-h6">{{ $t(bookmark.id ? 'bookmark.edit' : 'bookmark.add') }}</div>
           <div class="text-body2 text-grey q-mt-xs bookmark-file">{{ bookmark.relative_path }}</div>
@@ -17,6 +17,7 @@
           <q-btn flat color="primary" :label="$t('bookmark.save')" type="submit" :loading="saving" />
         </q-card-actions>
       </q-form>
+      <q-card-section v-else>{{ $t('privacy.hidden') }}<q-btn v-close-popup flat round icon="close" :aria-label="$t('common.close')" /></q-card-section>
     </q-card>
   </q-dialog>
 </template>

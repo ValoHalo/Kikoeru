@@ -12,13 +12,13 @@
         type="button"
         class="work-image-tile"
         :style="{ flexGrow: ratio(item) / totalRatio(row), aspectRatio: ratio(item) }"
-        :aria-label="item.title"
+        :aria-label="$privateText(item.title)"
         @click="$emit('preview', item)"
       >
         <img
           v-if="!failed[item.hash]"
-          :src="item.mediaStreamUrl || `/api/media/stream/${item.hash}`"
-          :alt="item.title"
+          :src="$privateImage(item.mediaStreamUrl || `/api/media/stream/${item.hash}`)"
+          :alt="$privateText(item.title)"
           loading="lazy"
           decoding="async"
           @load="onLoad(item, $event)"
@@ -26,7 +26,7 @@
         />
         <span v-else class="work-image-fallback">
           <q-icon name="broken_image" size="32px" />
-          <span>{{ item.title }}</span>
+          <span>{{ $privateText(item.title) }}</span>
         </span>
         <q-menu touch-position context-menu auto-close>
           <q-list separator>

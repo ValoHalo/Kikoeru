@@ -56,6 +56,8 @@ function syncCurrentTrackContext (state, fallbackWorkId = 0) {
 }
 
 const mutations = {
+  SET_PRIVACY_MODE (state, value) { state.privacyMode = Boolean(value); LocalStorage.set('privacy-mode', state.privacyMode) },
+  SET_SWAP_CHANNELS (state, value) { state.swapChannels = Boolean(value); LocalStorage.set('swap-audio-channels', state.swapChannels) },
   SET_HISTORY_CLEARING (state, value) { state.historyClearing = value },
   HISTORY_RECORDING_STARTED (state) { state.suppressPausedHistory = false },
   HISTORY_SAVED (state) { state.historySavedRevision++ },

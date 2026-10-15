@@ -1,4 +1,10 @@
 {
+  "privacy": {
+    "enable": "プライバシーモードを有効にする",
+    "disable": "プライバシーモードを解除",
+    "hidden": "内容は非表示です",
+    "channelUnavailable": "このブラウザーでは音声チャンネルを切り替えられません"
+  },
   "batchWorks": {
     "selectNamed": "作品を選択：{name}",
     "selectWork": "作品を選択",

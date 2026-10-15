@@ -22,7 +22,7 @@
     <div v-if="!selecting && (advanceSearchKeywords.length || searchMetas.length)" class="works-search-chips">
       <div v-if="isAdvanceSearch"><!--高级搜索模式的多关键字展示-->
         <q-badge class="q-ma-xs" v-for="meta,index in advanceSearchKeywords" :key="meta.t+meta.d">
-          {{ meta.d }}
+          {{ $privateText(meta.d) }}
           <q-btn
             class="q-ml-sm search-tag-close-btn"
             padding="xs"
@@ -30,13 +30,13 @@
             flat 
             size="xs"
             icon="close"
-            :aria-label="$t('works.removeKeyword', { d: meta.d })"
+            :aria-label="$t('works.removeKeyword', { d: $privateText(meta.d) })"
             @click="removeAdvanceSearchKeyword(index)"
           />
         </q-badge>
       </div>
       <div v-else> <!--普通搜索模式的信息展示-->
-        <q-badge class="q-ma-xs" v-for="meta, index in searchMetas" :key="meta">{{ index == 0 ? "":"," }} {{ meta }}</q-badge>
+        <q-badge class="q-ma-xs" v-for="meta, index in searchMetas" :key="meta">{{ index == 0 ? "":"," }} {{ $privateText(meta) }}</q-badge>
       </div>
     </div>
 
@@ -128,7 +128,7 @@
           bordered separator class="shadow-2"
         >
           <template #default="{ item }">
-            <WorkSelection :key="item.id" :label="item.title" list :enabled="selecting" :selected="selectedWorks.includes(item.id)" @select="toggleSelection(item.id, $event)"><WorkListItem :metadata="item" :showLabel="showLabel && $q.screen.width > 700" /></WorkSelection>
+            <WorkSelection :key="item.id" :label="$privateText(item.title)" list :enabled="selecting" :selected="selectedWorks.includes(item.id)" @select="toggleSelection(item.id, $event)"><WorkListItem :metadata="item" :showLabel="showLabel && $q.screen.width > 700" /></WorkSelection>
           </template>
         </q-virtual-scroll>
         <q-list v-else-if="listMode && works.length" bordered separator class="shadow-2">

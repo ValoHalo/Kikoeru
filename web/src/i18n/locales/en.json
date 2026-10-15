@@ -1,4 +1,10 @@
 {
+  "privacy": {
+    "enable": "Enable privacy mode",
+    "disable": "Disable privacy mode",
+    "hidden": "Content hidden",
+    "channelUnavailable": "This browser cannot switch audio channels"
+  },
   "batchWorks": {
     "selectNamed": "Select work: {name}",
     "selectWork": "Select works",

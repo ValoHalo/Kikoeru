@@ -1,9 +1,9 @@
 <template>
-  <q-card class="lyric-selection">
+  <q-card v-if="!$store.state.AudioPlayer.privacyMode" class="lyric-selection">
     <q-card-section class="row no-wrap items-start lyric-header">
       <div class="col lyric-header-copy">
         <div class="text-h5">{{ $t('lyricSelection.title') }}</div>
-        <div class="text-caption text-grey-7 ellipsis">{{ currentPlayingFile.title || $t('lyricSelection.noTrack') }}</div>
+        <div class="text-caption text-grey-7 ellipsis">{{ $privateText(currentPlayingFile.title || $t('lyricSelection.noTrack')) }}</div>
       </div>
       <q-btn v-close-popup flat round class="col-auto" icon="close" :aria-label="$t('lyricSelection.close')" @click="isEditingLyrics = false" />
     </q-card-section>
@@ -156,8 +156,8 @@
               @click="selectLyricOption(option)"
             >
               <q-item-section>
-                <q-item-label>{{ option.title }}</q-item-label>
-                <q-item-label caption lines="2">{{ option.subtitle || $t('lyricSelection.workRoot') }}</q-item-label>
+                <q-item-label>{{ $privateText(option.title) }}</q-item-label>
+                <q-item-label caption lines="2">{{ $privateText(option.subtitle || $t('lyricSelection.workRoot')) }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <div class="row items-center q-gutter-xs">
@@ -202,6 +202,7 @@
       </q-card>
     </q-dialog>
   </q-card>
+  <q-card v-else class="q-pa-md"><q-icon name="visibility_off" class="q-mr-sm" />{{ $t('privacy.hidden') }}<q-btn v-close-popup flat round icon="close" :aria-label="$t('common.close')" /></q-card>
 </template>
 
 <script>

@@ -190,6 +190,8 @@ export default {
 
     ...mapState('AudioPlayer', [
       'playing',
+      'privacyMode',
+      'swapChannels',
       'queue',
       'queueIndex',
       'playMode',
@@ -233,6 +235,11 @@ export default {
   },
 
   watch: {
+    privacyMode () {
+      this.updateMediaSessionMetadata()
+      if (this.privacyMode && document.pictureInPictureElement === this.$refs.media) document.exitPictureInPicture().catch(() => {})
+    },
+    swapChannels () { this.applyChannelSwap() },
     'currentPlayingFile.hash' () {
       this.$store.commit('AudioPlayer/CLEAR_SEEK_UNDO')
     },
@@ -336,6 +343,7 @@ export default {
     },
 
     initializePlayer () {
+      this.releaseAudioGraph()
       if (this.playerInstance) this.playerInstance.destroy()
       this.playerInstance = new Plyr(this.$refs.media, {
         controls: ['progress']
@@ -361,6 +369,7 @@ export default {
       // console.log('playing')
       this.playLrc(true)
       this.PLAY()
+      if (this.swapChannels || this.enableVisualizer) this.applyChannelSwap()
       this.scheduleNextTrackPreTranscode()
     },
     /**
@@ -437,7 +446,8 @@ export default {
       }
     },
 
-    onCanplay () {
+    onCanplay (event) {
+      if (!this.player?.media || (event && event.target !== this.player.media)) return
       // 缓冲至可播放状态时触发 (只有缓冲至可播放状态, 才能获取媒体文件的播放时长)
       this.SET_DURATION(this.player.duration)
       this.player.media.playbackRate = this.playbackRate
@@ -644,9 +654,9 @@ export default {
           navigator.mediaSession.metadata = null;
         } else {
           navigator.mediaSession.metadata = new window.MediaMetadata({
-            title: this.currentPlayingFile.title,
+            title: this.$privateText(this.currentPlayingFile.title),
             artist: "",
-            album: this.currentPlayingFile.workTitle,
+            album: this.privacyMode ? '' : this.currentPlayingFile.workTitle,
             // artwork: this.visualPlayerCoverUrl,
             artwork: this.$store.getters['AudioPlayer/shouldBlurCover'](this.playWorkId) ? [] : [
               // {
@@ -729,6 +739,32 @@ export default {
       }
     },
 
+    releaseAudioGraph () {
+      const graph = this.$store.state.AudioPlayer.audioAnalyser
+      if (graph) { graph.audioSrc.disconnect(); graph.audioCtx.close().catch(() => {}); this.SET_AUDIO_ANALYSER(null) }
+    },
+    applyChannelSwap () {
+      if (!this.player?.media) return
+      try {
+        let graph = this.$store.state.AudioPlayer.audioAnalyser
+        if (!graph) {
+          if (!this.swapChannels && !this.enableVisualizer) return
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+          graph = { audioCtx, left: audioCtx.createAnalyser(), right: audioCtx.createAnalyser(), splitter: audioCtx.createChannelSplitter(2), merger: audioCtx.createChannelMerger(2), audioSrc: audioCtx.createMediaElementSource(this.player.media) }
+          graph.audioSrc.connect(graph.splitter)
+          graph.merger.connect(audioCtx.destination)
+          this.SET_AUDIO_ANALYSER(graph)
+        }
+        graph.splitter.disconnect()
+        graph.splitter.connect(graph.left, this.swapChannels ? 1 : 0)
+        graph.splitter.connect(graph.right, this.swapChannels ? 0 : 1)
+        graph.splitter.connect(graph.merger, 0, this.swapChannels ? 1 : 0)
+        graph.splitter.connect(graph.merger, 1, this.swapChannels ? 0 : 1)
+        graph.audioCtx.resume().catch(() => {})
+      } catch {
+        this.$q.notify({ type: 'negative', message: t('privacy.channelUnavailable') })
+      }
+    },
     onChangeSlider(v) {
       this.$store.commit('AudioPlayer/REQUEST_MANUAL_SEEK', { seconds: v, from: this.sliderOrigin ?? this.player.currentTime })
       this.sliderOrigin = null
@@ -757,27 +793,11 @@ export default {
 
     const initAudio = () => {
       document.removeEventListener('click', initAudio);
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const analyser = {
-        left: audioCtx.createAnalyser(),
-        right: audioCtx.createAnalyser(),
-        audioCtx,
-        splitter: null,
-        merger: null,
-        audioSrc: null,
-      };
-
-      analyser.audioSrc = audioCtx.createMediaElementSource(this.player.media);
-      analyser.splitter = audioCtx.createChannelSplitter(2);
-      analyser.merger = audioCtx.createChannelMerger(2);
-      analyser.audioSrc.connect(analyser.splitter);
-      analyser.splitter.connect(analyser.left, 0);
-      analyser.splitter.connect(analyser.right, 1);
-      analyser.audioSrc.connect(audioCtx.destination)
-      this.SET_AUDIO_ANALYSER(analyser)
+      this.applyChannelSwap()
     }
+    this.initAudioHandler = initAudio
 
-    if (this.enableVisualizer) {
+    if (this.enableVisualizer || this.swapChannels) {
       document.addEventListener('click', initAudio);
       if (this.$q.platform.is.safari && this.$q.platform.is.mobile) {
         this.$q.notify({
@@ -795,6 +815,8 @@ export default {
   },
 
   beforeUnmount () {
+    document.removeEventListener('click', this.initAudioHandler)
+    this.releaseAudioGraph()
     this.lrcRequestId++
     this.clearPreTranscodeTimer()
     this.clearMediaSessionActionHandlers()

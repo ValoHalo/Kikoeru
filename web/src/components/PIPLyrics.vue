@@ -16,6 +16,7 @@ export default {
   name: 'PIPLyrics',
 
   computed: {
+    currentLyric () { return this.$store.state.AudioPlayer.privacyMode ? t('privacy.hidden') : this.$store.state.AudioPlayer.currentLyric },
     video() {
       return this.$refs.video;
     },
@@ -25,7 +26,7 @@ export default {
     },
 
     ...mapState('AudioPlayer', [
-      'currentLyric',
+      'privacyMode',
       'enablePIPLyrics',
       'playing',
     ]),
@@ -324,6 +325,10 @@ export default {
   },
 
   watch: {
+    privacyMode () {
+      if (this.ctx && this.canvas) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+      this.drawLyric(this.currentLyric)
+    },
     enablePIPLyrics(value) {
       if (!value) this.stopPIPLyric()
       else  this.tryEnterPIPAndShowUserPrompt()
