@@ -1,4 +1,16 @@
 {
+  "playbackProtection": {
+    "undo": "撤销跳转",
+    "positions": "播放位置记录",
+    "empty": "暂无位置记录",
+    "idle": "尚未保存播放进度",
+    "saving": "正在保存播放进度",
+    "failed": "播放进度尚未同步",
+    "savedAt": "已保存于 {time}",
+    "localFound": "本机有未同步的播放位置",
+    "restore": "恢复本机位置",
+    "discard": "使用服务器位置"
+  },
   "dataTransfer": {
     "title": "数据管理",
     "export": "导出数据",
@@ -35,6 +47,7 @@
     "downloadFailed": "浏览器未能保存导出文件。",
     "tables": {
       "t_circle": "社团",
+      "t_play_position": "播放位置记录",
       "t_tag": "标签",
       "t_va": "声优",
       "t_work": "作品资料",

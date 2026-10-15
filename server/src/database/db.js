@@ -780,17 +780,38 @@ const getPlayHistroy = async ({ username = '', sortOption = 'desc', limit = 1000
     return { works, totalCount };
 };
 exports.getPlayHistroy = getPlayHistroy;
-const updatePlayHistroy = async (username, work_id, state) => knex.transaction(async (trx) => {
+const updatePlayHistroy = async (username, work_id, state, reason = 'interval') => knex.transaction(async (trx) => {
     await trx.raw(`${knexfile_1.dbSpecifiedFunctionName.insertOrIgnore} INTO t_play_histroy (user_name, work_id, state) VALUES (?, ?, ?);`, [username, work_id, state]);
     await trx.raw('UPDATE t_play_histroy SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE user_name = ? AND work_id = ?;', [state, username, work_id]);
+    const playback = JSON.parse(state);
+    const track = playback.queue?.[playback.index];
+    if (!track || !Number.isFinite(playback.seconds) || playback.seconds < 0) return;
+    let relativePath;
+    try {
+        relativePath = require('../filesystem/trackReference').normalizeTrackPath(track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/'));
+    } catch { return; }
+    const seconds = Math.floor(playback.seconds);
+    const previous = await trx('t_play_position').where('user_name', username).orderBy('id', 'desc').first();
+    const sameTrack = previous && Number(previous.work_id) === Number(work_id) && previous.relative_path === relativePath;
+    if (sameTrack && Math.abs(previous.seconds - seconds) < 2) return;
+    if (sameTrack && reason === 'interval' && Math.abs(previous.seconds - seconds) < 300) return;
+    await trx('t_play_position').insert({ user_name: username, work_id, relative_path: relativePath, seconds, reason });
+    const expired = await trx('t_play_position').where('user_name', username).orderBy('id', 'desc').offset(100).select('id');
+    if (expired.length) await trx('t_play_position').whereIn('id', expired.map(row => row.id)).del();
 });
 exports.updatePlayHistroy = updatePlayHistroy;
 async function clearPlayHistory(username) {
     if (!username) throw new Error('A username is required');
-    return knex('t_play_histroy').where('user_name', username).del();
+    return knex.transaction(async trx => {
+        await trx('t_play_position').where('user_name', username).del();
+        return trx('t_play_histroy').where('user_name', username).del();
+    });
 }
 async function deletePlayHistroy(username, work_id) {
-    await knex('t_play_histroy').select('*').where('work_id', '=', work_id).where('user_name', '=', username).first().del();
+    await knex.transaction(async trx => {
+        await trx('t_play_position').where({ user_name: username, work_id }).del();
+        await trx('t_play_histroy').where({ user_name: username, work_id }).del();
+    });
 }
 async function getPlaylists(username, sfwOnly = false) {
     const items = knex('t_playlist_item');

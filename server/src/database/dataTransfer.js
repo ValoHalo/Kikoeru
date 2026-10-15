@@ -26,6 +26,7 @@ const definitions = {
     t_bookmark: ['id user_name work_id relative_path seconds name note', 'id'],
     t_work_availability: ['work_id missing_since', 'work_id'],
     t_scan_failure: ['id code root_folder relative_dir stage message attempts created_at updated_at', 'id'],
+    t_play_position: ['id user_name work_id relative_path seconds reason created_at', 'id'],
 };
 const TABLES = Object.fromEntries(Object.entries(definitions).map(([table, [columns, key]]) => [table, { columns: columns.split(' '), key: key.split(' ') }]));
 const CORE_TABLES = ['t_circle', 't_tag', 't_va', 't_user', 't_work', 'r_tag_work', 'r_va_work', 't_review', 't_play_histroy'];
@@ -37,6 +38,7 @@ const FEATURES = {
     '20260912000000_work_availability.js': ['t_work_availability'],
     '20261008000000_create_bookmarks.js': ['t_bookmark'],
     '20261008010000_add_bookmark_name.js': [],
+    '20261015090000_playback_positions.js': ['t_play_position'],
 };
 const LEGACY_LAST_MIGRATION = '20231201003918_work_file_memo.js';
 const OPTIONAL_VALUES = new Set(['nsfw', 'release', 'dl_count', 'price', 'review_count', 'rate_count', 'rate_average_2dp', 'rate_count_detail', 'rank', 'memo', 'rating', 'review_text', 'progress', 'is_custom_meta']);
@@ -63,7 +65,12 @@ function jsonValue(value, table, column) {
 }
 
 function recordKey(row, fields) {
-    return JSON.stringify(fields.map(field => row[field]));
+    return JSON.stringify(fields.map(field => {
+        const value = row[field];
+        if (field !== 'created_at' || value == null) return value;
+        const timestamp = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value) ? `${value.replace(' ', 'T')}Z` : value;
+        return new Date(timestamp).toISOString();
+    }));
 }
 
 function readSqlite(buffer) {
@@ -242,7 +249,8 @@ function readImport(buffer) {
         try { backup = JSON.parse(buffer.toString('utf8').replace(/^\uFEFF/, '')); }
         catch { fail('unsupported'); }
         if (!object(backup) || backup.format !== FORMAT) fail('unsupported');
-        if (backup.formatVersion !== 1 || backup.schemaVersion !== 1) fail('newerVersion');
+        if (backup.formatVersion !== 1 || ![1, 2].includes(backup.schemaVersion)) fail('newerVersion');
+        if (backup.schemaVersion === 1 && object(backup.tables)) backup.tables.t_play_position = [];
         input = { source: 'branchBackup', appVersion: backup.appVersion, exportedAt: backup.exportedAt, tables: backup.tables, ignoredTranslationTasks: 0 };
     }
     return { ...input, ...normalizeTables(input.tables), digest: crypto.createHash('sha256').update(buffer).digest('hex') };
@@ -274,7 +282,7 @@ async function exportData(knex, appVersion) {
         return result;
     });
     normalizeTables(tables);
-    const buffer = Buffer.from(JSON.stringify({ format: FORMAT, formatVersion: 1, schemaVersion: 1, appVersion, exportedAt: new Date().toISOString(), tables }));
+    const buffer = Buffer.from(JSON.stringify({ format: FORMAT, formatVersion: 1, schemaVersion: 2, appVersion, exportedAt: new Date().toISOString(), tables }));
     if (buffer.length > MAX_BYTES) fail('tooLarge');
     return buffer;
 }
@@ -305,8 +313,8 @@ async function importData(input, options, knex, rootFolders) {
         for (const [table, spec] of Object.entries(TABLES)) {
             if (table === 't_user') continue;
             const list = table === 't_playlist' || table === 't_work_collection';
-            const autoId = list || ['t_playlist_item', 't_work_collection_item', 't_bookmark', 't_scan_failure'].includes(table);
-            const keyFields = list ? ['user_name', 'name'] : table === 't_bookmark' ? ['user_name', 'work_id', 'relative_path', 'seconds', 'name', 'note'] : table === 't_scan_failure' ? ['root_folder', 'relative_dir', 'code'] : spec.key;
+            const autoId = list || ['t_playlist_item', 't_work_collection_item', 't_bookmark', 't_scan_failure', 't_play_position'].includes(table);
+            const keyFields = list ? ['user_name', 'name'] : table === 't_play_position' ? ['user_name', 'work_id', 'relative_path', 'seconds', 'created_at'] : table === 't_bookmark' ? ['user_name', 'work_id', 'relative_path', 'seconds', 'name', 'note'] : table === 't_scan_failure' ? ['root_folder', 'relative_dir', 'code'] : spec.key;
             const keys = new Set(existing[table].map(row => recordKey(row, keyFields)));
             const customNames = new Map(existing[table].filter(row => row.id < 0).map(row => [row.name, row.id]));
             let nextCustomId = existing[table].reduce((minimum, row) => Math.min(minimum, Number(row.id) || 0), 0) - 1;

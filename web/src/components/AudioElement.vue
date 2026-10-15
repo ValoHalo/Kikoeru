@@ -2,8 +2,7 @@
 
   <!--在进度条周围监听mouseup、mousedown事件，辅助进度条状态切换-->
   <div class="q-px-md"
-      @mousedown.capture="onPanSlider('start')"
-      @mouseup.capture="onPanSlider('end')"
+      @pointerdown.capture="onPanSlider('start')"
   >
     <q-slider v-model="changeCurrentTime"
       @change="onChangeSlider"
@@ -145,6 +144,7 @@ function convert_srt_vtt_to_lrc(text) {
 
 export default {
   name: 'AudioElement',
+  emits: ['position-changed'],
 
   mixins: [NotifyMixin],
 
@@ -163,6 +163,8 @@ export default {
       // 两个更新源回导致进度条跳转出错，需要在【用户输入时】关闭【audio播放】发出的time更新（slider上）
       isChangingCurrentTime: false,
       changeCurrentTime: 0,
+      sliderOrigin: null,
+      positionChangeReason: 'interval',
     }
   },
 
@@ -231,6 +233,9 @@ export default {
   },
 
   watch: {
+    'currentPlayingFile.hash' () {
+      this.$store.commit('AudioPlayer/CLEAR_SEEK_UNDO')
+    },
     hideNsfwCovers () {
       this.updateMediaSessionMetadata()
     },
@@ -244,6 +249,8 @@ export default {
 
     // watch source -> media.load() -> canPlay -> player.play()
     source (url) {
+      this.$store.commit('AudioPlayer/SET_PLAYBACK_READY', '')
+      this.positionChangeReason = 'interval'
       this.clearPreTranscodeTimer()
       this.SET_PLAYING_TRANSCODE(this.shouldTranscodeTrack(this.currentPlayingFile))
       this.loadLrcFile();
@@ -289,6 +296,7 @@ export default {
     },
     newCurrentTime(v) {
       if (v < 0) return;
+      this.positionChangeReason = this.$store.state.AudioPlayer.seekCause === 'automatic' ? 'interval' : 'seek'
       this.player.currentTime = v;
       this.SET_NEW_CURRENT_TIME(-1); // 标记时间已经更新到media上了
     },
@@ -447,6 +455,8 @@ export default {
         this.RESUME_HISTROY_SECONDS_DONE()
         if (this.notifyHistoryRestore) this.$q.notify({message: t('audioElement.historyRestored'), timeout: 1000})
       }
+      this.SET_CURRENT_TIME(this.player.currentTime)
+      this.$store.commit('AudioPlayer/SET_PLAYBACK_READY', this.currentPlayingFile.hash)
     },
 
     onTimeupdate () {
@@ -513,6 +523,9 @@ export default {
       //     this.lrcObj.pause();
       //   }
       // }
+      this.SET_CURRENT_TIME(this.player.currentTime)
+      this.$emit('position-changed', this.positionChangeReason)
+      this.positionChangeReason = 'interval'
       this.playLrc(this.playing);
     },
 
@@ -717,20 +730,20 @@ export default {
     },
 
     onChangeSlider(v) {
-      console.log("player current time is ", this.player.currentTime)
-      console.log("slider change value to ", v)
-      console.log("global current time is ", this.currentTime)
-      this.player.currentTime = v;
+      this.$store.commit('AudioPlayer/REQUEST_MANUAL_SEEK', { seconds: v, from: this.sliderOrigin ?? this.player.currentTime })
+      this.sliderOrigin = null
+      this.isChangingCurrentTime = false
     },
      onPanSlider(phase) {
-      console.warn(" pan with phase = ", phase)
       if (phase == 'start') {
+        if (this.sliderOrigin === null) this.sliderOrigin = this.player.currentTime
         this.isChangingCurrentTime = true;
         this.changeCurrentTime = this.currentTime;
       } else {
         // 延时一下，避免音频状态的值立即被更新到slider上
         setTimeout(() => {
           this.isChangingCurrentTime = false;
+          this.sliderOrigin = null;
         }, 100);
       }
      },

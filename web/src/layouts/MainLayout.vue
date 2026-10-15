@@ -119,6 +119,7 @@ import PIPLyrics from 'src/components/PIPLyrics.vue'
 import SleepMode from 'components/SleepMode.vue'
 import CountDownSleepMode from 'components/CountDownSleepMode.vue'
 import NotifyMixin from '../mixins/Notification.js'
+import { readPlaybackRecovery, playbackSignature, discardPlaybackRecovery } from '../utils/playbackHistory.mjs'
 import { mapState } from 'vuex'
 import { CLEARED_LAST_QUEUE_KEY_PREFIX } from '../store/module-AudioPlayer/state'
 import { applyColorScheme, COLOR_SCHEMES, COLOR_SCHEME_EVENT, hasSavedColorScheme, readColorScheme } from '../colorScheme'
@@ -249,6 +250,7 @@ export default {
         if (this.$store.state.User.name !== userName || this.$store.state.AudioPlayer.queue.length > 0) return
         if (!this.$store.state.AudioPlayer.restoreLastQueue || this.$q.localStorage.getItem(clearedQueueKey) === true) return
         const work = response.data && Array.isArray(response.data.works) ? response.data.works[0] : null
+        this.offerLocalRecovery(userName, work)
         if (this.$store.getters['AudioPlayer/sfwOnly'] && work?.nsfw !== false) return
         const historyState = work && work.state
         if (!historyState || !Array.isArray(historyState.queue) || historyState.queue.length === 0) return
@@ -285,6 +287,30 @@ export default {
       } catch (error) {
         console.warn('Failed to restore latest queue:', error)
       }
+    },
+    offerLocalRecovery (userName, work) {
+      const saved = readPlaybackRecovery(this.$q.localStorage, userName)
+      if (!saved || playbackSignature(saved.data) === saved.syncedSignature || playbackSignature(saved.data) === playbackSignature({ work_id: work?.id, state: work?.state })) return
+      if (this.$store.getters['AudioPlayer/sfwOnly']) return
+      this.$q.notify({
+        message: t('playbackProtection.localFound'), icon: 'restore', timeout: 0,
+        actions: [
+          { label: t('playbackProtection.restore'), handler: () => {
+            if (this.$store.state.User.name !== userName || this.$store.getters['AudioPlayer/sfwOnly']) return
+            const playback = saved.data.state
+            const track = playback.queue[playback.index]
+            if (!track) return
+            const sameTrack = this.$store.getters['AudioPlayer/currentPlayingFile'].hash === track.hash
+            this.$store.commit('AudioPlayer/SET_QUEUE', { workId: saved.data.work_id, queue: playback.queue, index: playback.index, resetPlaying: false, resumeHistroySeconds: playback.seconds, notifyHistoryRestore: false })
+            this.$store.commit('AudioPlayer/PAUSE')
+            if (sameTrack) {
+              this.$store.commit('AudioPlayer/SET_NEW_CURRENT_TIME', playback.seconds)
+              this.$store.commit('AudioPlayer/RESUME_HISTROY_SECONDS_DONE')
+            }
+          } },
+          { label: t('playbackProtection.discard'), handler: () => discardPlaybackRecovery(this.$q.localStorage, userName) }
+        ]
+      })
     },
     checkUpdate () {
       if (!this.canManage) return

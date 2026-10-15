@@ -1,4 +1,16 @@
 {
+  "playbackProtection": {
+    "undo": "シークを元に戻す",
+    "positions": "再生位置の履歴",
+    "empty": "保存された位置はありません",
+    "idle": "再生位置は未保存です",
+    "saving": "再生位置を保存中",
+    "failed": "再生位置は未同期です",
+    "savedAt": "{time} に保存済み",
+    "localFound": "このブラウザーに未同期の再生位置があります",
+    "restore": "ローカル位置を復元",
+    "discard": "サーバーの位置を使用"
+  },
   "dataTransfer": {
     "title": "データ管理",
     "export": "データをエクスポート",
@@ -35,6 +47,7 @@
     "downloadFailed": "ブラウザーでファイルを保存できませんでした。",
     "tables": {
       "t_circle": "サークル",
+      "t_play_position": "再生位置の履歴",
       "t_tag": "タグ",
       "t_va": "声優",
       "t_work": "作品情報",

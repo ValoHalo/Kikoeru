@@ -1,4 +1,16 @@
 {
+  "playbackProtection": {
+    "undo": "Undo seek",
+    "positions": "Playback positions",
+    "empty": "No saved positions",
+    "idle": "Playback position has not been saved",
+    "saving": "Saving playback position",
+    "failed": "Playback position is not synced",
+    "savedAt": "Saved at {time}",
+    "localFound": "This browser has an unsynced playback position",
+    "restore": "Restore local position",
+    "discard": "Use server position"
+  },
   "dataTransfer": {
     "title": "Data management",
     "export": "Export data",
@@ -35,6 +47,7 @@
     "downloadFailed": "The browser could not save the exported file.",
     "tables": {
       "t_circle": "Circles",
+      "t_play_position": "Playback positions",
       "t_tag": "Tags",
       "t_va": "Voice actors",
       "t_work": "Works",

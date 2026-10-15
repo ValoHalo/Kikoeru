@@ -47,6 +47,15 @@ const validate_1 = require("./utils/validate");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
 const { prepareWorks } = require('./utils/workVisibility');
+router.get('/positions', accessControl_1.requireAuthenticatedWrite, async (req, res, next) => {
+    try {
+        const rows = db.knex('t_play_position as p').join('t_work as w', 'w.id', 'p.work_id')
+            .where('p.user_name', (0, accessControl_1.getRequestUsername)(req, config_1.config))
+            .select('p.*', 'w.title', 'w.nsfw').orderBy('p.id', 'desc').limit(100);
+        if (req.query.nsfw === '1') rows.where('w.nsfw', false);
+        res.send({ positions: await rows });
+    } catch (error) { next(error); }
+});
 router.get('/', (0, express_validator_1.query)('page', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt(), (0, express_validator_1.query)('sort', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isIn(['desc', 'asc']), async (req, res) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
@@ -82,7 +91,8 @@ router.put('/', accessControl_1.requireAuthenticatedWrite, (0, express_validator
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const username = (0, accessControl_1.getRequestUsername)(req, config_1.config);
-    db.updatePlayHistroy(username, Number(req.body.work_id), JSON.stringify(req.body.state))
+    const reason = ['interval', 'pause', 'track', 'seek', 'recover'].includes(req.body.reason) ? req.body.reason : 'interval';
+    db.updatePlayHistroy(username, Number(req.body.work_id), JSON.stringify(req.body.state), reason)
         .then(() => {
         res.send({ message: t('play_histroy.saved') });
     }).catch((err) => {

@@ -59,6 +59,30 @@ const mutations = {
   SET_HISTORY_CLEARING (state, value) { state.historyClearing = value },
   HISTORY_RECORDING_STARTED (state) { state.suppressPausedHistory = false },
   HISTORY_SAVED (state) { state.historySavedRevision++ },
+  SET_HISTORY_SAVE_STATUS (state, value) {
+    state.historySaveStatus = value
+    if (value === 'saved') state.historySavedAt = Date.now()
+  },
+  SET_PLAYBACK_READY (state, hash) { state.playbackReadyHash = hash },
+  CLEAR_SEEK_UNDO (state) { state.seekUndo = []; state.seekUndoHash = ''; state.seekOrigin = null },
+  REQUEST_MANUAL_SEEK (state, value) {
+    const seconds = Math.max(0, Math.min(state.duration, Number(value.seconds)))
+    const from = Number.isFinite(value.from) ? value.from : state.currentTime
+    const hash = getters.currentPlayingFile(state).hash
+    if (!hash || !Number.isFinite(seconds) || Math.abs(from - seconds) < 0.01) return
+    if (state.seekUndoHash !== hash) state.seekUndo = []
+    state.seekUndoHash = hash
+    state.seekUndo = [...state.seekUndo, from].slice(-10)
+    state.seekOrigin = { hash, seconds: from }
+    state.seekCause = 'manual'
+    state.newCurrentTime = seconds
+  },
+  UNDO_SEEK (state) {
+    if (state.seekUndoHash !== getters.currentPlayingFile(state).hash || !state.seekUndo.length) return
+    state.newCurrentTime = state.seekUndo[state.seekUndo.length - 1]
+    state.seekUndo = state.seekUndo.slice(0, -1)
+    state.seekCause = 'undo'
+  },
   HISTORY_CLEARED (state) { state.historyRevision++; state.suppressPausedHistory = true },
   APPLY_DEFAULT_PREFERENCES: (state, defaults) => {
     const assignWhenUnset = (key, stateKey, normalize) => {
@@ -109,6 +133,7 @@ const mutations = {
   },
 
   SET_NEW_CURRENT_TIME (state, value) {
+    if (value >= 0) state.seekCause = 'automatic'
     state.newCurrentTime = value;
   },
 

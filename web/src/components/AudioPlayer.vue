@@ -62,9 +62,14 @@
         </div>
 
         <div class="player-progress non-selectable relative-position">
-          <AudioElement class="player-seek" />
+          <AudioElement class="player-seek" @position-changed="onUpdatePlayingStatus" />
           <div class="player-times">
             <span>{{ formatSeconds(currentTime) }}</span>
+            <div class="row items-center no-wrap">
+              <q-btn flat round dense size="sm" icon="undo" :disable="!seekUndo.length" :aria-label="$t('playbackProtection.undo')" @click="$store.commit('AudioPlayer/UNDO_SEEK')"><AppTooltip>{{ $t('playbackProtection.undo') }}</AppTooltip></q-btn>
+              <q-btn flat round dense size="sm" icon="history" :aria-label="$t('playbackProtection.positions')" @click="showPositions = true"><AppTooltip>{{ $t('playbackProtection.positions') }}</AppTooltip></q-btn>
+              <q-icon :name="historySaveStatus === 'failed' ? 'cloud_off' : historySaveStatus === 'saving' ? 'sync' : 'cloud_done'" :color="historySaveStatus === 'failed' ? 'negative' : undefined" size="16px"><AppTooltip>{{ historySaveLabel }}</AppTooltip></q-icon>
+            </div>
             <span>{{ formatSeconds(duration) }}</span>
           </div>
           <div v-if="playingTranscode" class="transcoding-status-anchor text-caption">
@@ -344,11 +349,13 @@
       <LyricSelection />
     </q-dialog>
     <BookmarksDialog v-if="showBookmarks && currentPlayingFile.hash" :work-id="Number(playWorkId)" :track="currentPlayingFile" @close="showBookmarks = false" />
+    <PlaybackPositions v-if="showPositions" @close="showPositions = false" />
   </div>
 </template>
 
 <script>
-import { savePlaybackHistory } from '../utils/playbackHistory.mjs'
+import { savePlaybackHistory, cachePlaybackRecovery, acknowledgePlaybackRecovery, discardPlaybackRecovery } from '../utils/playbackHistory.mjs'
+import PlaybackPositions from 'components/PlaybackPositions.vue'
 import { t } from '../i18n'
 import draggable from 'vuedraggable'
 import AudioElement from 'components/AudioElement.vue'
@@ -366,6 +373,7 @@ export default {
   name: 'AudioPlayer',
 
   components: {
+    PlaybackPositions,
     draggable,
     AudioElement,
     Scrollable,
@@ -382,6 +390,8 @@ export default {
       editCurrentPlayList: false,
       queueCopy: [],
       histroyCheckIntervalId: -1,
+      recoveryIntervalId: null,
+      showPositions: false,
       latestUpdatedHistory: null, // 记录最近一次更新的历史记录，防止反复对同一个播放历史进行远程数据更新
       playbackRates: PLAYBACK_RATES,
       showSaveQueueDialog: false,
@@ -403,7 +413,8 @@ export default {
   mounted () {
     this.histroyCheckIntervalId = setInterval(() => {
       this.onUpdatePlayingStatus()
-    }, 60 * 1000) // 每隔一段时间更新一次播放记录
+    }, 30 * 1000)
+    this.recoveryIntervalId = setInterval(() => this.cacheCurrentPosition(), 5000)
 
     if (this.$q.platform.is.desktop) {
       window.addEventListener('keydown', this.onKeyDown);
@@ -415,6 +426,7 @@ export default {
       window.removeEventListener('keydown', this.onKeyDown);
     }
     clearInterval(this.histroyCheckIntervalId)
+    clearInterval(this.recoveryIntervalId)
 
     // 原本是想要在关闭窗口时，更新最后一次播放历史
     // 但是实际测试下来，关闭窗口时根本没有来得及发送最后一次更新消息，于是放弃这个方案
@@ -422,6 +434,16 @@ export default {
   },
 
   watch: {
+    '$store.state.AudioPlayer.seekOrigin' (origin) {
+      if (origin?.hash === this.currentPlayingFile.hash) this.onUpdatePlayingStatus('seek', origin.seconds)
+    },
+    '$store.state.AudioPlayer.playbackReadyHash' (hash) {
+      if (hash && this.playing) this.onUpdatePlayingStatus('track')
+    },
+    '$store.state.AudioPlayer.historyRevision' () {
+      discardPlaybackRecovery(this.$q.localStorage, this.$store.state.User.name)
+      this.$store.commit('AudioPlayer/SET_HISTORY_SAVE_STATUS', 'idle')
+    },
     queue (val) {
       this.queueCopy = val.concat()
       // 在删除最后一个 track 时关闭当前播放列表
@@ -450,7 +472,7 @@ export default {
       if (value && this.$store.state.User.name) {
         this.$q.localStorage.remove(`${CLEARED_LAST_QUEUE_KEY_PREFIX}${this.$store.state.User.name}`)
       }
-      this.onUpdatePlayingStatus()
+      this.onUpdatePlayingStatus(value ? 'interval' : 'pause')
     },
 
     playMode() {
@@ -501,6 +523,10 @@ export default {
   },
 
   computed: {
+    historySaveLabel () {
+      if (this.historySaveStatus === 'saved') return t('playbackProtection.savedAt', { time: new Date(this.$store.state.AudioPlayer.historySavedAt).toLocaleTimeString() })
+      return t(`playbackProtection.${this.historySaveStatus}`)
+    },
     coverFilter () {
       const blur = this.$store.getters['AudioPlayer/shouldBlurCover'](this.playWorkId) ? 'blur(28px) ' : ''
       return blur + (this.isFlipCover ? 'brightness(0.1) grayscale(80%)' : 'brightness(1) grayscale(0%)')
@@ -604,6 +630,8 @@ export default {
 
     ...mapState('AudioPlayer', [
       'playing',
+      'seekUndo',
+      'historySaveStatus',
       'hide',
       'currentTime',
       'duration',
@@ -786,11 +814,20 @@ export default {
       return true;
     },
     
-    onUpdatePlayingStatus() {
+    currentPositionData (seconds = this.currentTime) {
+      return { user_name: this.$store.state.User.name, work_id: this.playWorkId, state: { queue: this.queueCopy, index: this.queueIndex, seconds, playMode: this.playMode, playbackRate: this.playbackRate } }
+    },
+    cacheCurrentPosition () {
+      const state = this.$store.state.AudioPlayer
+      if (!this.playing || !this.resumeHistroyDone || state.historyClearing || state.playbackReadyHash !== this.currentPlayingFile.hash) return
+      cachePlaybackRecovery(this.$q.localStorage, this.$store.state.User.name, this.currentPositionData())
+    },
+    onUpdatePlayingStatus(reason = 'interval', seconds = this.currentTime) {
       if (this.$store.state.AudioPlayer.historyClearing) return;
       if (this.$store.state.AudioPlayer.suppressPausedHistory && !this.playing) return;
       // 匿名播放不创建个人历史记录。
       if (!this.$store.state.User.name) return;
+      if (this.$store.state.AudioPlayer.playbackReadyHash !== this.currentPlayingFile.hash) return
       // Filtering a paused queue must not replace the saved playback history.
       if (this.$store.getters['AudioPlayer/sfwOnly'] && !this.playing) return;
 
@@ -803,17 +840,8 @@ export default {
         return
       }
 
-      const data = {
-        "user_name": this.$store.state.User.name,
-        "work_id": this.playWorkId,
-        "state": {
-          queue: this.queueCopy,
-          index: this.queueIndex,
-          seconds: this.currentTime,
-          playMode: this.playMode,
-          playbackRate: this.playbackRate,
-        }
-      }
+      const userName = this.$store.state.User.name
+      const data = { ...this.currentPositionData(seconds), reason }
 
       // 检查最近一次的历史更新记录，如果两次数据不变，则无需更新记录
       if (this.isSameTwoHistory(this.latestUpdatedHistory, data)) {
@@ -822,14 +850,18 @@ export default {
       }
 
       if (this.playing) this.$store.commit('AudioPlayer/HISTORY_RECORDING_STARTED');
+      cachePlaybackRecovery(this.$q.localStorage, userName, data)
+      this.$store.commit('AudioPlayer/SET_HISTORY_SAVE_STATUS', 'saving')
       savePlaybackHistory(this.$axios, data)
         .then((_) => {
-          console.log("更新播放状态成功")
+          if (this.$store.state.User.name !== userName) return
+          acknowledgePlaybackRecovery(this.$q.localStorage, userName, data)
+          this.$store.commit('AudioPlayer/SET_HISTORY_SAVE_STATUS', 'saved')
           this.latestUpdatedHistory = data;
           this.$store.commit('AudioPlayer/HISTORY_SAVED');
         })
         .catch((err) => {
-          console.error(err.response.data.error)
+          if (this.$store.state.User.name === userName) this.$store.commit('AudioPlayer/SET_HISTORY_SAVE_STATUS', 'failed')
         })
     },
 

@@ -1,4 +1,16 @@
 {
+  "playbackProtection": {
+    "undo": "復原跳轉",
+    "positions": "播放位置記錄",
+    "empty": "尚無位置記錄",
+    "idle": "尚未儲存播放進度",
+    "saving": "正在儲存播放進度",
+    "failed": "播放進度尚未同步",
+    "savedAt": "已儲存於 {time}",
+    "localFound": "本機有未同步的播放位置",
+    "restore": "恢復本機位置",
+    "discard": "使用伺服器位置"
+  },
   "dataTransfer": {
     "title": "資料管理",
     "export": "匯出資料",
@@ -35,6 +47,7 @@
     "downloadFailed": "瀏覽器無法儲存匯出檔案。",
     "tables": {
       "t_circle": "社團",
+      "t_play_position": "播放位置記錄",
       "t_tag": "標籤",
       "t_va": "聲優",
       "t_work": "作品資料",

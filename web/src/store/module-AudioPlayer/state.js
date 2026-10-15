@@ -113,6 +113,13 @@ export default function () {
     historyClearing: false,
     historyRevision: 0,
     historySavedRevision: 0,
+    historySaveStatus: 'idle',
+    historySavedAt: null,
+    playbackReadyHash: '',
+    seekUndo: [],
+    seekUndoHash: '',
+    seekOrigin: null,
+    seekCause: 'automatic',
     suppressPausedHistory: false,
     hide: false,
     playing: false, // 播放状态 (true/false)

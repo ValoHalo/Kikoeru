@@ -311,7 +311,7 @@ export default {
         this.showAudioPlayer();
       } else if (this.state == OpState.horize && this.onceMoved) {
         // this.onceMoved 用来处理长按后，进入horize调整状态，但是触摸位置并没有改变的情况，这个时候松开不应该调整进度，尤其是音频正在播放的时候
-        this.setNewCurrentTime(this.newCurrentTime);
+        this.$store.commit('AudioPlayer/REQUEST_MANUAL_SEEK', { seconds: this.newCurrentTime, from: this.startCurrentTime });
       }
       // this.deltaTime = 0;
       this.state = OpState.idle;
