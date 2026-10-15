@@ -1,4 +1,21 @@
 {
+  "dataTransfer": {
+    "unsupported": "This is not a supported Kikoeru data file, or its database schema is incomplete.",
+    "newerVersion": "This data format version is not supported by this application version.",
+    "damaged": "Cannot read the SQLite database. Use a complete database copied after stopping the old application.",
+    "invalidValue": "Invalid data in {table}.{column}.",
+    "duplicate": "Duplicate records in {table}.",
+    "brokenReference": "{table}.{column} refers to a missing record.",
+    "tooLarge": "The file or data exceeds the limit: 64 MiB and 250,000 records.",
+    "fileRequired": "Select a data file.",
+    "previewRequired": "Preview the same file before confirming the import.",
+    "mappingRequired": "Select a destination for every account and media folder.",
+    "userCollision": "Multiple source accounts cannot be imported into the same destination account.",
+    "pathCollision": "The folder for work {id} belongs to another work. Check the folder mapping.",
+    "uploadFailed": "File upload failed. Select the file again.",
+    "failed": "The data operation failed. No changes from this import were saved.",
+    "busy": "A scan, import or update installation is running. Try again when it finishes."
+  },
   "bookmark": {
     "missing": "Bookmark not found",
     "fileMissing": "File not found. Bookmark deleted.",

@@ -16,6 +16,7 @@ import DefaultPreferences from 'pages/Dashboard/DefaultPreferences.vue'
 import UserManage from 'pages/Dashboard/UserManage.vue'
 import Setup from 'pages/Dashboard/Setup.vue'
 import Update from 'pages/Dashboard/Update.vue'
+import DataManage from 'pages/Dashboard/DataManage.vue'
 
 function prefixRoutes(prefix, routes) {
   return routes.map((route) => {
@@ -55,6 +56,10 @@ const routes = [
       {
         path: 'usermanage',
         component: UserManage
+      },
+      {
+        path: 'data',
+        component: DataManage
       },
       {
         path: 'update',

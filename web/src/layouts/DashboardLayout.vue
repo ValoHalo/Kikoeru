@@ -95,6 +95,11 @@ export default {
           path: '/admin/advanced'
         },
         {
+          title: t('dataTransfer.title'),
+          icon: 'import_export',
+          path: '/admin/data'
+        },
+        {
           title: t('common.update'),
           icon: 'system_update_alt',
           path: '/admin/update'

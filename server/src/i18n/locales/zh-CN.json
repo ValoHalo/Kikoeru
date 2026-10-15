@@ -1,4 +1,21 @@
 {
+  "dataTransfer": {
+    "unsupported": "文件不是受支持的 Kikoeru 数据格式，或数据库结构不完整。",
+    "newerVersion": "此文件的数据格式版本尚不受当前版本支持。",
+    "damaged": "无法读取 SQLite 数据库。请使用旧程序停止后复制的完整数据库文件。",
+    "invalidValue": "{table} 的 {column} 字段包含无效数据。",
+    "duplicate": "{table} 中存在重复记录。",
+    "brokenReference": "{table} 的 {column} 引用了不存在的记录。",
+    "tooLarge": "文件或数据量超过限制：最大 64 MiB、250,000 条记录。",
+    "fileRequired": "请选择数据文件。",
+    "previewRequired": "请先预览同一个文件，再确认导入。",
+    "mappingRequired": "请完成所有账号和媒体目录的对应设置。",
+    "userCollision": "多个旧账号不能同时导入同一个当前账号。",
+    "pathCollision": "作品 {id} 的目录已被另一部作品使用，请检查媒体目录对应关系。",
+    "uploadFailed": "文件上传失败，请重新选择文件。",
+    "failed": "数据操作失败，本次导入没有保存任何更改。",
+    "busy": "正在扫描、导入或安装更新，请等待完成后重试。"
+  },
   "bookmark": {
     "missing": "书签不存在",
     "fileMissing": "文件不存在，已删除该书签",

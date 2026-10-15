@@ -1,4 +1,21 @@
 {
+  "dataTransfer": {
+    "unsupported": "檔案不是受支援的 Kikoeru 資料格式，或資料庫結構不完整。",
+    "newerVersion": "此檔案的資料格式版本尚不受目前版本支援。",
+    "damaged": "無法讀取 SQLite 資料庫。請使用舊程式停止後複製的完整資料庫檔案。",
+    "invalidValue": "{table} 的 {column} 欄位包含無效資料。",
+    "duplicate": "{table} 中存在重複記錄。",
+    "brokenReference": "{table} 的 {column} 參照了不存在的記錄。",
+    "tooLarge": "檔案或資料量超過限制：最大 64 MiB、250,000 筆記錄。",
+    "fileRequired": "請選擇資料檔案。",
+    "previewRequired": "請先預覽同一個檔案，再確認匯入。",
+    "mappingRequired": "請完成所有帳號和媒體目錄的對應設定。",
+    "userCollision": "多個舊帳號不能同時匯入同一個目前帳號。",
+    "pathCollision": "作品 {id} 的目錄已被另一部作品使用，請檢查媒體目錄對應關係。",
+    "uploadFailed": "檔案上傳失敗，請重新選擇檔案。",
+    "failed": "資料操作失敗，本次匯入沒有儲存任何變更。",
+    "busy": "正在掃描、匯入或安裝更新，請等待完成後重試。"
+  },
   "bookmark": {
     "missing": "書籤不存在",
     "fileMissing": "檔案不存在，已刪除該書籤",
