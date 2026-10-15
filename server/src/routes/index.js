@@ -34,6 +34,8 @@ router.use('/review', review_1.default);
 router.use('/histroy', play_histroy_1.default);
 router.use('/playlists', playlist_1.default);
 router.use('/bookmarks', bookmark_1.default);
+router.use('/clips', require('./clips').clips);
+router.use('/clip-playlists', require('./clips').playlists);
 router.use('/edit', edit_1.default);
 router.use('/library', library_1.default);
 router.use('/scan-failures', scanFailures_1.default);

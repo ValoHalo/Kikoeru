@@ -1,4 +1,11 @@
 {
+  "clips": {
+    "missing": "片段不存在",
+    "missingList": "片段列表不存在",
+    "fileMissing": "无法读取片段对应的曲目",
+    "rangeInvalid": "片段时间无效，B 必须晚于 A 且不能超过曲目时长",
+    "orderInvalid": "片段顺序无效，请刷新列表后重试"
+  },
   "scanJobs": {
     "busy": "扫描或更新正在进行，请稍后重试",
     "unfinished": "请先继续或取消尚未完成的扫描任务",

@@ -1,16 +1,27 @@
 <template>
 
   <!--在进度条周围监听mouseup、mousedown事件，辅助进度条状态切换-->
-  <div class="q-px-md"
-      @pointerdown.capture="onPanSlider('start')"
-  >
-    <q-slider v-model="changeCurrentTime"
-      @change="onChangeSlider"
-      @pan="onPanSlider"
-      :min="0" :max="duration" :step="0.01"
-      label
-      :label-value="formatSeconds(displayCurrentTime)"
-      />
+  <div class="q-px-md">
+    <div class="playback-slider" :class="{ 'has-clip-markers': clipMarkers.length }">
+      <q-slider v-model="changeCurrentTime"
+        @pointerdown.capture="onPanSlider('start')"
+        @pointerup.capture="onPanSlider('end')"
+        @pointercancel="onPanSlider('end')"
+        @change="onChangeSlider"
+        @pan="onPanSlider"
+        :min="0" :max="duration" :step="0.01"
+        label
+        :label-value="formatSeconds(displayCurrentTime)"
+        />
+      <div class="clip-markers" aria-hidden="true">
+        <span v-for="marker in clipMarkers" :key="marker.label" class="clip-marker" :class="`clip-marker-${marker.label.toLowerCase()}`" :style="{ left: `${marker.seconds / duration * 100}%` }"><span>{{ marker.label }}</span></span>
+      </div>
+    </div>
+    <div v-if="activeClipRange" class="clip-range-readout">
+      <span>A {{ formatClipTime(activeClipRange.start) }}</span><span>B {{ formatClipTime(activeClipRange.end) }}</span>
+      <q-icon v-if="activeClipRange.loop" name="repeat" :aria-label="$t('clips.loop')" />
+      <q-btn flat round dense size="sm" icon="close" :aria-label="$t('clips.stopRange')" @click="$store.commit('AudioPlayer/CLEAR_CLIP_PLAYBACK')"><AppTooltip>{{ $t('clips.stopRange') }}</AppTooltip></q-btn>
+    </div>
     <div class="vue-plyr">
       <!--使用video组件来播放音频和视频文件，同时隐藏原生的vue-plyr组件，这里的组件只会留下一个进度条的功能
       之所以用video，是因为video可以设置mp3等音频文件，也可以播放mp4等视频文件，在播放视频的时候，还能够用该video元素作为canvas绘制来源，
@@ -62,6 +73,7 @@ import { mapState, mapGetters, mapMutations } from 'vuex'
 import NotifyMixin from '../mixins/Notification.js'
 import { formatSeconds, extname, lyricLinesToLrc, ServerApi } from '../utils'
 import { TRANSCODE_OPTIONS } from '../store/module-AudioPlayer/state'
+import { formatClipTime, parseClipTime, validClipRange } from '../utils/clipPlayback.mjs'
 import { debounce } from 'quasar';
 
 const MEDIA_SESSION_ACTIONS = [
@@ -165,10 +177,29 @@ export default {
       changeCurrentTime: 0,
       sliderOrigin: null,
       positionChangeReason: 'interval',
+      clipBoundaryHandled: false,
+      preparedClipKey: '',
     }
   },
 
   computed: {
+    clipMarkers () {
+      if (!(this.duration > 0)) return []
+      const draft = this.$store.state.AudioPlayer.clipDraft
+      const range = draft?.hash === this.currentPlayingFile.hash
+        ? { start: parseClipTime(draft.startText), end: parseClipTime(draft.endText) }
+        : this.activeClipRange
+      if (!range) return []
+      return [{ label: 'A', seconds: range.start }, { label: 'B', seconds: range.end }]
+        .filter(marker => Number.isFinite(marker.seconds) && marker.seconds >= 0 && marker.seconds <= this.duration)
+    },
+    activeClipRange () {
+      const temporary = this.$store.state.AudioPlayer.clipRange
+      if (temporary?.hash === this.currentPlayingFile.hash && validClipRange(temporary.start, temporary.end)) return temporary
+      const track = this.currentPlayingFile
+      return validClipRange(track.clipStart, track.clipEnd) ? { start: track.clipStart, end: track.clipEnd, loop: false } : null
+    },
+    clipTrackKey () { const track = this.currentPlayingFile; return JSON.stringify([track.hash, this.queueIndex, track.clipStart, track.clipEnd]) },
     player () {
       return this.playerInstance
     },
@@ -235,6 +266,20 @@ export default {
   },
 
   watch: {
+    clipTrackKey (value, previous) {
+      this.clipBoundaryHandled = false
+      if (this.$store.state.AudioPlayer.clipRange?.hash !== this.currentPlayingFile.hash) this.$store.commit('AudioPlayer/SET_CLIP_RANGE', null)
+      if (previous) {
+        const [previousHash, previousIndex] = JSON.parse(previous)
+        if (previousHash !== this.currentPlayingFile.hash || previousIndex !== this.queueIndex) this.$store.commit('AudioPlayer/SET_CLIP_DRAFT', null)
+      }
+      if (this.activeClipRange && this.$store.state.AudioPlayer.playbackReadyHash === this.currentPlayingFile.hash && this.resumeHistroyDone && this.newCurrentTime < 0) {
+        this.positionChangeReason = 'interval'
+        this.player.currentTime = this.activeClipRange.start
+        this.preparedClipKey = this.clipTrackKey
+      }
+    },
+    activeClipRange () { this.clipBoundaryHandled = false },
     privacyMode () {
       this.updateMediaSessionMetadata()
       if (this.privacyMode && document.pictureInPictureElement === this.$refs.media) document.exitPictureInPicture().catch(() => {})
@@ -248,6 +293,10 @@ export default {
     },
     playing (flag) {
       if (this.player.duration) {
+        if (flag && this.activeClipRange) {
+          this.clipBoundaryHandled = false
+          if (this.player.currentTime < this.activeClipRange.start || this.player.currentTime >= this.activeClipRange.end) this.player.currentTime = this.activeClipRange.start
+        }
         // 缓冲至可播放状态
         flag ? this.player.play() : this.player.pause()
       }
@@ -256,6 +305,8 @@ export default {
 
     // watch source -> media.load() -> canPlay -> player.play()
     source (url) {
+      this.preparedClipKey = ''
+      this.clipBoundaryHandled = false
       this.$store.commit('AudioPlayer/SET_PLAYBACK_READY', '')
       this.positionChangeReason = 'interval'
       this.clearPreTranscodeTimer()
@@ -303,8 +354,10 @@ export default {
     },
     newCurrentTime(v) {
       if (v < 0) return;
+      this.clipBoundaryHandled = false
       this.positionChangeReason = this.$store.state.AudioPlayer.seekCause === 'automatic' ? 'interval' : 'seek'
       this.player.currentTime = v;
+      if (this.activeClipRange) this.preparedClipKey = this.clipTrackKey
       this.SET_NEW_CURRENT_TIME(-1); // 标记时间已经更新到media上了
     },
     lyricOffsetSeconds() {
@@ -334,6 +387,7 @@ export default {
 
   methods: {
     formatSeconds,
+    formatClipTime,
 
     onMediaError () {
       this.PAUSE()
@@ -448,14 +502,16 @@ export default {
 
     onCanplay (event) {
       if (!this.player?.media || (event && event.target !== this.player.media)) return
+      const restoringPosition = !this.resumeHistroyDone
       // 缓冲至可播放状态时触发 (只有缓冲至可播放状态, 才能获取媒体文件的播放时长)
       this.SET_DURATION(this.player.duration)
-      this.player.media.playbackRate = this.playbackRate
-
-      // 播放
-      if (this.playing && this.player.currentTime !== this.player.duration) {
-        this.player.play()
+      if (this.activeClipRange && !validClipRange(this.activeClipRange.start, this.activeClipRange.end, this.player.duration)) {
+        this.PAUSE()
+        this.$store.commit('AudioPlayer/CLEAR_CLIP_PLAYBACK')
+        this.$q.notify({ type: 'negative', message: t('clips.rangeInvalid') })
+        return
       }
+      this.player.media.playbackRate = this.playbackRate
 
       // 当音频文件在网页中加载完毕，可以播放时
       // 检查此前是否有需要恢复的历史进度，如果尚未恢复
@@ -465,11 +521,17 @@ export default {
         this.RESUME_HISTROY_SECONDS_DONE()
         if (this.notifyHistoryRestore) this.$q.notify({message: t('audioElement.historyRestored'), timeout: 1000})
       }
+      if (this.activeClipRange && this.preparedClipKey !== this.clipTrackKey) {
+        if (!restoringPosition) this.player.currentTime = this.activeClipRange.start
+        this.preparedClipKey = this.clipTrackKey
+      }
       this.SET_CURRENT_TIME(this.player.currentTime)
       this.$store.commit('AudioPlayer/SET_PLAYBACK_READY', this.currentPlayingFile.hash)
+      if (this.playing && this.player.currentTime !== this.player.duration) this.player.play()
     },
 
     onTimeupdate () {
+      if (this.finishClip(false)) return
       // 当目前的播放位置已更改时触发
       this.SET_CURRENT_TIME(this.player.currentTime)
       if (this.enablePIPLyrics) this.debouncedPlayLrc(false) // 开启桌面歌词后，用视频的time更新事件驱动歌词更新，false表示禁用掉LrcObject本身的事件更新
@@ -491,6 +553,38 @@ export default {
     },
 
     onEnded () {
+      if (this.finishClip(true)) return
+      this.advanceTrack()
+    },
+    finishClip (ended) {
+      const range = this.activeClipRange
+      if (!range) return false
+      if (this.clipBoundaryHandled) return true
+      if (!ended && (!this.playing || this.player.currentTime < range.end)) return false
+      this.clipBoundaryHandled = true
+      this.positionChangeReason = 'interval'
+      if (range.loop) {
+        this.player.currentTime = range.start
+        this.SET_CURRENT_TIME(range.start)
+        this.PLAY()
+        this.player.play()
+      } else if (!this.$store.state.AudioPlayer.clipRange && Number.isFinite(this.currentPlayingFile.clipEnd)) {
+        const index = this.queueIndex
+        this.advanceTrack()
+        if (this.queueIndex === index) {
+          this.player.currentTime = this.playing ? range.start : range.end
+          if (this.playing) this.player.play()
+          else this.player.pause()
+        }
+      } else {
+        this.player.pause()
+        this.player.currentTime = range.end
+        this.SET_CURRENT_TIME(range.end)
+        this.PAUSE()
+      }
+      return true
+    },
+    advanceTrack () {
       // 当前文件播放结束时触发
       switch (this.playMode.name) {
         case "all repeat":
@@ -527,6 +621,7 @@ export default {
     },
 
     onSeeked() {
+      if (!this.activeClipRange || this.player.currentTime < this.activeClipRange.end) this.clipBoundaryHandled = false
       // if (this.lrcAvailable) {
       //   this.lrcObj.play(this.player.currentTime * 1000);
       //   if (!this.playing) {
@@ -827,6 +922,14 @@ export default {
 </script>
 
 <style scoped>
+.playback-slider { position: relative; }
+.playback-slider.has-clip-markers { padding-bottom: 12px; }
+.clip-markers { position: absolute; inset: 0; pointer-events: none; }
+.clip-marker { position: absolute; top: 20px; width: 2px; height: 12px; background: var(--q-primary); transform: translateX(-50%); }
+.clip-marker > span { position: absolute; top: 12px; font-size: 11px; line-height: 14px; font-weight: 600; }
+.clip-marker-a > span { right: 3px; }
+.clip-marker-b > span { left: 3px; }
+.clip-range-readout { display: flex; align-items: center; justify-content: flex-end; gap: 12px; font-size: 12px; }
 .vue-plyr {
   /* visibility: hidden; */
   /*display: none;*/

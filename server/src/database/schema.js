@@ -245,6 +245,7 @@ const createSchema = (connection = db_1.knex) => connection.schema
     ;
   `)
     .then(() => require('./scanJobs').createScanTables(connection))
+    .then(() => require('./clips').createClipTables(connection))
     .then(() => {
     console.log(' * 成功构建数据库结构.');
 })

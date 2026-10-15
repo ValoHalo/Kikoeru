@@ -1,4 +1,11 @@
 {
+  "clips": {
+    "missing": "Clip not found",
+    "missingList": "Clip playlist not found",
+    "fileMissing": "The track for this clip is unavailable",
+    "rangeInvalid": "Invalid clip range: B must be after A and within the track duration",
+    "orderInvalid": "Invalid clip order. Refresh the playlist and try again"
+  },
   "scanJobs": {
     "busy": "A scan or update is running. Try again later.",
     "unfinished": "Resume or cancel the unfinished scan first.",

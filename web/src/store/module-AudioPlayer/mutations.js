@@ -56,6 +56,17 @@ function syncCurrentTrackContext (state, fallbackWorkId = 0) {
 }
 
 const mutations = {
+  SET_CLIP_RANGE (state, value) { state.clipRange = value },
+  SET_CLIP_DRAFT (state, value) { state.clipDraft = value },
+  CLEAR_CLIP_PLAYBACK (state) {
+    state.clipRange = null
+    state.queue = state.queue.map((track, index) => {
+      if (index !== state.queueIndex) return track
+      const result = { ...track }
+      for (const key of ['clipId', 'clipName', 'clipStart', 'clipEnd']) delete result[key]
+      return result
+    })
+  },
   SET_PRIVACY_MODE (state, value) { state.privacyMode = Boolean(value); LocalStorage.set('privacy-mode', state.privacyMode) },
   SET_SWAP_CHANNELS (state, value) { state.swapChannels = Boolean(value); LocalStorage.set('swap-audio-channels', state.swapChannels) },
   SET_HISTORY_CLEARING (state, value) { state.historyClearing = value },
@@ -145,6 +156,7 @@ const mutations = {
       return; // Invalid index, bail.
     }
 
+    state.clipRange = null
     state.playing = true
     state.queueIndex = index
     syncCurrentTrackContext(state)
@@ -152,6 +164,7 @@ const mutations = {
   NEXT_TRACK: (state) => {
     if (state.queueIndex < state.queue.length - 1) {
       // Go to next track only if it exists.
+      state.clipRange = null
       state.playing = true
       state.queueIndex += 1
       syncCurrentTrackContext(state)
@@ -160,6 +173,7 @@ const mutations = {
   PREVIOUS_TRACK: (state) => {
     if (state.queueIndex > 0) {
       // Go to previous track only if it exists.
+      state.clipRange = null
       state.playing = true
       state.queueIndex -= 1
       syncCurrentTrackContext(state)
@@ -167,6 +181,7 @@ const mutations = {
   },
 
   SET_QUEUE (state, payload) {
+    state.clipRange = null
     state.queue = Array.isArray(payload.queue) ? payload.queue : []
     if (state.queue.length === 0) {
       state.queueIndex = 0
@@ -191,6 +206,7 @@ const mutations = {
     mutations.FILTER_CURRENT_QUEUE(state)
   },
   EMPTY_QUEUE: (state) => {
+    state.clipRange = null
     state.playing = false
     state.queue = []
     state.queueIndex = 0

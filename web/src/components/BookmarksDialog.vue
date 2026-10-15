@@ -2,18 +2,23 @@
   <q-dialog :model-value="true" :position="$q.screen.lt.sm ? 'bottom' : 'standard'" @update:model-value="$emit('close')">
     <q-card class="bookmarks-dialog">
       <q-card-section class="row items-center q-pb-sm">
-        <div class="text-h6">{{ $t(track ? 'bookmark.currentTrack' : 'bookmark.currentWork') }}</div>
+        <div class="text-h6">{{ $t(track ? 'clips.panelTitle' : 'bookmark.currentWork') }}</div>
         <q-space />
-        <q-btn flat round dense icon="refresh" :aria-label="$t('bookmark.refresh')" :loading="loading" @click="loadBookmarks"><AppTooltip>{{ $t('bookmark.refresh') }}</AppTooltip></q-btn>
+        <q-btn v-if="tab === 'bookmarks'" flat round dense icon="refresh" :aria-label="$t('bookmark.refresh')" :loading="loading" @click="loadBookmarks"><AppTooltip>{{ $t('bookmark.refresh') }}</AppTooltip></q-btn>
         <q-btn flat round dense icon="close" :aria-label="$t('bookmark.close')" v-close-popup><AppTooltip>{{ $t('bookmark.close') }}</AppTooltip></q-btn>
       </q-card-section>
       <q-card-section v-if="track" class="q-pt-none">
         <div class="text-subtitle1 bookmark-text">{{ $privateText(track.title) }}</div>
         <div v-if="track.subtitle" class="text-caption text-grey bookmark-text">{{ $privateText(track.subtitle) }}</div>
-        <q-btn class="q-mt-sm" outline color="primary" icon="bookmark_add" :label="$t('bookmark.record')" :disable="!relativePath || jumping" :loading="saving" @click="recordPosition" />
+        <q-btn v-if="tab === 'bookmarks'" class="q-mt-sm" outline color="primary" icon="bookmark_add" :label="$t('bookmark.record')" :disable="!relativePath || jumping" :loading="saving" @click="recordPosition" />
       </q-card-section>
+      <q-tabs v-if="track" v-model="tab" dense align="left" active-color="primary" indicator-color="primary">
+        <q-tab name="bookmarks" :label="$t('bookmark.title')" />
+        <q-tab name="clips" :label="$t('clips.title')" />
+      </q-tabs>
       <q-separator />
-      <div class="bookmarks-list scroll">
+      <ClipPanel v-if="track && tab === 'clips'" :work-id="workId" :track="track" />
+      <div v-else class="bookmarks-list scroll">
         <div v-if="loading" class="q-pa-lg text-center"><q-spinner color="primary" size="28px" :aria-label="$t('bookmark.loading')" /></div>
         <template v-else>
           <div v-if="loadFailed" class="q-pa-lg text-center text-grey">{{ $t('bookmark.loadFailed') }}</div>
@@ -57,11 +62,12 @@ import { mapGetters, mapState } from 'vuex'
 import { formatSeconds } from '../utils'
 import NotifyMixin from '../mixins/Notification.js'
 import BookmarkEditor from './BookmarkEditor.vue'
+import ClipPanel from './ClipPanel.vue'
 
 export default {
   name: 'BookmarksDialog',
   mixins: [NotifyMixin],
-  components: { BookmarkEditor },
+  components: { BookmarkEditor, ClipPanel },
   props: {
     workId: { type: Number, required: true },
     track: { type: Object, default: null },
@@ -71,6 +77,7 @@ export default {
     return {
       bookmarks: [], loading: false, loadFailed: false, saving: false, jumping: false,
       editingBookmark: null, listRequest: 0,
+      tab: 'bookmarks',
     }
   },
   computed: {

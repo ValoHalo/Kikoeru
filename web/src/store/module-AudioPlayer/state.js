@@ -116,6 +116,8 @@ export default function () {
     historySaveStatus: 'idle',
     privacyMode: LocalStorage.getItem('privacy-mode') === true,
     swapChannels: LocalStorage.getItem('swap-audio-channels') === true,
+    clipRange: null,
+    clipDraft: null,
     historySavedAt: null,
     playbackReadyHash: '',
     seekUndo: [],

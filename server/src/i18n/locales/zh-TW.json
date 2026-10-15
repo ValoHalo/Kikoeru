@@ -1,4 +1,11 @@
 {
+  "clips": {
+    "missing": "片段不存在",
+    "missingList": "片段清單不存在",
+    "fileMissing": "無法讀取片段對應的曲目",
+    "rangeInvalid": "片段時間無效，B 必須晚於 A 且不能超過曲目長度",
+    "orderInvalid": "片段順序無效，請重新整理清單後再試"
+  },
   "scanJobs": {
     "busy": "掃描或更新正在進行，請稍後重試",
     "unfinished": "請先繼續或取消尚未完成的掃描任務",
