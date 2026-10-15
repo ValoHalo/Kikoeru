@@ -32,6 +32,7 @@ const definitions = {
 const TABLES = Object.fromEntries(Object.entries(definitions).map(([table, [columns, key]]) => [table, { columns: columns.split(' '), key: key.split(' ') }]));
 const CORE_TABLES = ['t_circle', 't_tag', 't_va', 't_user', 't_work', 'r_tag_work', 'r_va_work', 't_review', 't_play_histroy'];
 const BASELINE = '20260803090000_remove_ai_translation_tasks.js';
+const OPERATIONAL_TABLES = ['t_scan_job', 't_scan_job_item', 't_cover_status'];
 const FEATURES = {
     '20260830090000_create_playlists.js': ['t_playlist', 't_playlist_item'],
     '20260830150000_add_library_state.js': ['t_scan_failure', 't_work_user_state', 't_work_collection', 't_work_collection_item'],
@@ -41,6 +42,7 @@ const FEATURES = {
     '20261008010000_add_bookmark_name.js': [],
     '20261015090000_playback_positions.js': ['t_play_position'],
     '20261015100000_saved_searches.js': ['t_saved_search'],
+    '20261015110000_scan_jobs.js': OPERATIONAL_TABLES,
 };
 const LEGACY_LAST_MIGRATION = '20231201003918_work_file_memo.js';
 const OPTIONAL_VALUES = new Set(['nsfw', 'release', 'dl_count', 'price', 'review_count', 'rate_count', 'rate_average_2dp', 'rate_count_detail', 'rank', 'memo', 'rating', 'review_text', 'progress', 'is_custom_meta']);
@@ -85,7 +87,7 @@ function readSqlite(buffer) {
         const objects = db.prepare("SELECT name, type, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'").all();
         const tableNames = new Set(objects.filter(entry => entry.type === 'table' && !/^CREATE\s+VIRTUAL/i.test(entry.sql || '')).map(entry => entry.name));
         const columns = new Map();
-        for (const table of [...Object.keys(TABLES), 'knex_migrations', 't_translate_task']) {
+        for (const table of [...Object.keys(TABLES), ...OPERATIONAL_TABLES, 'knex_migrations', 't_translate_task']) {
             if (!tableNames.has(table)) continue;
             const info = db.prepare(`PRAGMA table_info("${table}")`).all();
             columns.set(table, new Set(info.map(column => column.name)));
@@ -116,9 +118,9 @@ function readSqlite(buffer) {
             if (columns.has('t_bookmark') && columns.get('t_bookmark').has('name') !== migrations.includes('20261008010000_add_bookmark_name.js')) fail('unsupported');
         } else {
             if (migrations.some(name => name > LEGACY_LAST_MIGRATION)) fail('unsupported');
-            if (Object.keys(TABLES).some(table => !CORE_TABLES.includes(table) && columns.has(table))) fail('unsupported');
+            if ([...Object.keys(TABLES), ...OPERATIONAL_TABLES].some(table => !CORE_TABLES.includes(table) && columns.has(table))) fail('unsupported');
         }
-        const allowedTables = new Set([...Object.keys(TABLES), 'knex_migrations', 'knex_migrations_lock', ...(native ? [] : ['t_translate_task'])]);
+        const allowedTables = new Set([...Object.keys(TABLES), ...OPERATIONAL_TABLES, 'knex_migrations', 'knex_migrations_lock', ...(native ? [] : ['t_translate_task'])]);
         if (objects.some(entry => entry.type === 'table' && !allowedTables.has(entry.name))) fail('unsupported');
         const tables = {};
         let count = 0;

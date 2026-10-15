@@ -9,39 +9,17 @@ const config_1 = require("./config");
 const accessControl_1 = require("./auth/accessControl");
 const token_1 = require("./auth/token");
 const utils_1 = require("./auth/utils");
-const path_1 = __importDefault(require("path"));
 const socket_io_1 = __importDefault(require("socket.io"));
-const child_process_1 = __importDefault(require("child_process"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const { scanCoordinator } = require('./filesystem/scanCoordinator');
-let scanner = null;
-let scanRequest = null;
+const scanJobs = require('./filesystem/scanJobRunner');
+const { jobStatus } = require('./database/scanJobs');
+const { knex } = require('./database/db');
 const socketServers = new Set();
 function broadcast(event, payload) {
     for (const io of socketServers) io.emit(event, payload);
 }
-function startScan(filename) {
-    if (scanRequest) return;
-    scanRequest = new AbortController();
-    scanCoordinator.run(() => new Promise((resolve, reject) => {
-        const child = child_process_1.default.fork(path_1.default.join(__dirname, 'filesystem', filename),
-            filename === 'updater.js' ? ['--refreshAll'] : [], { silent: false });
-        scanner = child;
-        child.on('message', message => { if (message.event) broadcast(message.event, message.payload); });
-        child.once('error', error => {
-            if (child.pid && child.exitCode === null) child.kill();
-            else { if (scanner === child) scanner = null; reject(error); }
-        });
-        child.once('exit', (code, signal) => {
-            if (scanner === child) scanner = null;
-            if (code || signal) reject(new Error(`Scanner exited: ${code ?? signal}`));
-            else resolve();
-        });
-    }), scanRequest.signal).catch(error => {
-        console.error('[Scanner]', error.message);
-        broadcast('SCAN_ERROR');
-    }).finally(() => { scanRequest = null; });
-}
+scanJobs.events.on('message', message => broadcast(message.event, message.payload));
+function startScan(kind) { scanJobs.startJob(kind).catch(error => { console.error('[Scanner]', error.message); broadcast('SCAN_ERROR'); }); }
 function socketMessage(socket, key) {
     const locale = typeof socket.handshake.query.locale === 'string' ? socket.handshake.query.locale : 'zh-CN';
     return i18n.getFixedT(i18n.hasResourceBundle(locale, 'translation') ? locale : 'zh-CN')(key);
@@ -89,27 +67,23 @@ function initSocket(server) {
             canManage: true,
         });
         socket.on('ON_SCANNER_PAGE', () => {
-            if (scanner?.connected) {
-                scanner.send({
-                    emit: 'SCAN_INIT_STATE'
-                }, error => { if (error) scanner?.kill(); });
-            }
+            scanJobs.sendState();
+            jobStatus(knex).then(job => socket.emit('SCAN_JOB', job)).catch(error => console.error(error));
         });
         socket.on('PERFORM_SCAN', () => {
-            startScan('scanner.js');
+            startScan('scan');
         });
         socket.on('PERFORM_UPDATE', () => {
-            startScan('updater.js');
+            startScan('metadata');
         });
         socket.on('PERFORM_LYRIC_SCAN', () => {
-            startScan('workFileScanner.js');
+            startScan('files');
         });
         socket.on('PERFORM_RETRY_FAILED', () => {
-            startScan('retryFailed.js');
+            startScan('retry');
         });
         socket.on('KILL_SCAN_PROCESS', () => {
-            if (scanner?.connected) scanner.send({ exit: 1 }, error => { if (error) scanner?.kill(); });
-            else scanRequest?.abort();
+            jobStatus(knex).then(job => job && scanJobs.cancelJob(job.id)).catch(error => console.error(error));
         });
         socket.on('error', (err) => {
             console.error(err);

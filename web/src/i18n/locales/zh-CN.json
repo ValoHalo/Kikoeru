@@ -1,4 +1,51 @@
 {
+  "scanJobs": {
+    "awaitingInventory": "尚未开始处理作品",
+    "busy": "扫描或更新正在进行，请稍后重试",
+    "unfinished": "请先继续或取消尚未完成的扫描任务",
+    "cannotResume": "这个任务目前无法继续",
+    "cannotPause": "这个任务目前无法暂停",
+    "cannotCancel": "这个任务目前无法取消",
+    "rootsChanged": "媒体目录配置已变化，请取消旧任务后重新扫描",
+    "pause": "暂停扫描",
+    "resume": "继续上次扫描",
+    "cancel": "取消任务",
+    "progress": "已处理 {completed} / {total}",
+    "rootUnavailable": "无法读取目录：{detail}",
+    "filesBusy": "目录内容仍在变化，请稍后继续：{detail}",
+    "scanFailed": "扫描已暂停：{detail}",
+    "interrupted": "上次扫描被中断，进度已保存",
+    "missingCovers": "已确认缺图的记录（最近 {count} 条）",
+    "checkCovers": "重新检查缺图",
+    "status": {
+      "queued": "等待执行",
+      "running": "正在扫描",
+      "pausing": "正在暂停",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "phase": {
+      "discovering": "正在查找作品目录",
+      "checking": "正在复核已完成目录",
+      "processing": "正在处理作品"
+    },
+    "kind": {
+      "scan": "媒体库扫描",
+      "metadata": "元数据更新",
+      "files": "本地文件扫描",
+      "retry": "失败项目重试",
+      "covers": "缺图重新检查"
+    },
+    "category": {
+      "permission": "权限或访问限制",
+      "network": "网络连接问题",
+      "missing": "资源不存在",
+      "database": "数据库问题",
+      "filesystem": "本地文件问题",
+      "unknown": "需要检查详细信息"
+    }
+  },
   "privacy": {
     "enable": "开启隐私模式",
     "disable": "关闭隐私模式",
@@ -1039,6 +1086,7 @@
     "scheduled": "指定时刻"
   },
   "scanner": {
+    "coverSourceUnavailable": "无法取得封面信息，稍后可以重试",
     "stopped": " ! 终止扫描进程.",
     "dlsiteFailed": "DLSite 获取元数据失败: {value0}",
     "asmrOneFailed": "ASMR ONE获取元数据失败: {value0}",

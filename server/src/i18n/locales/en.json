@@ -1,4 +1,12 @@
 {
+  "scanJobs": {
+    "busy": "A scan or update is running. Try again later.",
+    "unfinished": "Resume or cancel the unfinished scan first.",
+    "cannotResume": "This task cannot be resumed now.",
+    "cannotPause": "This task cannot be paused now.",
+    "cannotCancel": "This task cannot be cancelled now.",
+    "rootsChanged": "Media folder settings changed. Cancel the old task and start a new scan."
+  },
   "dataTransfer": {
     "unsupported": "This is not a supported Kikoeru data file, or its database schema is incomplete.",
     "newerVersion": "This data format version is not supported by this application version.",

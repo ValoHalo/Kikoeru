@@ -46,6 +46,9 @@ exports.classifyFolderResult = classifyFolderResult;
 exports.classifyCoverDownloadResults = classifyCoverDownloadResults;
 exports.updateMetadata = updateMetadata;
 exports.refreshWorks = refreshWorks;
+exports.finishFolderTask = finishFolderTask;
+exports.scanWorkFile = scanWorkFile;
+exports.getCoverImage = getCoverImage;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const limit_promise_1 = __importDefault(require("limit-promise"));
@@ -380,21 +383,28 @@ async function insertCustomMetadata(code, productAbsoluteFolder, rootFolderName,
     return initMeta;
 }
 async function getCoverImageForTranslated(code, types, skipFailed = false) {
-    const rjcode = code;
-    const result = await getCoverImage(rjcode, types);
-    if (result === 'failed' && skipFailed) {
-        LOG.main.warn(`${rjcode} 作品本身在DlSite上缺失部分图片，忽略这些问题`, 'scanner.missingSourceImages', { value0: String(rjcode) });
-        return 'skipped';
-    }
-    return result;
+    return getCoverImage(code, types);
 }
 async function getCoverImage(coverForCode, types) {
     LOG.task.info(coverForCode, '从 DLsite 下载封面...', 'scanner.fetchCover');
     const id = idConverter.codeToIdNumber(coverForCode);
+    const missing = await db.knex('t_cover_status').where('work_id', id).where('expires_at', '>', Date.now());
+    const requested = types.filter(type => process.env.KIKOERU_RETRY_COVERS === '1' || !missing.some(row => row.type === type));
+    if (!requested.length) return 'skipped';
     const coverUrls = await (0, dlsite_new_1.getCoverUrlsFromDLsite)(id);
-    const results = await Promise.all(types.map(async (type) => {
+    if (!coverUrls) {
+        LOG.task.error(coverForCode, '无法取得封面信息，稍后可以重试', 'scanner.coverSourceUnavailable');
+        return 'failed';
+    }
+    let transientFailure = false;
+    const rememberMissing = async (type, reason) => {
+        if (!(await db.knex('t_work').where('id', id).first('id'))) return;
+        await db.knex('t_cover_status').insert({ work_id: id, type, reason, expires_at: Date.now() + 86400000 }).onConflict(['work_id', 'type']).merge();
+    };
+    const results = await Promise.all(requested.map(async (type) => {
         const url = coverUrls?.[type];
         if (!url) {
+            await rememberMissing(type, 'no_url');
             LOG.task.warn(coverForCode, `封面 ${type} 无 URL，跳过`, 'scanner.coverNoUrl', { value0: String(type) });
             return null;
         }
@@ -403,10 +413,13 @@ async function getCoverImage(coverForCode, types) {
             const imageRes = await (0, axios_1.retryGet)(url, { retry: {}, responseType: 'arraybuffer' });
             LOG.task.info(coverForCode, `封面 ${coverForCode}_img_${type}.jpg network response got`, 'scanner.coverResponse', { value0: String(coverForCode), value1: String(type) });
             await (0, utils_1.saveCoverImageToDisk)(imageRes.data, coverForCode, type);
+            await db.knex('t_cover_status').where({ work_id: id, type }).del();
             LOG.task.info(coverForCode, `封面 ${coverForCode}_img_${type}.jpg 下载成功.`, 'scanner.coverDownloaded', { value0: String(coverForCode), value1: String(type) });
             return type;
         }
         catch (err) {
+            if (err.response?.status === 404) await rememberMissing(type, 'http_404');
+            else transientFailure = true;
             const msg = type === "main" ? "主图失败" : "非主图或缩略图下载失败请忽略";
             const note = { messageKey: type === 'main' ? 'scanner.mainCoverFailed' : 'scanner.optionalCoverFailed' };
             LOG.task.warn(coverForCode, `在下载封面 ${coverForCode}_img_${type}.jpg 过程中出错: ${err.message}, url = ${url}, msg = ${msg}`, 'scanner.coverDownloadFailed', { value0: String(coverForCode), value1: String(type), value2: String(err.message), value3: String(url), value4: note });
@@ -414,7 +427,7 @@ async function getCoverImage(coverForCode, types) {
             return null;
         }
     }));
-    return classifyCoverDownloadResults(results);
+    return results.some(Boolean) ? 'added' : transientFailure ? 'failed' : 'skipped';
 }
 function classifyCoverDownloadResults(results) {
     return results.some(Boolean) ? 'added' : 'failed';
@@ -771,7 +784,7 @@ async function refreshWorks(query, idColumnName, processor) {
 ;
 async function scanWorkFile(work, index, total) {
     const rjcode = idConverter.idNumberToCode(work.id);
-    LOG.main.info(`扫描进度：${index + 1}/${total}`, 'scanner.progress', { value0: String(index + 1), value1: String(total) });
+    if (index >= 0 && total > 0) LOG.main.info(`扫描进度：${index + 1}/${total}`, 'scanner.progress', { value0: String(index + 1), value1: String(total) });
     try {
         const rootFolder = config_1.config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
         if (!rootFolder)

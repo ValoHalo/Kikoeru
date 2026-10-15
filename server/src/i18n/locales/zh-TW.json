@@ -1,4 +1,12 @@
 {
+  "scanJobs": {
+    "busy": "掃描或更新正在進行，請稍後重試",
+    "unfinished": "請先繼續或取消尚未完成的掃描任務",
+    "cannotResume": "此任務目前無法繼續",
+    "cannotPause": "此任務目前無法暫停",
+    "cannotCancel": "此任務目前無法取消",
+    "rootsChanged": "媒體目錄設定已變更，請取消舊任務後重新掃描"
+  },
   "dataTransfer": {
     "unsupported": "檔案不是受支援的 Kikoeru 資料格式，或資料庫結構不完整。",
     "newerVersion": "此檔案的資料格式版本尚不受目前版本支援。",

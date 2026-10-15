@@ -37,6 +37,7 @@ router.use('/bookmarks', bookmark_1.default);
 router.use('/edit', edit_1.default);
 router.use('/library', library_1.default);
 router.use('/scan-failures', scanFailures_1.default);
+router.use('/scan-jobs', require('./scanJobs'));
 router.use('/update', update_1.default);
 router.use('/data', require('./data'));
 router.use('/saved-searches', require('./savedSearch'));

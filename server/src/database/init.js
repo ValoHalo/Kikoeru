@@ -114,6 +114,7 @@ const initDatabase = async () => {
         }
     }
     ensureTranscodeDir();
+    await require('./scanJobs').recoverScanJobs(db_1.knex);
     await (0, db_1.fixDatabase)();
 };
 exports.initDatabase = initDatabase;

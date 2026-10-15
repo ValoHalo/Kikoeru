@@ -1,4 +1,51 @@
 {
+  "scanJobs": {
+    "awaitingInventory": "尚未開始處理作品",
+    "busy": "掃描或更新正在進行，請稍後重試",
+    "unfinished": "請先繼續或取消尚未完成的掃描任務",
+    "cannotResume": "此任務目前無法繼續",
+    "cannotPause": "此任務目前無法暫停",
+    "cannotCancel": "此任務目前無法取消",
+    "rootsChanged": "媒體目錄設定已變更，請取消舊任務後重新掃描",
+    "pause": "暫停掃描",
+    "resume": "繼續上次掃描",
+    "cancel": "取消任務",
+    "progress": "已處理 {completed} / {total}",
+    "rootUnavailable": "無法讀取目錄：{detail}",
+    "filesBusy": "目錄內容仍在變動，請稍後繼續：{detail}",
+    "scanFailed": "掃描已暫停：{detail}",
+    "interrupted": "上次掃描被中斷，進度已儲存",
+    "missingCovers": "已確認缺圖的記錄（最近 {count} 筆）",
+    "checkCovers": "重新檢查缺圖",
+    "status": {
+      "queued": "等待執行",
+      "running": "正在掃描",
+      "pausing": "正在暫停",
+      "paused": "已暫停",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "phase": {
+      "discovering": "正在尋找作品目錄",
+      "checking": "正在複核已完成目錄",
+      "processing": "正在處理作品"
+    },
+    "kind": {
+      "scan": "媒體庫掃描",
+      "metadata": "中繼資料更新",
+      "files": "本機檔案掃描",
+      "retry": "失敗項目重試",
+      "covers": "缺圖重新檢查"
+    },
+    "category": {
+      "permission": "權限或存取限制",
+      "network": "網路連線問題",
+      "missing": "資源不存在",
+      "database": "資料庫問題",
+      "filesystem": "本機檔案問題",
+      "unknown": "需要檢查詳細資訊"
+    }
+  },
   "privacy": {
     "enable": "開啟隱私模式",
     "disable": "關閉隱私模式",
@@ -1039,6 +1086,7 @@
     "scheduled": "指定時刻"
   },
   "scanner": {
+    "coverSourceUnavailable": "無法取得封面資訊，稍後可以重試",
     "stopped": " ! 終止掃描程序.",
     "dlsiteFailed": "DLSite 獲取中繼資料失敗: {value0}",
     "asmrOneFailed": "ASMR ONE獲取中繼資料失敗: {value0}",

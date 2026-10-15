@@ -1,4 +1,51 @@
 {
+  "scanJobs": {
+    "awaitingInventory": "No works processed yet",
+    "busy": "A scan or update is running. Try again later.",
+    "unfinished": "Resume or cancel the unfinished scan first.",
+    "cannotResume": "This task cannot be resumed now.",
+    "cannotPause": "This task cannot be paused now.",
+    "cannotCancel": "This task cannot be cancelled now.",
+    "rootsChanged": "Media folder settings changed. Cancel the old task and start a new scan.",
+    "pause": "Pause scan",
+    "resume": "Resume last scan",
+    "cancel": "Cancel task",
+    "progress": "Processed {completed} / {total}",
+    "rootUnavailable": "Cannot read folder: {detail}",
+    "filesBusy": "Folder contents are still changing. Resume later: {detail}",
+    "scanFailed": "Scan paused: {detail}",
+    "interrupted": "The previous scan was interrupted. Its progress was saved.",
+    "missingCovers": "Confirmed missing covers (latest {count})",
+    "checkCovers": "Recheck missing covers",
+    "status": {
+      "queued": "Queued",
+      "running": "Scanning",
+      "pausing": "Pausing",
+      "paused": "Paused",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "phase": {
+      "discovering": "Finding work folders",
+      "checking": "Checking completed folders",
+      "processing": "Processing works"
+    },
+    "kind": {
+      "scan": "Library scan",
+      "metadata": "Metadata update",
+      "files": "Local file scan",
+      "retry": "Retry failed items",
+      "covers": "Missing cover check"
+    },
+    "category": {
+      "permission": "Permission or access restriction",
+      "network": "Network connection problem",
+      "missing": "Resource not found",
+      "database": "Database problem",
+      "filesystem": "Local file problem",
+      "unknown": "Check the error details"
+    }
+  },
   "privacy": {
     "enable": "Enable privacy mode",
     "disable": "Disable privacy mode",
@@ -1039,6 +1086,7 @@
     "scheduled": "Stop at a time"
   },
   "scanner": {
+    "coverSourceUnavailable": "Cover information is unavailable. Try again later.",
     "stopped": "Scan process stopped.",
     "dlsiteFailed": "Failed to retrieve DLsite metadata: {value0}",
     "asmrOneFailed": "Failed to retrieve ASMR ONE metadata: {value0}",

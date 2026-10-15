@@ -5,19 +5,33 @@
       <h2 id="scanner-title">{{ $t('libraryScanner.title') }}</h2>
     </div>
     <div class="library-scan-actions">
-      <q-btn v-if="state === 'running'" unelevated no-caps class="settings-action-button" color="negative" icon="stop" :label="$t('libraryScanner.stop')" :aria-label="$t('libraryScanner.stopProcess')"
-        :disable="!(loggedIn || socketConnected)" @click="killScanProceess()" />
+      <q-btn v-if="jobRunning" unelevated no-caps class="settings-action-button" color="primary" icon="pause" :label="$t('scanJobs.pause')" :loading="job?.status === 'pausing'" :disable="job?.status === 'pausing'" @click="controlJob('pause')" />
+      <q-btn v-else-if="job?.status === 'paused'" unelevated no-caps class="settings-action-button" color="primary" icon="play_arrow" :label="$t('scanJobs.resume')" :loading="jobRequest" @click="controlJob('resume')" />
       <q-btn v-else unelevated no-caps class="settings-action-button" color="primary" icon="play_arrow" :label="$t('libraryScanner.scan')" :aria-label="$t('libraryScanner.scanLibrary')"
-        :disable="!(loggedIn || socketConnected)" @click="performScan()" />
+        :disable="jobRequest || !(loggedIn || socketConnected)" @click="performScan()" />
+      <q-btn v-if="jobRunning || job?.status === 'paused'" outline no-caps class="settings-action-button" color="negative" icon="stop" :label="$t('scanJobs.cancel')" :disable="jobRequest" @click="controlJob('cancel')" />
       <q-btn outline no-caps class="settings-action-button" color="primary" icon="refresh" :label="$t('libraryScanner.refreshMetadata')" :aria-label="$t('libraryScanner.refreshLibrary')"
-        :disable="state === 'running' || !(loggedIn || socketConnected)" @click="performUpdate()" />
+        :disable="jobUnfinished || jobRequest || !(loggedIn || socketConnected)" @click="performUpdate()" />
       <q-btn outline no-caps class="settings-action-button" color="primary" icon="find_replace" :label="$t('libraryScanner.scanFiles')" :aria-label="$t('libraryScanner.scanChanges')"
-        :disable="state === 'running' || !(loggedIn || socketConnected)" @click="performWorkFileScan()" />
+        :disable="jobUnfinished || jobRequest || !(loggedIn || socketConnected)" @click="performWorkFileScan()" />
       <q-btn outline no-caps class="settings-action-button" color="primary" icon="replay" :label="$t('libraryScanner.retry')" :aria-label="$t('libraryScanner.retryOnly')"
-        :disable="state === 'running' || persistedFailures.length === 0 || !(loggedIn || socketConnected)" @click="retryFailed()" />
+        :disable="jobUnfinished || jobRequest || persistedFailures.length === 0 || !(loggedIn || socketConnected)" @click="retryFailed()" />
       <q-btn outline no-caps class="settings-action-button settings-action-button--neutral" icon="network_check" :label="$t('libraryScanner.networkTest')" :aria-label="$t('libraryScanner.networkTest')"
         :loading="networkTesting" :disable="state === 'running'" @click="testNetwork()" />
     </div>
+
+    <div v-if="job" class="scanner-status q-mt-md q-pa-md" role="status">
+      <div class="row items-center justify-between q-gutter-sm"><span>{{ $t(`scanJobs.kind.${job.kind}`) }}</span><span>{{ $t(`scanJobs.status.${job.status}`) }}</span></div>
+      <div class="text-caption q-my-sm"><span v-if="job.total || job.status === 'completed'">{{ $t('scanJobs.progress', { completed: job.completed, total: job.total }) }}</span><span v-else>{{ $t('scanJobs.awaitingInventory') }}</span> <span v-if="jobRunning">{{ $t(`scanJobs.phase.${job.phase}`) }}</span></div>
+      <q-linear-progress :value="job.total ? job.completed / job.total : 0" :indeterminate="jobRunning && !job.total" />
+      <div v-if="job.error_key" class="text-warning q-mt-sm">{{ $t(`scanJobs.${job.error_key}`, { detail: job.error_detail || '' }) }}</div>
+      <div v-if="job.status === 'completed'" class="text-caption q-mt-sm">{{ $t('scanner.scanFinished', { added: job.counts?.added || 0, updated: job.counts?.updated || 0, skipped: job.counts?.skipped || 0, failed: job.counts?.failed || 0 }) }}</div>
+    </div>
+
+    <q-expansion-item v-if="missingCovers.length" class="scanner-status q-mt-md" icon="image_not_supported" :label="$t('scanJobs.missingCovers', { count: missingCovers.length })">
+      <q-list dense><q-item v-for="cover in missingCovers" :key="`${cover.work_id}:${cover.type}`"><q-item-section>{{ $privateText(cover.title) }}<q-item-label caption>{{ cover.type }}</q-item-label></q-item-section></q-item></q-list>
+      <div class="q-pa-md"><q-btn outline no-caps icon="refresh" :label="$t('scanJobs.checkCovers')" :disable="jobUnfinished || jobRequest" @click="startJob('covers')" /></div>
+    </q-expansion-item>
 
     <div v-if="persistedFailures.length" class="scanner-status q-mt-md">
       <div class="row items-center justify-between q-pa-md">
@@ -35,6 +49,7 @@
           <q-item dense>
             <q-item-section>
               <q-item-label caption>{{ $t('libraryScanner.failureStage', { value: stageLabel(failure.stage), attempts: failure.attempts }) }}</q-item-label>
+              <q-item-label caption>{{ $t(`scanJobs.category.${failure.category || 'unknown'}`) }}</q-item-label>
               <q-item-label caption>{{ $t('libraryScanner.failureDirectory', { root_folder: failure.root_folder, relative_dir: failure.relative_dir }) }}</q-item-label>
               <q-item-label caption>{{ $t('libraryScanner.lastFailure', { updated_at: failure.updated_at }) }}</q-item-label>
             </q-item-section>
@@ -175,6 +190,10 @@ export default {
   data () {
     return {
       tab: 'tasks',
+      job: null,
+      jobRequest: false,
+      jobPoll: null,
+      missingCovers: [],
       state: null, // ['running', 'finished', 'error']
       loggedIn: false,
       socketConnected: false,
@@ -190,6 +209,30 @@ export default {
   },
 
   methods: {
+    onScanJob (job) {
+      const previous = this.job?.status
+      this.job = job
+      if (job) this.state = ['queued', 'running', 'pausing'].includes(job.status) ? 'running' : job.status === 'completed' ? 'finished' : null
+      if (job && previous !== job.status && ['completed', 'paused', 'cancelled'].includes(job.status)) { this.tasks = []; this.loadFailures() }
+    },
+    async loadJob () {
+      try { this.onScanJob((await this.$axios.get('/api/scan-jobs')).data.job) }
+      catch (_) { /* A disconnected server keeps the last known task visible. */ }
+    },
+    async startJob (kind) {
+      if (this.jobRequest) return
+      this.jobRequest = true
+      try { const { data } = await this.$axios.post('/api/scan-jobs', { kind }); this.cleanRerun(); this.onScanJob(data.job) }
+      catch (error) { this.showErrNotif(error.response?.data?.error || error.message) }
+      finally { this.jobRequest = false }
+    },
+    async controlJob (action) {
+      if (this.jobRequest || !this.job) return
+      this.jobRequest = true
+      try { this.onScanJob((await this.$axios.post(`/api/scan-jobs/${this.job.id}/${action}`)).data.job) }
+      catch (error) { this.showErrNotif(error.response?.data?.error || error.message) }
+      finally { this.jobRequest = false }
+    },
     logMessage (log) {
       const params = Object.fromEntries(Object.entries(log.params || {}).map(([key, value]) => [
         key, value && typeof value === 'object' && value.messageKey ? t(value.messageKey) : value
@@ -252,23 +295,19 @@ export default {
     },
 
     performScan () {
-      this.cleanRerun()
-      this.$socket.emit('PERFORM_SCAN')
+      this.startJob('scan')
     },
 
     performWorkFileScan () {
-      this.cleanRerun()
-      this.$socket.emit('PERFORM_LYRIC_SCAN')
+      this.startJob('files')
     },
 
     performUpdate () {
-      this.cleanRerun()
-      this.$socket.emit('PERFORM_UPDATE')
+      this.startJob('metadata')
     },
 
     retryFailed () {
-      this.cleanRerun()
-      this.$socket.emit('PERFORM_RETRY_FAILED')
+      this.startJob('retry')
     },
 
     async loadFailures () {
@@ -276,6 +315,7 @@ export default {
       try {
         const response = await this.$axios.get('/api/scan-failures')
         this.persistedFailures = response.data.failures || []
+        this.missingCovers = response.data.missingCovers || []
       } catch (error) {
         this.showErrNotif((error.response && error.response.data.error) || error.message || error)
       } finally {
@@ -329,6 +369,8 @@ export default {
   },
 
   computed: {
+    jobRunning () { return ['queued', 'running', 'pausing'].includes(this.job?.status) },
+    jobUnfinished () { return this.jobRunning || this.job?.status === 'paused' },
     allLogs () {
       const resultLogs = this.results.map(res => {
         if (res.result === 'added') {
@@ -345,6 +387,7 @@ export default {
 
   mounted () {
     const listeners = {
+      SCAN_JOB: this.onScanJob,
       SCAN_TASKS: this.onScanTasks,
       SCAN_FAILED_TASKS: this.onScanFailedTasks,
       SCAN_MAIN_LOGS: this.onScanMainLogs,
@@ -362,9 +405,12 @@ export default {
     this.socketConnected = this.$socket.connected
     this.$socket.emit('ON_SCANNER_PAGE')
     this.loadFailures()
+    this.loadJob()
+    this.jobPoll = setInterval(() => this.loadJob(), 2000)
   },
 
   beforeUnmount () {
+    clearInterval(this.jobPoll)
     Object.entries(this.socketListeners || {}).forEach(([event, listener]) => {
       this.$socket.removeListener(event, listener)
     })

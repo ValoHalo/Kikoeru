@@ -244,6 +244,7 @@ const createSchema = (connection = db_1.knex) => connection.schema
     LEFT JOIN relatedWorks ON relatedWorks.source_original_work_id = t_work.original_work_id
     ;
   `)
+    .then(() => require('./scanJobs').createScanTables(connection))
     .then(() => {
     console.log(' * 成功构建数据库结构.');
 })
