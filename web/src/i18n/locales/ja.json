@@ -1,4 +1,35 @@
 {
+  "batchWorks": {
+    "selectNamed": "作品を選択：{name}",
+    "selectWork": "作品を選択",
+    "selected": "{count} 件を選択中",
+    "selectLoaded": "現在のページまたは読込済みの作品をすべて選択",
+    "clear": "選択を解除",
+    "collection": "コレクションに追加",
+    "progress": "視聴状況",
+    "archive": "アーカイブ",
+    "exit": "選択を終了",
+    "confirm": "一括変更",
+    "confirmCount": "選択した {count} 作品に適用します。",
+    "result": "変更 {changed} 件、変更不要 {unchanged} 件、利用不可 {missing} 件。",
+    "marked": "聴きたい",
+    "listening": "視聴中",
+    "listened": "視聴済み",
+    "replay": "再視聴",
+    "postponed": "保留",
+    "unset": "視聴状況を解除",
+    "failed": "一括操作に失敗しました",
+    "limit": "一度に選択できるのは 1,000 作品までです"
+  },
+  "savedSearch": {
+    "title": "保存した検索",
+    "save": "現在の検索を保存",
+    "name": "検索名",
+    "empty": "保存した検索はありません",
+    "deleteNamed": "保存した検索「{name}」を削除しますか？",
+    "failed": "検索の保存操作に失敗しました",
+    "unavailable": "この検索のコレクションは利用できません"
+  },
   "playbackProtection": {
     "undo": "シークを元に戻す",
     "positions": "再生位置の履歴",
@@ -47,6 +78,7 @@
     "downloadFailed": "ブラウザーでファイルを保存できませんでした。",
     "tables": {
       "t_circle": "サークル",
+      "t_saved_search": "保存した検索",
       "t_play_position": "再生位置の履歴",
       "t_tag": "タグ",
       "t_va": "声優",

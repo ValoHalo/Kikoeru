@@ -1,4 +1,35 @@
 {
+  "batchWorks": {
+    "selectNamed": "Select work: {name}",
+    "selectWork": "Select works",
+    "selected": "{count} selected",
+    "selectLoaded": "Select this page or loaded works",
+    "clear": "Clear selection",
+    "collection": "Add to collection",
+    "progress": "Listening status",
+    "archive": "Archive",
+    "exit": "Exit selection",
+    "confirm": "Update selected works",
+    "confirmCount": "Apply to {count} selected works.",
+    "result": "Changed {changed}, unchanged {unchanged}, unavailable {missing}.",
+    "marked": "Want to listen",
+    "listening": "Listening",
+    "listened": "Finished",
+    "replay": "Listen again",
+    "postponed": "On hold",
+    "unset": "Clear listening status",
+    "failed": "Batch operation failed",
+    "limit": "Select up to 1,000 works at a time"
+  },
+  "savedSearch": {
+    "title": "Saved searches",
+    "save": "Save current search",
+    "name": "Search name",
+    "empty": "No saved searches",
+    "deleteNamed": "Delete saved search \"{name}\"?",
+    "failed": "Saved search operation failed",
+    "unavailable": "The collection used by this search is unavailable"
+  },
   "playbackProtection": {
     "undo": "Undo seek",
     "positions": "Playback positions",
@@ -47,6 +78,7 @@
     "downloadFailed": "The browser could not save the exported file.",
     "tables": {
       "t_circle": "Circles",
+      "t_saved_search": "Saved searches",
       "t_play_position": "Playback positions",
       "t_tag": "Tags",
       "t_va": "Voice actors",

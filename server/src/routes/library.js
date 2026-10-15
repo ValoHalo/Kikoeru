@@ -13,6 +13,52 @@ const { prepareWorks } = require('./utils/workVisibility');
 const router = express.Router();
 const PAGE_SIZE = config.pageSize || 12;
 
+router.post('/batch', requireAuthenticatedWrite,
+    body('workIds').isArray({ min: 1, max: 1000 }), body('workIds.*').isInt({ min: 1 }),
+    body('action').isIn(['archive', 'unarchive', 'progress', 'collection']),
+    body('progress').optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']),
+    body('collectionId').optional().isInt({ min: 1 }), async (req, res, next) => {
+        if (!isValidRequest(req, res)) return;
+        const { action, progress, collectionId } = req.body;
+        if ((action === 'progress' && progress === undefined) || (action === 'collection' && !collectionId)) return res.status(400).send({ error: t('library.batchInvalid') });
+        try {
+            const result = await db.knex.transaction(async trx => {
+                const user_name = username(req);
+                const requested = [...new Set(req.body.workIds.map(Number))];
+                const works = trx('t_work').whereIn('id', requested).select('id');
+                if (req.query.nsfw === '1') works.where('nsfw', false);
+                const ids = (await works).map(row => Number(row.id));
+                const changed = [], unchanged = [];
+                if (action === 'collection' && !(await trx('t_work_collection').where({ id: collectionId, user_name }).first())) {
+                    const error = new Error(t('library.collectionMissing')); error.status = 404; throw error;
+                }
+                let position = action === 'collection' ? Number((await trx('t_work_collection_item').where('collection_id', collectionId).max('position as position').first()).position ?? -1) + 1 : 0;
+                for (const work_id of ids) {
+                    if (action === 'progress') {
+                        const previous = await trx('t_review').where({ user_name, work_id }).first();
+                        if ((previous?.progress ?? null) === progress) { unchanged.push(work_id); continue; }
+                        await trx('t_review').insert({ user_name, work_id, progress }).onConflict(['user_name', 'work_id']).merge({ progress, updated_at: trx.fn.now() });
+                    } else if (action === 'collection') {
+                        const identity = { collection_id: Number(collectionId), work_id };
+                        if (await trx('t_work_collection_item').where(identity).first()) { unchanged.push(work_id); continue; }
+                        await trx('t_work_collection_item').insert({ ...identity, position: position++ });
+                    } else {
+                        const previous = await trx('t_work_user_state').where({ user_name, work_id }).first();
+                        if (Boolean(previous) === (action === 'archive')) { unchanged.push(work_id); continue; }
+                        if (action === 'archive') await trx('t_work_user_state').insert({ user_name, work_id });
+                        else await trx('t_work_user_state').where({ user_name, work_id }).del();
+                    }
+                    changed.push(work_id);
+                }
+                return { changed, unchanged, missing: requested.filter(id => !ids.includes(id)) };
+            });
+            res.send(result);
+        } catch (error) {
+            if (error.status) return res.status(error.status).send({ error: error.message });
+            next(error);
+        }
+    });
+
 router.get('/missing', query('page').optional().isInt({ min: 1 }), async (req, res, next) => {
     if (!isValidRequest(req, res)) return;
     try {

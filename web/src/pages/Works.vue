@@ -3,10 +3,13 @@
     <!--没有搜索的情况下，显示最近播放作品-->
     <RecentWorks v-if="enableShowRecent && !isAdvanceSearch && searchMetas.length == 0 && !collectionId" />
 
-    <section class="works-toolbar" aria-labelledby="works-heading">
-    <div class="works-toolbar-heading">
+    <section class="works-toolbar" :class="{ 'works-toolbar--selecting': selecting }" :aria-labelledby="selecting ? undefined : 'works-heading'" :aria-label="selecting ? $t('batchWorks.selectWork') : undefined">
+    <LibraryBatchActions v-if="selecting" :selected="selectedWorks" @select-all="selectLoaded" @clear="selectedWorks = []" @exit="exitSelection" @completed="batchCompleted" />
+    <div v-else class="works-toolbar-heading">
       <div class="works-title"><q-icon name="library_music" size="23px" /><h2 id="works-heading">{{ pageTitle ? $t(pageTitle) : '' }}</h2><span class="works-count">{{ pagination.totalCount }}</span></div>
       <div class="works-display-controls">
+        <SavedSearchMenu v-if="$store.state.User.name" :search="savedSearchValue" @apply="applySavedSearch" />
+        <q-btn v-if="$store.state.User.name" flat round dense icon="checklist" :aria-label="$t('batchWorks.selectWork')" @click="selecting = true"><AppTooltip>{{ $t('batchWorks.selectWork') }}</AppTooltip></q-btn>
         <q-btn flat no-caps :icon="sortInDesc ? 'south' : 'north'" :label="sortInDesc ? $t('works.descending') : $t('works.ascending')" :aria-label="$t('favourites.sortDirection')" class="works-sort-direction" @click="sortInDesc = !sortInDesc" />
         <div class="works-view-options" role="group" :aria-label="$t('works.viewMode')">
           <q-btn flat dense no-caps icon="grid_view" :label="$t('works.cardView')" :aria-pressed="!listMode" :class="{ 'is-selected': !listMode }" @click="listMode = false" />
@@ -16,7 +19,7 @@
         <q-btn v-if="$q.screen.width >= 1120 && !listMode" flat dense :icon="detailMode ? 'zoom_out' : 'zoom_in'" :aria-label="$t(detailMode ? 'works.smallerCards' : 'works.largerCards')" class="works-density" @click="detailMode = !detailMode"><AppTooltip>{{ $t(detailMode ? 'works.smallerCards' : 'works.largerCards') }}</AppTooltip></q-btn>
       </div>
     </div>
-    <div v-if="advanceSearchKeywords.length || searchMetas.length" class="works-search-chips">
+    <div v-if="!selecting && (advanceSearchKeywords.length || searchMetas.length)" class="works-search-chips">
       <div v-if="isAdvanceSearch"><!--高级搜索模式的多关键字展示-->
         <q-badge class="q-ma-xs" v-for="meta,index in advanceSearchKeywords" :key="meta.t+meta.d">
           {{ meta.d }}
@@ -37,7 +40,7 @@
       </div>
     </div>
 
-    <div class="works-filters">
+    <div v-show="!selecting" class="works-filters">
       <div class="works-filter-fields">
       <!-- 排序属性 -->
       <q-select
@@ -125,11 +128,11 @@
           bordered separator class="shadow-2"
         >
           <template #default="{ item }">
-            <WorkListItem :key="item.id" :metadata="item" :showLabel="showLabel && $q.screen.width > 700" />
+            <WorkSelection :key="item.id" :label="item.title" list :enabled="selecting" :selected="selectedWorks.includes(item.id)" @select="toggleSelection(item.id, $event)"><WorkListItem :metadata="item" :showLabel="showLabel && $q.screen.width > 700" /></WorkSelection>
           </template>
         </q-virtual-scroll>
         <q-list v-else-if="listMode && works.length" bordered separator class="shadow-2">
-          <WorkListItem v-for="work in works" :key="work.id" :metadata="work" :showLabel="showLabel && $q.screen.width > 700" />
+          <WorkSelection v-for="work in works" :key="work.id" :label="work.title" list :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><WorkListItem :metadata="work" :showLabel="showLabel && $q.screen.width > 700" /></WorkSelection>
         </q-list>
 
         <!--完整作品卡片-->
@@ -137,7 +140,7 @@
           <div class="col-xs-12 col-sm-6 col-md-4" v-for="work in works" :key="work.id"
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
           >
-            <OldWorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/>
+            <WorkSelection :label="work.title" :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><OldWorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/></WorkSelection>
           </div>
         </div>
 
@@ -148,7 +151,7 @@
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
             :style="{ '--sim-hover-work-card': work.id === touchedWorkId ? '1' : '0'}"
           >
-            <WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/>
+            <WorkSelection :label="work.title" :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/></WorkSelection>
           </div>
         </div>
 
@@ -158,7 +161,7 @@
             :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
             style="--sim-hover-work-card: 0"
           >
-            <WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/>
+            <WorkSelection :label="work.title" :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/></WorkSelection>
           </div>
         </div>
 
@@ -199,6 +202,9 @@ import OldWorkCard from 'src/components/OldWorkCard.vue'
 import { AdvanceSearchCondType } from '../utils.js'
 import { WORK_LIST_MODES } from '../store/module-AudioPlayer/state'
 import { rememberWorksScroll } from '../utils/worksScroll'
+import WorkSelection from '../components/WorkSelection.vue'
+import LibraryBatchActions from '../components/LibraryBatchActions.vue'
+import SavedSearchMenu from '../components/SavedSearchMenu.vue'
 
 export default {
   name: 'Works',
@@ -206,6 +212,9 @@ export default {
   mixins: [NotifyMixin],
 
   components: {
+    WorkSelection,
+    LibraryBatchActions,
+    SavedSearchMenu,
     WorkCard,
     OldWorkCard,
     WorkListItem,
@@ -214,6 +223,9 @@ export default {
 
   data () {
     return {
+      selecting: false,
+      selectedWorks: [],
+      selectionAnchor: null,
       listMode: false,
       showLabel: true,
       detailMode: true,
@@ -307,6 +319,16 @@ export default {
   },
 
   computed: {
+    savedSearchValue () {
+      const query = { ...this.$route.query }
+      delete query.page
+      if (this.isAdvanceSearch) delete query.keyword
+      return { path: this.isAdvanceSearch ? '/search' : '/works', query, filters: { order: this.sortCategoryOption, sort: this.sortInDesc ? 'desc' : 'asc', nsfw: Number(this.nsfwOption.replace('nsfw_', '')), lyric: this.lyricOption || [], keywords: this.advanceSearchKeywords } }
+    },
+    selectionContext () {
+      const query = { ...this.$route.query }; delete query.page
+      return JSON.stringify([this.$route.path, query, this.nsfwOption, this.lyricOption, this.advanceSearchKeywords, this.$store.state.User.name])
+    },
     hasSearch () {
       return Boolean(this.$route.query.keyword || (this.isAdvanceSearch && this.advanceSearchKeywords.length))
     },
@@ -382,6 +404,7 @@ export default {
   },
 
   deactivated () {
+    this.exitSelection()
     this.stopLoad = true
   },
 
@@ -391,6 +414,8 @@ export default {
   },
 
   watch: {
+    selecting (value) { if (value && !this.$store.state.AudioPlayer.hide) this.$store.commit('AudioPlayer/TOGGLE_HIDE') },
+    selectionContext () { this.exitSelection() },
     url () {
       this.reset()
     },
@@ -468,6 +493,41 @@ export default {
   },
 
   methods: {
+    exitSelection () { this.selecting = false; this.selectedWorks = []; this.selectionAnchor = null },
+    toggleSelection (id, event) {
+      const ids = this.works.map(work => work.id)
+      const start = ids.indexOf(this.selectionAnchor), end = ids.indexOf(id)
+      const values = event.shiftKey && start >= 0 ? ids.slice(Math.min(start, end), Math.max(start, end) + 1) : [id]
+      const selected = new Set(this.selectedWorks)
+      const remove = selected.has(id)
+      values.forEach(value => remove ? selected.delete(value) : selected.add(value))
+      if (selected.size > 1000) return this.showWarnNotif(t('batchWorks.limit'))
+      this.selectedWorks = [...selected]
+      this.selectionAnchor = id
+    },
+    selectLoaded () {
+      const selected = [...new Set([...this.selectedWorks, ...this.works.map(work => work.id)])]
+      if (selected.length > 1000) return this.showWarnNotif(t('batchWorks.limit'))
+      this.selectedWorks = selected
+    },
+    batchCompleted (result) {
+      this.selectedWorks = result.missing
+      this.reset(this.workListMode === WORK_LIST_MODES.PAGINATION ? this.requestedPage : 1)
+    },
+    async applySavedSearch (search) {
+      if (search.unavailable) return this.showWarnNotif(t('savedSearch.unavailable'))
+      if (search.query.collectionId && !this.collections.some(item => String(item.id) === search.query.collectionId)) return this.showWarnNotif(t('savedSearch.unavailable'))
+      this.resettingSearchControls = true
+      try {
+        this.sortCategoryOption = search.filters.order
+        this.sortInDesc = search.filters.sort === 'desc'
+        this.nsfwOption = `nsfw_${search.filters.nsfw}`
+        this.lyricOption = [...search.filters.lyric]
+        this.advanceSearchKeywords = search.filters.keywords.map(item => ({ ...item }))
+        await this.$router.push({ path: search.path, query: { ...search.query } })
+        await this.$nextTick()
+      } finally { this.resettingSearchControls = false; this.reset() }
+    },
     async loadCollections () {
       if (this.loadingCollections) return
       this.loadingCollections = true
@@ -775,6 +835,8 @@ export default {
 .works-filter-fields :deep(.q-field__label) { color: var(--toolbar-muted); }
 .works-filter-fields :deep(.q-field__native) { letter-spacing: 0; }
 .works-search-chips { margin: -4px 0 12px; }
+.works-toolbar--selecting { position: sticky; top: 56px; z-index: 20; background: #fff; }
+.body--dark .works-toolbar--selecting { background: #121212; }
 .works-toolbar .q-btn:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: 2px; }
 @media (max-width: 699px) {
   .works-results { margin: 0 12px; }

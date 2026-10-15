@@ -1,4 +1,35 @@
 {
+  "batchWorks": {
+    "selectNamed": "選擇作品：{name}",
+    "selectWork": "選擇作品",
+    "selected": "已選 {count} 部",
+    "selectLoaded": "全選目前頁面或已載入作品",
+    "clear": "清空選擇",
+    "collection": "加入合集",
+    "progress": "收聽狀態",
+    "archive": "封存",
+    "exit": "退出多選",
+    "confirm": "批次修改",
+    "confirmCount": "將處理選中的 {count} 部作品。",
+    "result": "已修改 {changed} 部，無需修改 {unchanged} 部，無法使用 {missing} 部。",
+    "marked": "想聽",
+    "listening": "在聽",
+    "listened": "聽過",
+    "replay": "重聽",
+    "postponed": "擱置",
+    "unset": "清除收聽狀態",
+    "failed": "批次操作失敗",
+    "limit": "一次最多選擇 1,000 部作品"
+  },
+  "savedSearch": {
+    "title": "已儲存搜尋",
+    "save": "儲存目前搜尋",
+    "name": "搜尋名稱",
+    "empty": "尚無已儲存搜尋",
+    "deleteNamed": "刪除已儲存搜尋「{name}」？",
+    "failed": "儲存搜尋操作失敗",
+    "unavailable": "此搜尋參照的合集已無法使用"
+  },
   "playbackProtection": {
     "undo": "復原跳轉",
     "positions": "播放位置記錄",
@@ -47,6 +78,7 @@
     "downloadFailed": "瀏覽器無法儲存匯出檔案。",
     "tables": {
       "t_circle": "社團",
+      "t_saved_search": "已儲存搜尋",
       "t_play_position": "播放位置記錄",
       "t_tag": "標籤",
       "t_va": "聲優",

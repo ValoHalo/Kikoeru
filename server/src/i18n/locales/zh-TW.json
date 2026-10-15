@@ -71,6 +71,8 @@
     "jpegRequired": "圖片格式不是 JPEG，無法儲存自訂封面。目前僅支援 JPEG 格式。"
   },
   "library": {
+    "invalidSearch": "搜尋條件無效",
+    "batchInvalid": "請選擇有效的批次操作參數",
     "workMissing": "作品不存在",
     "archived": "作品已歸檔",
     "duplicateName": "分組名稱已存在",

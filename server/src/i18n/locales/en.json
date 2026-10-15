@@ -73,6 +73,8 @@
     "jpegRequired": "Only JPEG images can be saved as custom covers"
   },
   "library": {
+    "invalidSearch": "Invalid search conditions",
+    "batchInvalid": "Select valid batch operation parameters",
     "workMissing": "Work does not exist",
     "archived": "Work archived",
     "duplicateName": "A collection with this name already exists",

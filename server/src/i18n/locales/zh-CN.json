@@ -71,6 +71,8 @@
     "jpegRequired": "图像文件非jpeg，无法保存自定义封面，目前只支持jpeg格式的封面"
   },
   "library": {
+    "invalidSearch": "搜索条件无效",
+    "batchInvalid": "请选择有效的批量操作参数",
     "workMissing": "作品不存在",
     "archived": "作品已归档",
     "duplicateName": "分组名称已存在",

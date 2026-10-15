@@ -71,6 +71,8 @@
     "jpegRequired": "JPEG形式ではないため、カスタムカバーを保存できません。現在対応しているのはJPEG形式のみです"
   },
   "library": {
+    "invalidSearch": "検索条件が無効です",
+    "batchInvalid": "有効な一括操作の設定を選択してください",
     "workMissing": "作品が存在しません",
     "archived": "作品をアーカイブしました",
     "duplicateName": "同じ名前のコレクションが既に存在します",

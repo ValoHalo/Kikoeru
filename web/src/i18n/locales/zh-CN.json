@@ -1,4 +1,35 @@
 {
+  "batchWorks": {
+    "selectNamed": "选择作品：{name}",
+    "selectWork": "选择作品",
+    "selected": "已选 {count} 部",
+    "selectLoaded": "全选当前页或已加载作品",
+    "clear": "清空选择",
+    "collection": "加入合集",
+    "progress": "收听状态",
+    "archive": "归档",
+    "exit": "退出多选",
+    "confirm": "批量修改",
+    "confirmCount": "将处理选中的 {count} 部作品。",
+    "result": "已修改 {changed} 部，无需修改 {unchanged} 部，不可用 {missing} 部。",
+    "marked": "想听",
+    "listening": "在听",
+    "listened": "听过",
+    "replay": "重听",
+    "postponed": "搁置",
+    "unset": "清除收听状态",
+    "failed": "批量操作失败",
+    "limit": "一次最多选择 1,000 部作品"
+  },
+  "savedSearch": {
+    "title": "已保存搜索",
+    "save": "保存当前搜索",
+    "name": "搜索名称",
+    "empty": "暂无已保存搜索",
+    "deleteNamed": "删除已保存搜索“{name}”？",
+    "failed": "保存搜索操作失败",
+    "unavailable": "这个搜索引用的合集已不可用"
+  },
   "playbackProtection": {
     "undo": "撤销跳转",
     "positions": "播放位置记录",
@@ -47,6 +78,7 @@
     "downloadFailed": "浏览器未能保存导出文件。",
     "tables": {
       "t_circle": "社团",
+      "t_saved_search": "已保存搜索",
       "t_play_position": "播放位置记录",
       "t_tag": "标签",
       "t_va": "声优",
