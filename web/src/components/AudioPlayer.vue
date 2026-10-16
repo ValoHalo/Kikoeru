@@ -64,13 +64,16 @@
         <div class="player-progress non-selectable relative-position">
           <AudioElement class="player-seek" @position-changed="onUpdatePlayingStatus" />
           <div class="player-times">
-            <span>{{ formatSeconds(currentTime) }}</span>
-            <div class="row items-center no-wrap">
-              <q-btn flat round dense size="sm" icon="undo" :disable="!seekUndo.length" :aria-label="$t('playbackProtection.undo')" @click="$store.commit('AudioPlayer/UNDO_SEEK')"><AppTooltip>{{ $t('playbackProtection.undo') }}</AppTooltip></q-btn>
-              <q-btn flat round dense size="sm" icon="history" :aria-label="$t('playbackProtection.positions')" @click="showPositions = true"><AppTooltip>{{ $t('playbackProtection.positions') }}</AppTooltip></q-btn>
-              <q-icon :name="historySaveStatus === 'failed' ? 'cloud_off' : historySaveStatus === 'saving' ? 'sync' : 'cloud_done'" :color="historySaveStatus === 'failed' ? 'negative' : undefined" size="16px"><AppTooltip>{{ historySaveLabel }}</AppTooltip></q-icon>
+            <div class="player-time-values">
+              <span>{{ formatSeconds(currentTime) }}</span>
+              <span class="player-time-divider">/</span>
+              <span>{{ formatSeconds(duration) }}</span>
             </div>
-            <span>{{ formatSeconds(duration) }}</span>
+            <div class="player-progress-actions">
+              <q-icon v-if="historySaveStatus === 'failed'" name="cloud_off" color="negative" size="16px" role="status" :aria-label="$t('playbackProtection.failed')"><AppTooltip>{{ $t('playbackProtection.failed') }}</AppTooltip></q-icon>
+              <q-btn flat round dense icon="undo" :disable="!canUndoSeek" :aria-label="$t('playbackProtection.undo')" @click="$store.commit('AudioPlayer/UNDO_SEEK')"><AppTooltip>{{ $t('playbackProtection.undo') }}</AppTooltip></q-btn>
+              <q-btn flat round dense icon="redo" :disable="!canRedoSeek" :aria-label="$t('playbackProtection.redo')" @click="$store.commit('AudioPlayer/REDO_SEEK')"><AppTooltip>{{ $t('playbackProtection.redo') }}</AppTooltip></q-btn>
+            </div>
           </div>
           <div v-if="playingTranscode" class="transcoding-status-anchor text-caption">
             <TranscodingStatus :track-hash="currentPlayingFile.hash" />
@@ -350,13 +353,11 @@
       <LyricSelection />
     </q-dialog>
     <BookmarksDialog v-if="showBookmarks && currentPlayingFile.hash" :work-id="Number(playWorkId)" :track="currentPlayingFile" @close="showBookmarks = false" />
-    <PlaybackPositions v-if="showPositions" @close="showPositions = false" />
   </div>
 </template>
 
 <script>
 import { savePlaybackHistory, cachePlaybackRecovery, acknowledgePlaybackRecovery, discardPlaybackRecovery } from '../utils/playbackHistory.mjs'
-import PlaybackPositions from 'components/PlaybackPositions.vue'
 import { t } from '../i18n'
 import draggable from 'vuedraggable'
 import AudioElement from 'components/AudioElement.vue'
@@ -374,7 +375,6 @@ export default {
   name: 'AudioPlayer',
 
   components: {
-    PlaybackPositions,
     draggable,
     AudioElement,
     Scrollable,
@@ -392,7 +392,7 @@ export default {
       queueCopy: [],
       histroyCheckIntervalId: -1,
       recoveryIntervalId: null,
-      showPositions: false,
+      positionHistoryRequest: 0,
       latestUpdatedHistory: null, // 记录最近一次更新的历史记录，防止反复对同一个播放历史进行远程数据更新
       playbackRates: PLAYBACK_RATES,
       showSaveQueueDialog: false,
@@ -412,6 +412,7 @@ export default {
   },
 
   mounted () {
+    this.loadSeekHistory()
     this.histroyCheckIntervalId = setInterval(() => {
       this.onUpdatePlayingStatus()
     }, 30 * 1000)
@@ -423,6 +424,7 @@ export default {
   },
 
   beforeUnmount() {
+    this.positionHistoryRequest++
     if (this.$q.platform.is.desktop) {
       window.removeEventListener('keydown', this.onKeyDown);
     }
@@ -439,9 +441,19 @@ export default {
       if (origin?.hash === this.currentPlayingFile.hash) this.onUpdatePlayingStatus('seek', origin.seconds)
     },
     '$store.state.AudioPlayer.playbackReadyHash' (hash) {
+      this.loadSeekHistory()
       if (hash && this.playing) this.onUpdatePlayingStatus('track')
     },
+    '$store.state.User.name' () {
+      this.$store.commit('AudioPlayer/CLEAR_SEEK_UNDO')
+      this.loadSeekHistory()
+    },
+    'currentPlayingFile.hash' () {
+      this.positionHistoryRequest++
+    },
     '$store.state.AudioPlayer.historyRevision' () {
+      this.positionHistoryRequest++
+      this.$store.commit('AudioPlayer/CLEAR_SEEK_UNDO')
       discardPlaybackRecovery(this.$q.localStorage, this.$store.state.User.name)
       this.$store.commit('AudioPlayer/SET_HISTORY_SAVE_STATUS', 'idle')
     },
@@ -524,10 +536,6 @@ export default {
   },
 
   computed: {
-    historySaveLabel () {
-      if (this.historySaveStatus === 'saved') return t('playbackProtection.savedAt', { time: new Date(this.$store.state.AudioPlayer.historySavedAt).toLocaleTimeString() })
-      return t(`playbackProtection.${this.historySaveStatus}`)
-    },
     coverFilter () {
       const blur = this.$store.getters['AudioPlayer/shouldBlurCover'](this.playWorkId) ? 'blur(28px) ' : ''
       return blur + (this.isFlipCover ? 'brightness(0.1) grayscale(80%)' : 'brightness(1) grayscale(0%)')
@@ -631,7 +639,6 @@ export default {
 
     ...mapState('AudioPlayer', [
       'playing',
-      'seekUndo',
       'historySaveStatus',
       'hide',
       'currentTime',
@@ -655,6 +662,8 @@ export default {
     ]),
     
     ...mapGetters('AudioPlayer', [
+      'canUndoSeek',
+      'canRedoSeek',
       'currentPlayingFile',
       'resumeHistroyDone',
       'isCurrentPlayingFileVideo',
@@ -663,6 +672,23 @@ export default {
 
   methods: {
     formatSeconds,
+
+    async loadSeekHistory () {
+      const request = ++this.positionHistoryRequest
+      const user = this.$store.state.User.name
+      const track = this.currentPlayingFile
+      const state = this.$store.state.AudioPlayer
+      if (!user || !track.hash || state.playbackReadyHash !== track.hash) return
+      const snapshot = state.seekUndo
+      const item = this.playlistItemFromTrack(track)
+      try {
+        const params = { workId: item.workId, relativePath: item.relativePath }
+        if (this.$store.getters['AudioPlayer/sfwOnly']) params.nsfw = 1
+        const { data } = await this.$axios.get('/api/histroy/positions', { params })
+        if (request !== this.positionHistoryRequest || this.$store.state.User.name !== user) return
+        this.$store.commit('AudioPlayer/HYDRATE_SEEK_UNDO', { hash: track.hash, positions: data.positions, snapshot })
+      } catch { /* Session undo remains available when saved positions cannot be loaded. */ }
+    },
 
     startFixLyricSync(whoStartFirst) {
       this.fixState = "measure";
@@ -1086,11 +1112,45 @@ export default {
 
 .player-times {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
   font-size: 13px;
   line-height: 18px;
   font-variant-numeric: tabular-nums;
+}
+
+.player-time-values {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
   opacity: 0.85;
+}
+
+.player-time-divider { opacity: 0.55; }
+
+.player-progress-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+
+  > .q-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+
+    :deep(.q-icon) { font-size: 20px; }
+  }
+
+  @media (pointer: coarse) {
+    > .q-btn {
+      width: 44px;
+      height: 44px;
+    }
+  }
 }
 
 .player-transport {

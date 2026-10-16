@@ -55,6 +55,10 @@ function syncCurrentTrackContext (state, fallbackWorkId = 0) {
   state.playWorkId = workId
 }
 
+const MAX_SEEK_HISTORY = 100
+const sameSeekPosition = (left, right) => Math.abs(left - right) < 0.01
+const currentSeekPosition = state => Number.isFinite(state.newCurrentTime) && state.newCurrentTime >= 0 ? state.newCurrentTime : state.currentTime
+
 const mutations = {
   SET_CLIP_RANGE (state, value) { state.clipRange = value },
   SET_CLIP_DRAFT (state, value) { state.clipDraft = value },
@@ -77,24 +81,66 @@ const mutations = {
     if (value === 'saved') state.historySavedAt = Date.now()
   },
   SET_PLAYBACK_READY (state, hash) { state.playbackReadyHash = hash },
-  CLEAR_SEEK_UNDO (state) { state.seekUndo = []; state.seekUndoHash = ''; state.seekOrigin = null },
+  CLEAR_SEEK_UNDO (state) {
+    if (['manual', 'undo', 'redo'].includes(state.seekCause) && state.newCurrentTime >= 0) state.newCurrentTime = -1
+    state.seekCause = 'automatic'
+    state.seekUndo = []
+    state.seekRedo = []
+    state.seekUndoHash = ''
+    state.seekOrigin = null
+  },
+  HYDRATE_SEEK_UNDO (state, { hash, positions, snapshot }) {
+    if (!hash || hash !== getters.currentPlayingFile(state).hash || snapshot !== state.seekUndo) return
+    if (state.seekUndoHash && state.seekUndoHash !== hash) return
+    const duration = Number.isFinite(state.duration) && state.duration > 0 ? state.duration : Infinity
+    const saved = (Array.isArray(positions) ? positions : [])
+      .map(position => position?.seconds)
+      .filter(seconds => (typeof seconds === 'number' || (typeof seconds === 'string' && seconds.trim())) && Number.isFinite(Number(seconds)) && Number(seconds) >= 0)
+      .map(Number)
+      .filter(seconds => seconds <= duration)
+    const currentTime = currentSeekPosition(state)
+    while (saved.length && Math.abs(saved[0] - currentTime) < 1) saved.shift()
+    saved.reverse()
+
+    // Saved positions use whole seconds; keep the more precise local departure.
+    const local = state.seekUndoHash === hash ? state.seekUndo.filter(seconds => seconds <= duration) : []
+    let overlap = Math.min(saved.length, local.length)
+    while (overlap && !local.slice(0, overlap).every((seconds, index) => Math.floor(saved[saved.length - overlap + index]) === Math.floor(seconds))) overlap--
+    state.seekUndo = saved.slice(0, saved.length - overlap).concat(local)
+      .filter((seconds, index, stack) => index === 0 || !sameSeekPosition(stack[index - 1], seconds))
+      .slice(-MAX_SEEK_HISTORY)
+    state.seekUndoHash = hash
+  },
   REQUEST_MANUAL_SEEK (state, value) {
     const seconds = Math.max(0, Math.min(state.duration, Number(value.seconds)))
-    const from = Number.isFinite(value.from) ? value.from : state.currentTime
+    const from = Number.isFinite(value.from) ? value.from : currentSeekPosition(state)
     const hash = getters.currentPlayingFile(state).hash
-    if (!hash || !Number.isFinite(seconds) || Math.abs(from - seconds) < 0.01) return
+    if (!hash || !Number.isFinite(seconds) || !Number.isFinite(from) || from < 0 || sameSeekPosition(from, seconds)) return
     if (state.seekUndoHash !== hash) state.seekUndo = []
     state.seekUndoHash = hash
-    state.seekUndo = [...state.seekUndo, from].slice(-10)
+    state.seekUndo = [...state.seekUndo, from].slice(-MAX_SEEK_HISTORY)
+    state.seekRedo = []
     state.seekOrigin = { hash, seconds: from }
     state.seekCause = 'manual'
     state.newCurrentTime = seconds
   },
   UNDO_SEEK (state) {
-    if (state.seekUndoHash !== getters.currentPlayingFile(state).hash || !state.seekUndo.length) return
+    if (!getters.canUndoSeek(state)) return
+    const from = currentSeekPosition(state)
+    if (!Number.isFinite(from) || from < 0) return
+    state.seekRedo = [...state.seekRedo, from].slice(-MAX_SEEK_HISTORY)
     state.newCurrentTime = state.seekUndo[state.seekUndo.length - 1]
     state.seekUndo = state.seekUndo.slice(0, -1)
     state.seekCause = 'undo'
+  },
+  REDO_SEEK (state) {
+    if (!getters.canRedoSeek(state)) return
+    const from = currentSeekPosition(state)
+    if (!Number.isFinite(from) || from < 0) return
+    state.seekUndo = [...state.seekUndo, from].slice(-MAX_SEEK_HISTORY)
+    state.newCurrentTime = state.seekRedo[state.seekRedo.length - 1]
+    state.seekRedo = state.seekRedo.slice(0, -1)
+    state.seekCause = 'redo'
   },
   HISTORY_CLEARED (state) { state.historyRevision++; state.suppressPausedHistory = true },
   APPLY_DEFAULT_PREFERENCES: (state, defaults) => {

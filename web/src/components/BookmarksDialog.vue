@@ -184,7 +184,11 @@ export default {
         })
         if (!keepPlaying) this.$store.commit('AudioPlayer/PAUSE')
         if (sameSource && !resumePending) {
-          this.$store.commit('AudioPlayer/SET_NEW_CURRENT_TIME', data.seconds)
+          if (current.hash === target.hash) {
+            this.$store.commit('AudioPlayer/REQUEST_MANUAL_SEEK', { seconds: data.seconds })
+          } else {
+            this.$store.commit('AudioPlayer/SET_NEW_CURRENT_TIME', data.seconds)
+          }
           this.$store.commit('AudioPlayer/RESUME_HISTROY_SECONDS_DONE')
         }
       } catch (error) {

@@ -97,7 +97,7 @@ export default {
 
   watch: {
     '$store.state.User.name' () { this.resetHistory() },
-    '$store.state.AudioPlayer.historySavedRevision' () { if (this.active && !this.clearing) this.resetHistory() },
+    '$store.state.AudioPlayer.historySavedRevision' () { if (this.active && !this.clearing) this.resetHistory(true) },
     '$store.state.AudioPlayer.historyRevision' () { this.resetHistory() }
   },
   methods: {

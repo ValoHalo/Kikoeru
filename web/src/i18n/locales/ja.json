@@ -111,6 +111,7 @@
   },
   "playbackProtection": {
     "undo": "シークを元に戻す",
+    "redo": "シークをやり直す",
     "positions": "再生位置の履歴",
     "empty": "保存された位置はありません",
     "idle": "再生位置は未保存です",

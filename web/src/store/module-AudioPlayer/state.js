@@ -121,6 +121,7 @@ export default function () {
     historySavedAt: null,
     playbackReadyHash: '',
     seekUndo: [],
+    seekRedo: [],
     seekUndoHash: '',
     seekOrigin: null,
     seekCause: 'automatic',

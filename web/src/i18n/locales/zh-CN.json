@@ -111,6 +111,7 @@
   },
   "playbackProtection": {
     "undo": "撤销跳转",
+    "redo": "重做跳转",
     "positions": "播放位置记录",
     "empty": "暂无位置记录",
     "idle": "尚未保存播放进度",

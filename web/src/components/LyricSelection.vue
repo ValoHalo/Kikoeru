@@ -282,7 +282,7 @@ export default {
       'SET_CURRENT_LYRIC_LINE_NUMBER',
       'SET_HAS_LYRIC',
       'SET_LYRIC_LINES',
-      'SET_NEW_CURRENT_TIME',
+      'REQUEST_MANUAL_SEEK',
     ]),
 
     cloneLyricLines () {
@@ -306,7 +306,7 @@ export default {
     },
 
     seekToLine (line) {
-      this.SET_NEW_CURRENT_TIME(Math.max(0, Number(line.time) || 0) / 1000)
+      this.REQUEST_MANUAL_SEEK({ seconds: Math.max(0, Number(line.time) || 0) / 1000 })
     },
 
     openLineEditor (index) {

@@ -338,13 +338,13 @@ export default {
     },
     rewindSeekMode(rewind) {
       if (rewind) {
-        this.player.rewind(this.rewindSeekTime);
+        this.requestManualSeek(this.player.currentTime - this.rewindSeekTime)
         this.SET_REWIND_SEEK_MODE(false);
       }
     },
     forwardSeekMode(forward) {
       if (forward) {
-        this.player.forward(this.forwardSeekTime);
+        this.requestManualSeek(this.player.currentTime + this.forwardSeekTime)
         this.SET_FORWARD_SEEK_MODE(false);
       }
     },
@@ -388,6 +388,10 @@ export default {
   methods: {
     formatSeconds,
     formatClipTime,
+
+    requestManualSeek (seconds, from = this.player.currentTime) {
+      this.$store.commit('AudioPlayer/REQUEST_MANUAL_SEEK', { seconds, from })
+    },
 
     onMediaError () {
       this.PAUSE()
@@ -791,14 +795,13 @@ export default {
         previoustrack: () => this.PREVIOUS_TRACK(),
         nexttrack: () => this.NEXT_TRACK(),
         seekbackward: ({ seekOffset }) => {
-          this.player.currentTime = Math.max(0, this.player.currentTime - (seekOffset || this.rewindSeekTime))
+          this.requestManualSeek(this.player.currentTime - (seekOffset || this.rewindSeekTime))
         },
         seekforward: ({ seekOffset }) => {
-          const targetTime = this.player.currentTime + (seekOffset || this.forwardSeekTime)
-          this.player.currentTime = Math.min(this.player.duration || targetTime, targetTime)
+          this.requestManualSeek(this.player.currentTime + (seekOffset || this.forwardSeekTime))
         },
         seekto: ({ seekTime }) => {
-          if (typeof seekTime === 'number') this.player.currentTime = seekTime
+          if (typeof seekTime === 'number') this.requestManualSeek(seekTime)
         },
       }
 
@@ -861,7 +864,7 @@ export default {
       }
     },
     onChangeSlider(v) {
-      this.$store.commit('AudioPlayer/REQUEST_MANUAL_SEEK', { seconds: v, from: this.sliderOrigin ?? this.player.currentTime })
+      this.requestManualSeek(v, this.sliderOrigin ?? this.player.currentTime)
       this.sliderOrigin = null
       this.isChangingCurrentTime = false
     },

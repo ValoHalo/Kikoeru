@@ -27,6 +27,16 @@ const getters = {
     }
   },
 
+  canUndoSeek: (state) => {
+    const hash = getters.currentPlayingFile(state).hash
+    return Boolean(hash && state.seekUndoHash === hash && state.seekUndo.length)
+  },
+
+  canRedoSeek: (state) => {
+    const hash = getters.currentPlayingFile(state).hash
+    return Boolean(hash && state.seekUndoHash === hash && state.seekRedo.length)
+  },
+
   isCurrentPlayingFileVideo: (state) => {
     const title = (state.queue[state.queueIndex] || {title: ''}).title;
     return title.endsWith("mp4");

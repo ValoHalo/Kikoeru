@@ -126,7 +126,7 @@ export default {
     preview () {
       if (!this.rangeValid || !this.playbackReady) return
       this.$store.commit('AudioPlayer/SET_CLIP_RANGE', { hash: this.track.hash, start: this.start, end: this.end, loop: this.draft.loop })
-      this.$store.commit('AudioPlayer/SET_NEW_CURRENT_TIME', this.start)
+      this.$store.commit('AudioPlayer/REQUEST_MANUAL_SEEK', { seconds: this.start })
       this.$store.commit('AudioPlayer/PLAY')
     },
     stopPreview () {

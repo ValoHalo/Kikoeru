@@ -111,6 +111,7 @@
   },
   "playbackProtection": {
     "undo": "Undo seek",
+    "redo": "Redo seek",
     "positions": "Playback positions",
     "empty": "No saved positions",
     "idle": "Playback position has not been saved",

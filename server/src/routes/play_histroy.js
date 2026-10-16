@@ -47,13 +47,19 @@ const validate_1 = require("./utils/validate");
 const accessControl_1 = require("../auth/accessControl");
 const PAGE_SIZE = config_1.config.pageSize || 12;
 const { prepareWorks } = require('./utils/workVisibility');
-router.get('/positions', accessControl_1.requireAuthenticatedWrite, async (req, res, next) => {
+router.get('/positions', accessControl_1.requireAuthenticatedWrite,
+    (0, express_validator_1.query)('workId', (_value, { path }) => t('validation.invalidValue', { field: path })).optional().isString().bail().isInt({ min: 1 }),
+    (0, express_validator_1.query)('relativePath', (_value, { path }) => t('validation.invalidValue', { field: path })).optional().isString().bail().isLength({ min: 1, max: 2048 }),
+    async (req, res, next) => {
+    if (!(0, validate_1.isValidRequest)(req, res)) return;
     try {
         const rows = db.knex('t_play_position as p').join('t_work as w', 'w.id', 'p.work_id')
             .where('p.user_name', (0, accessControl_1.getRequestUsername)(req, config_1.config))
-            .select('p.*', 'w.title', 'w.nsfw').orderBy('p.id', 'desc').limit(100);
+            .select('p.*', 'w.title', 'w.nsfw');
+        if (req.query.workId !== undefined) rows.where('p.work_id', Number(req.query.workId));
+        if (req.query.relativePath !== undefined) rows.where('p.relative_path', req.query.relativePath.replace(/\\/g, '/'));
         if (req.query.nsfw === '1') rows.where('w.nsfw', false);
-        res.send({ positions: await rows });
+        res.send({ positions: await rows.orderBy('p.id', 'desc').limit(100) });
     } catch (error) { next(error); }
 });
 router.get('/', (0, express_validator_1.query)('page', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isInt(), (0, express_validator_1.query)('sort', (_value, { path }) => t('validation.invalidValue', { field: path })).optional({ nullable: true }).isIn(['desc', 'asc']), async (req, res) => {
