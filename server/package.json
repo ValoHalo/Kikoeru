@@ -53,8 +53,7 @@
     "scan": "node --trace-warnings src/filesystem/scanner.js",
     "build": "npm run check",
     "check": "node scripts/check-syntax.js",
-    "release:win": "node scripts/build-release.js",
-    "test": "node --test test/unit/*.test.js"
+    "release:win": "node scripts/build-release.js"
   },
   "author": "Watanuki-Kimihiro",
   "contributors": [

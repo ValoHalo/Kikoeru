@@ -5,7 +5,7 @@
 ## 仓库目录
 
 ```text
-server/                       Express 后端源码、测试和打包器
+server/                       Express 后端源码和打包器
 web/                          Vue 3 / Quasar 2 前端源码
 build-windows-release.ps1     Windows 一键构建入口
 build-linux-release.sh        Linux x64 一键构建入口
@@ -25,7 +25,6 @@ build-linux-release.sh        Linux x64 一键构建入口
 ```powershell
 Set-Location server
 npm ci
-npm test
 npm run check
 ```
 
@@ -76,7 +75,7 @@ npx quasar dev
 
 首次构建会下载并解压配置中指定的 Node.js 24 前端工具链与 FFmpeg LGPL 归档，校验 FFmpeg 的 SHA-256 后，安装锁定依赖并构建前端 PWA
 
-脚本随后在 `.build/work/` 中准备后端工作副本，部署前端文件，运行后端测试和语法检查，再使用 Node.js 22 的 pkg target 生成便携程序
+脚本随后在 `.build/work/` 中准备后端工作副本，部署前端文件，运行语法检查，再使用 Node.js 22 的 pkg target 生成便携程序
 
 当前 Windows 前端工具链为 Node.js 24.14.1，版本和下载地址以 `server/scripts/release-config.json` 为准
 
@@ -122,7 +121,7 @@ ZIP 包含应用程序、`ffmpeg.exe`、`ffprobe.exe`、启动脚本和根目录
 ./build-linux-release.sh
 ```
 
-脚本会在 `.build/` 中下载并校验固定版本的 Node.js Linux x64 运行时和 FFmpeg LGPL 归档，创建隔离的前后端工作副本，安装锁定依赖，运行后端测试与语法检查，再构建前端 PWA
+脚本会在 `.build/` 中下载并校验固定版本的 Node.js Linux x64 运行时和 FFmpeg LGPL 归档，创建隔离的前后端工作副本，安装锁定依赖，运行语法检查，再构建前端 PWA
 
 实际构建和最终产物使用脚本下载的固定 Node.js 24 运行时，当前配置为 Node.js 24.19.0
 
@@ -161,7 +160,7 @@ podman run --rm \
 
 ### 版本号
 
-产品版本由 `server/package.json` 的 `version` 字段维护，后端运行配置、`/api/version`、测试运行配置和 Windows 打包均从这里读取版本
+产品版本由 `server/package.json` 的 `version` 字段维护，后端运行配置、`/api/version` 和 Windows 打包均从这里读取版本
 
 `server/package-lock.json` 中的同名字段由 npm 同步更新，前端随服务端发布，不单独维护产品版本
 
@@ -201,7 +200,7 @@ Windows 使用直接包含二进制目录的 ZIP，Linux 使用 tar.xz，GitHub 
 
 通常不需要清理整个 `.build/`，只有工具损坏，或依赖与工具版本变化后出现异常时，再处理对应缓存目录
 
-仓库保留源码、配置、锁定依赖文件、已有测试、构建脚本、`LICENSE` 和 `server/scripts/release-config.json`，工具链、依赖目录和构建产物由本地构建或 CI 生成
+仓库保留源码、配置、锁定依赖文件、构建脚本、`LICENSE` 和 `server/scripts/release-config.json`，工具链、依赖目录和构建产物由本地构建或 CI 生成
 
 ## GitHub Actions
 

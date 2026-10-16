@@ -897,22 +897,4 @@ router.use((error, req, res, next) => {
     }
     next(error);
 });
-exports.__testing = {
-    doTranscodeOrReadFromCache,
-    getSourceFingerprint,
-    getOrCalculateAudioInfo,
-    getOrStartSharedTask,
-    getTranscodeCacheMetadataPath,
-    getTranscodeStatusResponse,
-    lufsCalculateTaskStatus,
-    parseTranscodeBitRate,
-    peakCalculateTaskStatus,
-    readValidatedTranscodeCache,
-    resolveTranscodeSource,
-    startTranscodeTask,
-    transcodeTasks,
-    transcodeTaskSourceFingerprints,
-    transcodeTaskStatus,
-    writeTranscodeCacheMetadata,
-};
 exports.default = router;

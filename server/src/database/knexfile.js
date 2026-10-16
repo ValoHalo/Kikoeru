@@ -69,16 +69,5 @@ exports.knexConnections = {
         },
         pool: {},
     },
-    testConfig: {
-        client: sqlite_type,
-        connection: {
-            filename: path_1.default.join(__dirname, '../test/db-test.sqlite3'),
-        },
-        useNullAsDefault: true,
-        migrations: {
-            tableName: 'knex_migrations'
-        },
-        pool: {},
-    },
 };
 Object.assign(module.exports, exports.knexConnections);

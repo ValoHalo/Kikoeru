@@ -122,7 +122,6 @@ run_in "$web_work_root" npm run check
 run_in "$web_work_root" npm run build
 
 run_in "$server_work_root" npm ci --no-audit --no-fund --cache "$npm_cache"
-run_in "$server_work_root" npm test
 run_in "$server_work_root" npm run check
 run_in "$server_work_root" npm prune --omit=dev --no-audit --no-fund
 

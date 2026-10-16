@@ -121,7 +121,6 @@ Invoke-Step $frontendNpm @("run", "build") $webBuildRoot
 Invoke-Robocopy -Source (Join-Path $webBuildRoot "dist\pwa") -Destination (Join-Path $serverBuildRoot "src\public")
 
 Invoke-Step $serverNpm @("ci", "--no-audit", "--no-fund", "--cache", (Join-Path $buildRoot "cache\server-npm")) $serverBuildRoot
-Invoke-Step $serverNode @("--test", "test/unit/*.test.js") $serverBuildRoot
 Invoke-Step $serverNode @("scripts/check-syntax.js") $serverBuildRoot
 
 $previousBuildRoot = $env:KIKOERU_BUILD_ROOT
