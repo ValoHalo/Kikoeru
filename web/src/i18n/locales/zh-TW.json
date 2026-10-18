@@ -547,6 +547,7 @@
     "deleteHistoryFailed": "刪除歷史失敗："
   },
   "workTree": {
+    "lastPlayed": "上次播放：{time}",
     "backToTop": "回到頂端",
     "setDefaultFolder": "設為預設資料夾",
     "clearDefaultFolder": "取消預設資料夾",

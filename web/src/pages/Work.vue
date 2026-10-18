@@ -17,7 +17,7 @@
       </div>
       <div v-if="workUnavailable" class="q-pa-xl text-center text-grey">{{ $t('work.unavailable') }}</div>
       <template v-if="metadataLoaded">
-        <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy">
+        <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy" @history-cleared="clearPlaybackHistory">
           <template #folder-action>
             <q-btn
               v-if="!metadata.files_missing"
@@ -93,7 +93,11 @@ export default {
       workUnavailable: false,
       importantTreePathArr: [],
       defaultFolder: null,
-      currentFolder: []
+      currentFolder: [],
+      dataRequest: 0,
+      metadataRequest: 0,
+      historyRequest: 0,
+      historyRefreshPending: false,
     }
   },
 
@@ -132,9 +136,14 @@ export default {
 
   watch: {
     '$store.state.User.name' () {
+      this.clearPlaybackHistory()
       this.loadDefaultFolder()
       this.$nextTick(() => this.$refs.workTree?.initPath())
+      if (this.metadataLoaded) this.refreshPlaybackHistory()
+      else this.requestData()
     },
+    '$store.state.AudioPlayer.historySavedRevision' () { this.refreshPlaybackHistory() },
+    '$store.state.AudioPlayer.historyRevision' () { this.clearPlaybackHistory() },
     $route (to) {
       if (!to.path.startsWith('/work/') || String(to.params.id) === String(this.workid)) return
       this.workid = to.params.id;
@@ -150,7 +159,33 @@ export default {
     this.requestData()
   },
 
+  beforeUnmount () {
+    this.dataRequest++
+    this.metadataRequest++
+    this.historyRequest++
+  },
+
   methods: {
+    clearPlaybackHistory (workId = this.workid) {
+      if (Number(workId) !== Number(this.workid)) return
+      this.historyRequest++
+      this.historyRefreshPending = false
+      this.metadata = { ...this.metadata, state: null, play_updated_at: null, play_updated_at_full: null }
+    },
+    async refreshPlaybackHistory () {
+      const request = ++this.historyRequest
+      if (!this.metadataLoaded) { this.historyRefreshPending = true; return }
+      this.historyRefreshPending = false
+      const workId = this.workid
+      const user = this.$store.state.User.name
+      try {
+        const { data } = await this.$axios.get(`/api/work/${workId}`)
+        if (request !== this.historyRequest || workId !== this.workid || user !== this.$store.state.User.name || !this.metadataLoaded) return
+        this.metadata = { ...this.metadata, state: data.state, play_updated_at: data.play_updated_at, play_updated_at_full: data.play_updated_at_full }
+      } catch {
+        // A failed refresh keeps the last confirmed history without interrupting playback.
+      }
+    },
     loadDefaultFolder () {
       this.defaultFolder = null
       try {
@@ -190,8 +225,18 @@ export default {
       else this.$router.push('/works')
     },
     async requestMetaData() {
+      const request = ++this.metadataRequest
+      const historyRequest = this.historyRequest
+      const workId = this.workid
+      const user = this.$store.state.User.name
       try {
-        const response = await this.$axios.get(`/api/work/${this.workid}`);
+        const response = await this.$axios.get(`/api/work/${workId}`);
+        if (request !== this.metadataRequest || workId !== this.workid || user !== this.$store.state.User.name) return false
+        if (historyRequest !== this.historyRequest) {
+          response.data.state = null
+          response.data.play_updated_at = null
+          response.data.play_updated_at_full = null
+        }
         this.metadata = response.data
         this.metadataLoaded = true
         // 如果有播放状态记录
@@ -201,6 +246,7 @@ export default {
         }
         return true
       } catch (error ) {
+        if (request !== this.metadataRequest || workId !== this.workid || user !== this.$store.state.User.name) return false
         if (error.response && error.response.status === 404 && this.$store.getters['AudioPlayer/sfwOnly']) {
           this.workUnavailable = true
           return false
@@ -216,6 +262,7 @@ export default {
     },
 
     async requestTracks() {
+      const request = this.dataRequest
       try {
         const response = await this.$axios.get(`/api/tracks/${this.workid}`, {
           params: {
@@ -224,9 +271,11 @@ export default {
             audioTypes: this.smartPathAudioTypes,
           },
         });
+        if (request !== this.dataRequest) return
         this.tree = response.data;
         this.importantTreePathArr = getImportantTreePath(this.tree)
       } catch (error) {
+        if (request !== this.dataRequest) return
         if (error.response) {
           // 请求已发出，但服务器响应的状态码不在 2xx 范围内
           this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
@@ -237,6 +286,8 @@ export default {
     },
 
     async requestData () {
+      const request = ++this.dataRequest
+      this.clearPlaybackHistory()
       this.loadingData = true
       this.metadataLoaded = false
       this.workUnavailable = false
@@ -244,8 +295,10 @@ export default {
       this.importantTreePathArr = []
       this.currentFolder = []
       this.loadDefaultFolder()
-      if (await this.requestMetaData() && !this.metadata.files_missing) await this.requestTracks()
+      if (await this.requestMetaData() && request === this.dataRequest && !this.metadata.files_missing) await this.requestTracks()
+      if (request !== this.dataRequest) return
       this.loadingData = false
+      if (this.historyRefreshPending) this.refreshPlaybackHistory()
     },
 
     resumeMetadataPlayHistroy() {

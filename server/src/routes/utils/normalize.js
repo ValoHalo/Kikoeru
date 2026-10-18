@@ -27,6 +27,12 @@ function normalize(works, options = {}) {
         record.relatedWorks = joinNameAndId(record.related_work_titles, record.related_work_ids);
         if (Object.prototype.hasOwnProperty.call(record, "state")) {
             record.state = (0, utils_1.ensureIsJsonObject)(record.state);
+            const updatedAt = record.play_updated_at;
+            // SQLite CURRENT_TIMESTAMP has no suffix but is stored in UTC.
+            const timestamp = typeof updatedAt === 'string'
+                ? new Date(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(updatedAt) ? `${updatedAt.replace(' ', 'T')}Z` : updatedAt)
+                : updatedAt;
+            record.play_updated_at_full = timestamp instanceof Date && Number.isFinite(timestamp.getTime()) ? timestamp.toISOString() : null;
             record.play_updated_at = (0, strftime_1.default)('%F', record.play_updated_at);
         }
         if (Object.prototype.hasOwnProperty.call(record, "review_updated_at")) {

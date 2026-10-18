@@ -359,14 +359,16 @@ export default {
     },
 
     clearThisHistroy() {
+      const workId = this.metadata.id
       appDialog(this.$q, {
         title: t('workDetails.notice'),
         message: t('workDetails.deleteHistoryPrompt'),
         cancel: t('common.cancel'),
         ok: t('common.ok')
       }).onOk(async () => {
-        this.$axios.delete('/api/histroy', { data: { work_id: this.metadata.id } })
+        this.$axios.delete('/api/histroy', { data: { work_id: workId } })
           .then((_) => {
+            this.$emit('history-cleared', workId)
             this.$q.notify(t('workDetails.historyDeleted'))
           })
           .catch((err) => {

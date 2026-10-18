@@ -105,6 +105,10 @@
               <q-icon size="0.8rem" name="schedule" class="q-mr-xs"></q-icon>
               {{ formatSeconds(item.duration) }}
             </q-item-label>
+            <q-item-label v-if="isLastPlayed(item)" caption class="work-tree-last-played"
+              :class="currentPlayingFile.hash === item.hash ? 'text-white' : 'text-primary'">
+              {{ $t('workTree.lastPlayed', { time: lastPlayed.time }) }}
+            </q-item-label>
           </q-item-section>
 
           <q-item-section v-if="item.type === 'audio'" side class="work-tree-bookmark">
@@ -240,6 +244,20 @@ export default {
   },
 
   computed: {
+    lastPlayed () {
+      const state = this.metadata.state
+      const index = Number(state?.index)
+      const track = Array.isArray(state?.queue) && Number.isInteger(index) ? state.queue[index] : null
+      if (!track || !this.metadata.play_updated_at_full) return null
+      const reference = this.playlistItemFromTrack(track)
+      if (reference.workId !== Number(this.metadata.id) || !reference.relativePath) return null
+      const date = new Date(this.metadata.play_updated_at_full)
+      if (!Number.isFinite(date.getTime())) return null
+      const time = new Intl.DateTimeFormat(this.$i18n.locale, {
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+      }).format(date)
+      return { relativePath: reference.relativePath, time }
+    },
     isAdministrator () {
       return this.$store.state.User.canManage === true
     },
@@ -300,6 +318,10 @@ export default {
 
   methods: {
     formatSeconds,
+
+    isLastPlayed (item) {
+      return item.type === 'audio' && this.lastPlayed && this.playlistItemFromTrack(item).relativePath === this.lastPlayed.relativePath
+    },
 
     scrollToTop () { window.scrollTo({ top: 0, behavior: 'smooth' }) },
 
@@ -521,6 +543,7 @@ export default {
 
 <style scoped>
 .work-tree-filename { min-width: 0; overflow-wrap: anywhere; }
+.work-tree-last-played { white-space: normal; overflow-wrap: anywhere; }
 .work-tree-bookmark { padding-left: 8px; }
 .work-tree-bookmark .q-btn { width: 32px; height: 32px; min-width: 32px; min-height: 32px; }
 .work-tree-actions { display: flex; gap: 4px; }

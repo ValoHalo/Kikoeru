@@ -547,6 +547,7 @@
     "deleteHistoryFailed": "Failed to delete playback history: "
   },
   "workTree": {
+    "lastPlayed": "Last played: {time}",
     "backToTop": "Back to top",
     "setDefaultFolder": "Set as default folder",
     "clearDefaultFolder": "Clear default folder",

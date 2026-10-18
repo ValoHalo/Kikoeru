@@ -547,6 +547,7 @@
     "deleteHistoryFailed": "再生履歴の削除に失敗しました："
   },
   "workTree": {
+    "lastPlayed": "前回の再生：{time}",
     "backToTop": "ページの先頭へ",
     "setDefaultFolder": "デフォルトフォルダに設定",
     "clearDefaultFolder": "デフォルトフォルダを解除",
