@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const express_validator_1 = require("express-validator");
-const express_jwt_1 = __importDefault(require("express-jwt"));
+const express_jwt_1 = require("express-jwt");
 const utils_1 = require("../auth/utils");
 const db = __importStar(require("../database/db"));
 const config_1 = require("../config");
@@ -85,12 +85,13 @@ router.post('/logout', (_req, res) => {
     res.status(204).end();
 });
 if (config_1.config.auth) {
-    router.get('/me', (0, express_jwt_1.default)({
+    router.get('/me', (0, express_jwt_1.expressjwt)({
         secret: config_1.config.jwtsecret,
         audience: utils_1.audience,
         issuer: utils_1.issuer,
         getToken: token_1.getToken,
         algorithms: ['HS256'],
+        requestProperty: 'user',
         credentialsRequired: false,
     }));
 }

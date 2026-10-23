@@ -1,8 +1,9 @@
 {
-  "frontendNode": {
-    "version": "24.14.1",
-    "directoryName": "node-v24.14.1-win-x64",
-    "archiveUrl": "https://nodejs.org/dist/v24.14.1/node-v24.14.1-win-x64.zip"
+  "windowsNode": {
+    "version": "24.22.1",
+    "directoryName": "node-v24.22.1-win-x64",
+    "archiveUrl": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-win-x64.zip",
+    "archiveSha256": "d2046d28c2c3dcd211ac5145c0bf30e2047ef9dfb306693c8c6e2eccd8b95fa5"
   },
   "ffmpeg": {
     "archiveUrl": "https://github.com/KaffuAlcaid/Kikoeru-FFmpeg/releases/download/v1.0.0/ffmpeg-8.1.2-win64-lgpl-kikoeru.zip",
@@ -11,11 +12,11 @@
     "archiveSha256": "8870b4f772962243e27b1d835e26a6c0225cf5e9071b8139a26c79de3e08d12d"
   },
   "linuxNode": {
-    "version": "24.19.0",
-    "archiveUrl": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-x64.tar.xz",
-    "archiveFileName": "node-v24.19.0-linux-x64.tar.xz",
-    "archiveRoot": "node-v24.19.0-linux-x64",
-    "archiveSha256": "14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647"
+    "version": "24.22.1",
+    "archiveUrl": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz",
+    "archiveFileName": "node-v24.22.1-linux-x64.tar.xz",
+    "archiveRoot": "node-v24.22.1-linux-x64",
+    "archiveSha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6"
   },
   "linuxFfmpeg": {
     "archiveUrl": "https://github.com/KaffuAlcaid/Kikoeru-FFmpeg/releases/download/v1.0.0/ffmpeg-8.1.2-linux64-lgpl-kikoeru.tar.xz",

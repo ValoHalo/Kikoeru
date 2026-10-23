@@ -9,11 +9,9 @@ $webBuildRoot = Join-Path $buildRoot "work\web"
 $serverBuildRoot = Join-Path $buildRoot "work\server"
 $releaseConfig = Get-Content -LiteralPath (Join-Path $sourceServerRoot "scripts\release-config.json") -Raw | ConvertFrom-Json
 $toolingRoot = Join-Path $buildRoot "tooling"
-$frontendToolchain = Join-Path $toolingRoot $releaseConfig.frontendNode.directoryName
-$frontendNode = Join-Path $frontendToolchain "node.exe"
-$frontendNpm = Join-Path $frontendToolchain "npm.cmd"
-$serverNode = (Get-Command node.exe -ErrorAction Stop).Source
-$serverNpm = (Get-Command npm.cmd -ErrorAction Stop).Source
+$nodeToolchain = Join-Path $toolingRoot $releaseConfig.windowsNode.directoryName
+$buildNode = Join-Path $nodeToolchain "node.exe"
+$npmCli = Join-Path $nodeToolchain "node_modules\npm\bin\npm-cli.js"
 $git = (Get-Command git.exe -ErrorAction Stop).Source
 
 $fullCommitId = (& $git -C $repositoryRoot rev-parse HEAD).Trim()
@@ -35,8 +33,10 @@ function Invoke-Step {
         [Parameter(Mandatory = $true)][string[]]$Arguments,
         [Parameter(Mandatory = $true)][string]$WorkingDirectory
     )
+    $previousPath = $env:PATH
     Push-Location $WorkingDirectory
     try {
+        $env:PATH = "$nodeToolchain;$previousPath"
         Write-Host "> $FilePath $($Arguments -join ' ')"
         & $FilePath @Arguments
         if ($LASTEXITCODE -ne 0) {
@@ -44,6 +44,7 @@ function Invoke-Step {
         }
     }
     finally {
+        $env:PATH = $previousPath
         Pop-Location
     }
 }
@@ -80,14 +81,21 @@ function Invoke-Robocopy {
 
 New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
 
-if (-not (Test-Path -LiteralPath $frontendNode -PathType Leaf) -or
-    -not (Test-Path -LiteralPath $frontendNpm -PathType Leaf)) {
-    $nodeArchive = Join-Path $toolingRoot "$($releaseConfig.frontendNode.directoryName).zip"
-    if (-not (Test-Path -LiteralPath $nodeArchive -PathType Leaf)) {
-        Invoke-Download -Uri $releaseConfig.frontendNode.archiveUrl -Destination $nodeArchive
-    }
-    New-Item -ItemType Directory -Force -Path $toolingRoot | Out-Null
+$nodeArchive = Join-Path $toolingRoot "$($releaseConfig.windowsNode.directoryName).zip"
+if (-not (Test-Path -LiteralPath $nodeArchive -PathType Leaf)) {
+    Invoke-Download -Uri $releaseConfig.windowsNode.archiveUrl -Destination $nodeArchive
+}
+$nodeHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $nodeArchive).Hash.ToLowerInvariant()
+if ($nodeHash -ne $releaseConfig.windowsNode.archiveSha256) {
+    throw "Node.js archive checksum mismatch. Expected $($releaseConfig.windowsNode.archiveSha256), got $nodeHash"
+}
+if (-not (Test-Path -LiteralPath $buildNode -PathType Leaf) -or
+    -not (Test-Path -LiteralPath $npmCli -PathType Leaf)) {
     Expand-Archive -LiteralPath $nodeArchive -DestinationPath $toolingRoot -Force
+}
+$nodeVersion = (& $buildNode --version).Trim()
+if ($LASTEXITCODE -ne 0 -or $nodeVersion -ne "v$($releaseConfig.windowsNode.version)") {
+    throw "Downloaded Node.js version does not match release-config.json"
 }
 
 $ffmpegArchive = Join-Path $buildRoot "downloads\$($releaseConfig.ffmpeg.archiveFileName)"
@@ -115,18 +123,19 @@ Invoke-Robocopy -Source $sourceWebRoot -Destination $webBuildRoot -ExcludedDirec
 Invoke-Robocopy -Source $sourceServerRoot -Destination $serverBuildRoot -ExcludedDirectories @("node_modules", ".runtime", "config", (Join-Path $sourceServerRoot "src\public"))
 Copy-Item -LiteralPath (Join-Path $repositoryRoot "LICENSE") -Destination (Join-Path $serverBuildRoot "LICENSE")
 
-Invoke-Step $frontendNpm @("ci", "--no-audit", "--no-fund", "--cache", (Join-Path $buildRoot "cache\frontend-npm")) $webBuildRoot
-Invoke-Step $frontendNpm @("run", "build") $webBuildRoot
+Invoke-Step $buildNode @($npmCli, "ci", "--no-audit", "--no-fund", "--cache", (Join-Path $buildRoot "cache\frontend-npm")) $webBuildRoot
+Invoke-Step $buildNode @($npmCli, "run", "check") $webBuildRoot
+Invoke-Step $buildNode @($npmCli, "run", "build") $webBuildRoot
 
 Invoke-Robocopy -Source (Join-Path $webBuildRoot "dist\pwa") -Destination (Join-Path $serverBuildRoot "src\public")
 
-Invoke-Step $serverNpm @("ci", "--no-audit", "--no-fund", "--cache", (Join-Path $buildRoot "cache\server-npm")) $serverBuildRoot
-Invoke-Step $serverNode @("scripts/check-syntax.js") $serverBuildRoot
+Invoke-Step $buildNode @($npmCli, "ci", "--no-audit", "--no-fund", "--cache", (Join-Path $buildRoot "cache\server-npm")) $serverBuildRoot
+Invoke-Step $buildNode @("scripts/check-syntax.js") $serverBuildRoot
 
 $previousBuildRoot = $env:KIKOERU_BUILD_ROOT
 try {
     $env:KIKOERU_BUILD_ROOT = $buildRoot
-    Invoke-Step $serverNpm @("run", "release:win", "--", "--ffmpeg-archive", $ffmpegArchive, "--commit-id", $commitId) $serverBuildRoot
+    Invoke-Step $buildNode @($npmCli, "run", "release:win", "--", "--ffmpeg-archive", $ffmpegArchive, "--commit-id", $commitId) $serverBuildRoot
 }
 finally {
     $env:KIKOERU_BUILD_ROOT = $previousBuildRoot

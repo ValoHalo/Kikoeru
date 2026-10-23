@@ -5,7 +5,6 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
-const pkgFetch = require("@yao-pkg/pkg-fetch");
 
 const serverRoot = path.resolve(__dirname, "..");
 const runtimeRoot = process.env.KIKOERU_BUILD_ROOT
@@ -15,7 +14,7 @@ const releaseRoot = path.join(runtimeRoot, "release");
 const packageJson = require(path.join(serverRoot, "package.json"));
 const releaseConfig = require(path.join(__dirname, "release-config.json"));
 
-const targetNodeRange = "node22";
+const targetNodeRange = `node${releaseConfig.windowsNode.version}`;
 const requiredPkgNativeAssets = Object.freeze([
     "node_modules/sqlite3/build/Release/node_sqlite3.node",
     "node_modules/better-sqlite3/build/Release/better_sqlite3.node",
@@ -84,6 +83,10 @@ function validatePkgNativeAssets() {
             `Missing pkg native runtime file: ${relativePath}`,
         );
     }
+    const database = new (require("better-sqlite3"))(":memory:");
+    database.close();
+    require("sqlite3");
+    require("@parcel/watcher");
 }
 
 function extractFfmpegArchive(archivePath) {
@@ -158,44 +161,6 @@ function assertFrontendIsDeployed() {
     assert.ok(listFiles(deployedFrontend).length > 1, "The deployed frontend is empty");
 }
 
-function prepareBetterSqlite3Prebuild() {
-    const nodeVersion = pkgFetch.getNodeVersion(targetNodeRange);
-    const releaseDirectory = path.join(serverRoot, "node_modules", "better-sqlite3", "build", "Release");
-    const nativeFile = path.join(releaseDirectory, "better_sqlite3.node");
-    const targetFile = `${nativeFile}.win.x64.${nodeVersion}`;
-    const cachedTargetFile = path.join(runtimeRoot, "native-cache", `better_sqlite3-${nodeVersion}-win-x64.node`);
-    if (fs.existsSync(targetFile)) {
-        return;
-    }
-    if (fs.existsSync(cachedTargetFile)) {
-        fs.copyFileSync(cachedTargetFile, targetFile);
-        return;
-    }
-
-    const prebuildInstall = path.join(serverRoot, "node_modules", "prebuild-install", "bin.js");
-    const hostBackup = path.join(runtimeRoot, `better_sqlite3.host-${process.pid}.node`);
-    assert.ok(fs.statSync(nativeFile).isFile(), `Missing better-sqlite3 native module: ${nativeFile}`);
-    fs.mkdirSync(runtimeRoot, { recursive: true });
-    fs.copyFileSync(nativeFile, hostBackup);
-    try {
-        runNodeScript(prebuildInstall, ["--platform", "win32", "--arch", "x64", "--target", nodeVersion], {
-            cwd: path.join(serverRoot, "node_modules", "better-sqlite3"),
-            env: {
-                ...process.env,
-                npm_config_cache: path.join(runtimeRoot, "cache", "server-npm"),
-                npm_config_update_notifier: "false",
-            },
-        });
-        fs.copyFileSync(nativeFile, targetFile);
-        fs.mkdirSync(path.dirname(cachedTargetFile), { recursive: true });
-        fs.copyFileSync(nativeFile, cachedTargetFile);
-    }
-    finally {
-        fs.copyFileSync(hostBackup, nativeFile);
-        fs.rmSync(hostBackup, { force: true });
-    }
-}
-
 function buildExecutable(executablePath) {
     const pkgEntrypoint = path.join(serverRoot, "node_modules", "@yao-pkg", "pkg", "lib-es5", "bin.js");
     const pkgCachePath = path.join(runtimeRoot, "pkg-cache");
@@ -203,7 +168,7 @@ function buildExecutable(executablePath) {
     const environment = { ...process.env, PKG_CACHE_PATH: pkgCachePath };
     delete environment.PKG_NODE_PATH;
     delete environment.PKG_IGNORE_TAG;
-    runNodeScript(pkgEntrypoint, ["--targets", `${targetNodeRange}-win-x64`, "--output", executablePath, "."], {
+    runNodeScript(pkgEntrypoint, ["--sea", "--targets", `${targetNodeRange}-win-x64`, "--output", executablePath, "."], {
         env: environment,
     });
     assert.ok(fs.statSync(executablePath).isFile(), `pkg did not create ${executablePath}`);
@@ -316,11 +281,11 @@ function createZip(stagePath, zipPath) {
 }
 
 function main() {
+    assert.strictEqual(process.versions.node, releaseConfig.windowsNode.version, "Node.js version does not match release-config.json");
     const options = parseArguments(process.argv.slice(2));
     const ffmpegInput = extractFfmpegArchive(options.ffmpegArchive);
     assertFrontendIsDeployed();
     validatePkgNativeAssets();
-    prepareBetterSqlite3Prebuild();
 
     resetDirectory(releaseRoot);
     const stageName = `kikoeru-win-x64-${options.commitId}`;

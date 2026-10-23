@@ -9,7 +9,7 @@ const config_1 = require("./config");
 const accessControl_1 = require("./auth/accessControl");
 const token_1 = require("./auth/token");
 const utils_1 = require("./auth/utils");
-const socket_io_1 = __importDefault(require("socket.io"));
+const socket_io_1 = require("socket.io");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const scanJobs = require('./filesystem/scanJobRunner');
 const { jobStatus } = require('./database/scanJobs');
@@ -25,7 +25,7 @@ function socketMessage(socket, key) {
     return i18n.getFixedT(i18n.hasResourceBundle(locale, 'translation') ? locale : 'zh-CN')(key);
 }
 function initSocket(server) {
-    const io = (0, socket_io_1.default)(server);
+    const io = new socket_io_1.Server(server);
     socketServers.add(io);
     server.once('close', () => socketServers.delete(io));
     if (config_1.config.auth) {

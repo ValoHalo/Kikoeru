@@ -60,10 +60,10 @@ npx quasar dev
 
 - Windows 10/11 x64 或 Windows Server x64
 - PowerShell 5.1 或更高版本
-- Node.js 22 或更高的兼容版本和 npm，当前 Windows CI 使用 Node.js 22 与 npm 11
-- 能够访问 Node.js、npm registry、GitHub 和 pkg 运行时下载地址的网络
+- Git
+- 能够访问 Node.js、npm registry 和 GitHub 的网络
 
-无需预先安装前端使用的 Node.js 24 或 FFmpeg，脚本会将工具链、下载、npm 缓存、工作副本和检查结果保存在 `.build/` 中
+无需预先安装 Node.js 或 FFmpeg，脚本会将工具链、下载、npm 缓存和工作副本保存在 `.build/` 中
 
 ### 一键构建
 
@@ -73,11 +73,11 @@ npx quasar dev
 .\build-windows-release.ps1
 ```
 
-首次构建会下载并解压配置中指定的 Node.js 24 前端工具链与 FFmpeg LGPL 归档，校验 FFmpeg 的 SHA-256 后，安装锁定依赖并构建前端 PWA
+首次构建会下载配置中指定的 Node.js 24 工具链与 FFmpeg LGPL 归档，校验两者的 SHA-256 后，安装锁定依赖并构建前端 PWA
 
-脚本随后在 `.build/work/` 中准备后端工作副本，部署前端文件，运行语法检查，再使用 Node.js 22 的 pkg target 生成便携程序
+脚本随后在 `.build/work/` 中准备后端工作副本，部署前端文件，运行语法和原生模块检查，再使用 pkg 的 Enhanced SEA 模式生成包含官方 Node.js 运行时的便携程序
 
-当前 Windows 前端工具链为 Node.js 24.14.1，版本和下载地址以 `server/scripts/release-config.json` 为准
+Windows 前后端构建和便携程序统一使用 Node.js 24.22.1，版本、下载地址和 SHA-256 以 `server/scripts/release-config.json` 的 `windowsNode` 为准；Windows CI 也使用 Node.js 24.22.1 及其自带的 npm
 
 输出文件位于仓库根目录
 
@@ -123,7 +123,7 @@ ZIP 包含应用程序、`ffmpeg.exe`、`ffprobe.exe`、启动脚本和根目录
 
 脚本会在 `.build/` 中下载并校验固定版本的 Node.js Linux x64 运行时和 FFmpeg LGPL 归档，创建隔离的前后端工作副本，安装锁定依赖，运行语法检查，再构建前端 PWA
 
-实际构建和最终产物使用脚本下载的固定 Node.js 24 运行时，当前配置为 Node.js 24.19.0
+实际构建和最终产物使用脚本下载的固定 Node.js 24 运行时，当前配置为 Node.js 24.22.1
 
 输出文件位于仓库根目录
 

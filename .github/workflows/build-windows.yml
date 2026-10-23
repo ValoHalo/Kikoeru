@@ -18,13 +18,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v7
 
-      - name: Set up Node.js 22
+      - name: Set up Node.js 24.22.1
         uses: actions/setup-node@v7
         with:
-          node-version: 22
-
-      - name: Set up npm 11
-        run: npm install --global npm@11
+          node-version: "24.22.1"
 
       - name: Verify release tag matches product version
         if: startsWith(github.ref, 'refs/tags/')
@@ -53,10 +50,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v7
 
-      - name: Set up Node.js 24
+      - name: Set up Node.js 24.22.1
         uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: "24.22.1"
 
       - name: Verify release tag matches product version
         if: startsWith(github.ref, 'refs/tags/')

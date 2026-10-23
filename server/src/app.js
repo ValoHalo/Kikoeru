@@ -1,5 +1,20 @@
 #!/usr/bin/env node
 "use strict";
+// SEA starts forked processes at this entrypoint before dispatching their worker.
+if (process.pkg && typeof process.send === 'function') {
+    const worker = process.argv[2];
+    process.argv.splice(1, 1);
+    if (worker === require.resolve('./filesystem/scanJobWorker.js')) {
+        require('./filesystem/scanJobWorker.js');
+    }
+    else if (worker === require.resolve('./filesystem/watcherWorker.js')) {
+        require('./filesystem/watcherWorker.js');
+    }
+    else {
+        throw new Error('Unsupported child process entrypoint');
+    }
+    return;
+}
 const { t } = require('./i18n');
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;

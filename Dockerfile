@@ -1,4 +1,4 @@
-FROM node:24.19.0-bookworm-slim AS web-build
+FROM node:24.22.1-bookworm-slim AS web-build
 
 WORKDIR /build/web
 COPY web/package.json web/package-lock.json ./
@@ -6,13 +6,13 @@ RUN npm ci --no-audit --no-fund
 COPY web/ ./
 RUN npm run check && npm run build
 
-FROM node:24.19.0-bookworm-slim AS server-dependencies
+FROM node:24.22.1-bookworm-slim AS server-dependencies
 
 WORKDIR /build/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
-FROM node:24.19.0-bookworm-slim
+FROM node:24.22.1-bookworm-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg tini \

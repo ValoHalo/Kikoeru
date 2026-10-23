@@ -26,13 +26,13 @@
   },
   "dependencies": {
     "@quasar/extras": "2.0.2",
-    "axios": "1.19.0",
+    "axios": "1.20.0",
     "lrc-file-parser": "1.0.7",
     "plyr": "3.8.4",
-    "quasar": "2.23.5",
+    "quasar": "2.32.2",
     "register-service-worker": "1.7.2",
-    "socket.io-client": "2.5.0",
-    "vue": "3.5.40",
+    "socket.io-client": "4.8.4",
+    "vue": "3.5.44",
     "vue-i18n": "11.4.10",
     "vue-router": "4.6.4",
     "vuedraggable": "4.1.0",
@@ -50,11 +50,17 @@
     "workbox-build": "7.4.1"
   },
   "engines": {
-    "node": "^24.0.0",
-    "npm": ">= 11.0.0"
+    "node": "^24.22.1",
+    "npm": "^11.19.1"
   },
   "browserslist": [
     "last 2 versions",
     "not dead"
-  ]
+  ],
+  "allowScripts": {
+    "@parcel/watcher": true,
+    "core-js": false,
+    "esbuild": true,
+    "unrs-resolver": true
+  }
 }
