@@ -14,11 +14,32 @@ export function readPlaybackRecovery (storage, user) {
   } catch { return null }
 }
 
+export function shouldOfferPlaybackRecovery (saved, work) {
+  if (!saved?.data?.state?.queue?.length || !Number.isFinite(saved.savedAt)) return false
+  const signature = playbackSignature(saved.data)
+  if (signature === saved.syncedSignature || signature === saved.dismissedSignature) return false
+  if (signature === playbackSignature({ work_id: work?.id, state: work?.state })) return false
+  if (!work?.state) return true
+  const serverUpdatedAt = Date.parse(work.play_updated_at_full)
+  return Number.isFinite(serverUpdatedAt) && saved.savedAt > serverUpdatedAt
+}
+
+export function dismissPlaybackRecovery (storage, user, data) {
+  try {
+    const saved = readPlaybackRecovery(storage, user)
+    const signature = playbackSignature(data)
+    if (saved && playbackSignature(saved.data) === signature) {
+      storage.set(`playback-recovery:${user}`, { ...saved, dismissedSignature: signature })
+    }
+  } catch { /* Dismissing the notification must not interrupt playback. */ }
+}
+
 export function cachePlaybackRecovery (storage, user, data) {
   if (!user) return
   try {
     const old = readPlaybackRecovery(storage, user)
-    storage.set(`playback-recovery:${user}`, { data, savedAt: Date.now(), syncedSignature: old?.syncedSignature || '' })
+    const unchanged = old && playbackSignature(old.data) === playbackSignature(data)
+    storage.set(`playback-recovery:${user}`, { ...old, data, savedAt: unchanged ? old.savedAt : Date.now(), syncedSignature: old?.syncedSignature || '' })
   } catch { /* Playback continues when browser storage is unavailable. */ }
 }
 

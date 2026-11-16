@@ -119,13 +119,14 @@ import PIPLyrics from 'src/components/PIPLyrics.vue'
 import SleepMode from 'components/SleepMode.vue'
 import CountDownSleepMode from 'components/CountDownSleepMode.vue'
 import NotifyMixin from '../mixins/Notification.js'
-import { readPlaybackRecovery, playbackSignature, discardPlaybackRecovery } from '../utils/playbackHistory.mjs'
+import { readPlaybackRecovery, shouldOfferPlaybackRecovery, dismissPlaybackRecovery, discardPlaybackRecovery } from '../utils/playbackHistory.mjs'
 import { mapState } from 'vuex'
 import { CLEARED_LAST_QUEUE_KEY_PREFIX } from '../store/module-AudioPlayer/state'
 import { applyColorScheme, COLOR_SCHEMES, COLOR_SCHEME_EVENT, hasSavedColorScheme, readColorScheme } from '../colorScheme'
 import { applyAccentColor, hasSavedAccentColor, normalizeAccentColor } from '../themeColor'
 
 const LOGIN_PROMPT_DISMISSED_KEY = 'anonymous-login-prompt-dismissed'
+const LOGIN_PROMPT_SHOWN_KEY = 'anonymous-login-prompt-shown'
 const DISMISSED_UPDATE_VERSION_KEY = 'dismissed-update-version'
 
 export default {
@@ -140,11 +141,15 @@ export default {
       updateNotification: null,
       updateVersion: '',
       restoredQueueUser: '',
+      localRecoveryNotification: null,
       preferencesLoaded: false,
       colorScheme: readColorScheme(),
     }
   },
   watch: {
+    userName () {
+      if (this.localRecoveryNotification) this.localRecoveryNotification()
+    },
     canManage (allowed) {
       if (allowed && this.updateChecksReady) this.checkUpdate()
       else if (this.updateNotification) this.updateNotification()
@@ -267,33 +272,27 @@ export default {
           index,
           resetPlaying: false,
           resumeHistroySeconds: seconds,
+          notifyHistoryRestore: false,
         })
         if (historyState.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', historyState.playMode)
         if (Object.prototype.hasOwnProperty.call(historyState, 'playbackRate')) {
           this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', historyState.playbackRate)
         }
-        const track = this.$store.getters['AudioPlayer/currentPlayingFile']
-        if (!track.hash) return
-        this.$q.notify({
-          message: track && track.title ? t('mainLayout.queueRestoredTrack', { title: track.title }) : t('mainLayout.queueRestored'),
-          icon: 'restore',
-          timeout: 3500,
-          actions: [{ label: t('mainLayout.clear'), handler: () => {
-            if (this.$store.state.User.name !== userName) return
-            this.$q.localStorage.set(clearedQueueKey, true)
-            this.$store.commit('AudioPlayer/EMPTY_QUEUE')
-          } }],
-        })
       } catch (error) {
         console.warn('Failed to restore latest queue:', error)
       }
     },
     offerLocalRecovery (userName, work) {
       const saved = readPlaybackRecovery(this.$q.localStorage, userName)
-      if (!saved || playbackSignature(saved.data) === saved.syncedSignature || playbackSignature(saved.data) === playbackSignature({ work_id: work?.id, state: work?.state })) return
-      if (this.$store.getters['AudioPlayer/sfwOnly']) return
-      this.$q.notify({
-        message: t('playbackProtection.localFound'), icon: 'restore', timeout: 0,
+      if (!shouldOfferPlaybackRecovery(saved, work)) return
+      if (this.$store.getters['AudioPlayer/sfwOnly'] || this.localRecoveryNotification) return
+      this.localRecoveryNotification = this.$q.notify({
+        message: t('playbackProtection.localFound'), icon: 'restore', timeout: 10000,
+        group: 'local-playback-recovery',
+        onDismiss: () => {
+          this.localRecoveryNotification = null
+          dismissPlaybackRecovery(this.$q.localStorage, userName, saved.data)
+        },
         actions: [
           { label: t('playbackProtection.restore'), handler: () => {
             if (this.$store.state.User.name !== userName || this.$store.getters['AudioPlayer/sfwOnly']) return
@@ -371,14 +370,16 @@ export default {
       this.$router.replace({ path: this.$route.path, query }).catch(() => {})
     },
     showAnonymousLoginPrompt () {
-      if (this.loginDialog || this.loginPromptDismiss || this.$q.localStorage.getItem(LOGIN_PROMPT_DISMISSED_KEY) === true) return
+      if (this.loginDialog || this.loginPromptDismiss || this.$q.localStorage.getItem(LOGIN_PROMPT_DISMISSED_KEY) === true || this.$q.sessionStorage.getItem(LOGIN_PROMPT_SHOWN_KEY) === true) return
+      this.$q.sessionStorage.set(LOGIN_PROMPT_SHOWN_KEY, true)
       this.loginPromptDismiss = this.$q.notify({
         message: t('mainLayout.loginPrompt'),
         color: 'primary',
         textColor: 'white',
         icon: 'login',
-        position: 'bottom',
-        timeout: 0,
+        timeout: 5000,
+        group: 'anonymous-login-prompt',
+        onDismiss: () => { this.loginPromptDismiss = null },
         actions: [
           { label: t('common.login'), color: 'white', handler: () => this.openLoginDialog() },
           { label: t('mainLayout.dismissPrompt'), color: 'white', handler: () => this.dismissLoginPromptPermanently() }
@@ -447,6 +448,7 @@ export default {
     getLinks () { return this.links.filter(link => link.path !== '/fullScreenPlayer' || this.playWorkId !== 0).map(link => link.path === '/fullScreenPlayer' ? { ...link, path: `${link.path}/${this.playWorkId}` } : link) },
   },
   beforeUnmount () {
+    if (this.localRecoveryNotification) this.localRecoveryNotification()
     if (this.updateNotification) this.updateNotification()
     this.dismissAnonymousLoginPrompt()
     if (this.colorSchemeMediaQuery) this.colorSchemeMediaQuery.removeListener(this.onSystemColorSchemeChange)

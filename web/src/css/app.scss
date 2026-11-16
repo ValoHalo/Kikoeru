@@ -1,5 +1,23 @@
 // app global css in SCSS form
 
+.q-notifications__list--top {
+  padding-top: 56px;
+}
+
+.q-notification {
+  border-radius: 8px;
+  transition: transform .18s ease, opacity .18s ease;
+}
+
+.q-notification__progress {
+  height: 3px;
+  opacity: .6;
+}
+
+.q-notification__actions {
+  color: inherit;
+}
+
 .q-img__image[src*="blurNsfw=1"] {
   filter: blur(28px);
   transform: scale(1.18);

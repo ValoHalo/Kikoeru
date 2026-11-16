@@ -96,28 +96,37 @@
             <q-item-label>{{ $privateText(item.title) }}</q-item-label>
             <q-item-label v-if="item.children" caption lines="1">{{ $t('workTree.itemCount', { count: visibleFiles(item.children).length }) }}</q-item-label>
 
-            <!--音频文件时长-->
             <q-item-label
-              v-if="item.type === 'audio' && Number.isFinite(item.duration) && item.duration >= 0"
+              v-if="item.type === 'audio' && ((Number.isFinite(item.duration) && item.duration >= 0) || isLastPlayed(item))"
               caption
-              lines="1"
+              class="work-tree-audio-meta"
             >
-              <q-icon size="0.8rem" name="schedule" class="q-mr-xs"></q-icon>
-              {{ formatSeconds(item.duration) }}
-            </q-item-label>
-            <q-item-label v-if="isLastPlayed(item)" caption class="work-tree-last-played"
-              :class="currentPlayingFile.hash === item.hash ? 'text-white' : 'text-primary'">
-              {{ $t('workTree.lastPlayed', { time: lastPlayed.time }) }}
+              <span v-if="Number.isFinite(item.duration) && item.duration >= 0" class="work-tree-duration">
+                <q-icon size="0.8rem" name="schedule" class="q-mr-xs" />
+                {{ formatSeconds(item.duration) }}
+              </span>
+              <span v-if="isLastPlayed(item)" class="work-tree-last-played"
+                :class="currentPlayingFile.hash === item.hash ? 'text-white' : 'text-primary'">
+                {{ $t('workTree.lastPlayed', { time: lastPlayed.time }) }}
+              </span>
             </q-item-label>
           </q-item-section>
 
-          <q-item-section v-if="item.type === 'audio'" side class="work-tree-bookmark">
-            <q-btn
-              flat round dense icon="bookmark_add"
-              :color="currentPlayingFile.hash === item.hash ? 'white' : 'primary'"
-              :aria-label="$t('bookmark.addForTrack', { title: $privateText(item.title) })"
-              @click.stop="openBookmarkEditor(item)"
-            ><AppTooltip>{{ $t('bookmark.add') }}</AppTooltip></q-btn>
+          <q-item-section v-if="item.type === 'audio'" side class="work-tree-track-actions">
+            <div class="row no-wrap items-center q-gutter-x-xs">
+              <q-btn
+                flat round dense icon="playlist_play"
+                :color="currentPlayingFile.hash === item.hash ? 'white' : 'primary'"
+                :aria-label="$t('workTree.playNext')"
+                @click.stop="playNext(item)"
+              ><AppTooltip>{{ $t('workTree.playNext') }}</AppTooltip></q-btn>
+              <q-btn
+                flat round dense icon="playlist_add"
+                :color="currentPlayingFile.hash === item.hash ? 'white' : 'primary'"
+                :aria-label="$t('workTree.addToQueue')"
+                @click.stop="addToQueue(item)"
+              ><AppTooltip>{{ $t('workTree.addToQueue') }}</AppTooltip></q-btn>
+            </div>
           </q-item-section>
 
           <!-- 上下文菜单 -->
@@ -151,7 +160,6 @@
         </q-item>
       </q-list>
     </q-card>
-    <BookmarkEditor v-if="bookmarkDraft" :bookmark="bookmarkDraft" @close="bookmarkDraft = null" />
     <WorkImageGallery
       v-if="folderImages.length"
       :key="JSON.stringify([metadata.id, ...path])"
@@ -169,7 +177,6 @@
 import { t } from '../i18n'
 import ImageEditor from './ImageEditor.vue'
 import WorkImageGallery from './WorkImageGallery.vue'
-import BookmarkEditor from './BookmarkEditor.vue'
 import { mapState, mapGetters } from 'vuex'
 import { formatSeconds } from '../utils'
 import NotifyMixin from '../mixins/Notification.js'
@@ -183,7 +190,6 @@ export default {
   components: {
     ImageEditor,
     WorkImageGallery,
-    BookmarkEditor,
   },
 
   data() {
@@ -201,7 +207,6 @@ export default {
       newPlaylistName: '',
       loadingPlaylists: false,
       addingToPlaylist: false,
-      bookmarkDraft: null,
     }
   },
 
@@ -225,8 +230,6 @@ export default {
   },
 
   watch: {
-    'metadata.id' () { this.bookmarkDraft = null },
-    '$store.state.User.name' () { this.bookmarkDraft = null },
     tree (value) {
       this.internalTree = value;
       this.initPath();
@@ -307,8 +310,6 @@ export default {
     ...mapState('AudioPlayer', [
       'playing',
       'playWorkId',
-      'currentTime',
-      'resumeHistroySeconds',
     ]),
 
     ...mapGetters('AudioPlayer', [
@@ -324,17 +325,6 @@ export default {
     },
 
     scrollToTop () { window.scrollTo({ top: 0, behavior: 'smooth' }) },
-
-    openBookmarkEditor (track) {
-      const position = this.resumeHistroySeconds >= 0 ? this.resumeHistroySeconds : this.currentTime
-      this.bookmarkDraft = {
-        work_id: Number(track.workId || this.metadata.id),
-        relative_path: String(track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/')).replace(/\\/g, '/'),
-        seconds: this.currentPlayingFile.hash === track.hash ? Math.max(0, Math.floor(position)) : 0,
-        name: '',
-        note: '',
-      }
-    },
 
     isSubtitle (item) {
       return item.type !== 'folder' && /\.(lrc|srt|vtt|ass|ssa)$/i.test(item.title || '')
@@ -543,9 +533,11 @@ export default {
 
 <style scoped>
 .work-tree-filename { min-width: 0; overflow-wrap: anywhere; }
+.work-tree-audio-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.work-tree-duration { display: inline-flex; align-items: center; white-space: nowrap; }
 .work-tree-last-played { white-space: normal; overflow-wrap: anywhere; }
-.work-tree-bookmark { padding-left: 8px; }
-.work-tree-bookmark .q-btn { width: 32px; height: 32px; min-width: 32px; min-height: 32px; }
+.work-tree-track-actions { padding-left: 8px; }
+.work-tree-track-actions .q-btn { width: 32px; height: 32px; min-width: 32px; min-height: 32px; }
 .work-tree-actions { display: flex; gap: 4px; }
 
 .work-tree-toolbar {

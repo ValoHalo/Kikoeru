@@ -930,8 +930,7 @@ export default {
               // this.$router.push(`/fullScreenPlayer`)
               this.$router.go(0);
             }
-          },
-          { icon: 'close', 'aria-label': t('common.close') }
+          }
         ],
       });
     },

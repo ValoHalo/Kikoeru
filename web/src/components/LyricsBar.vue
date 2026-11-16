@@ -100,6 +100,7 @@ export default {
       const eleY = touch.clientY - this.startY
 
       this.$refs.draggable.style.left = eleX + 'px'
+      this.$refs.draggable.style.bottom = 'auto'
       this.$refs.draggable.style.top = eleY + 'px'
     },
 
@@ -137,14 +138,16 @@ export default {
 
 <style lang="scss">
   .lyric-container {
-    position: relative;
+    position: fixed;
 
     /* 水平位置置于中间 */
     left: 50vw;
+    width: max-content;
+    max-width: 90vw;
     transform: translateX(-50%);
 
-    /* 垂直位置置于底部playBar尚未考上一点，这个后面可以手动调整 */
-    top: -80px;
+    /* 默认留出播放条和字号滑块的空间；拖动后使用用户选择的位置。 */
+    bottom: calc(clamp(140px, 20dvh, 200px) + env(safe-area-inset-bottom, 0px));
     
     display: flex;
     flex-direction: column;

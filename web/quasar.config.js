@@ -44,7 +44,8 @@ export default defineConfig(function () {
 
     framework: {
       config: {
-        dark: 'auto'
+        dark: 'auto',
+        notify: { closeBtn: true, progress: true, position: 'top' }
       },
       plugins: [
         'LocalStorage',
