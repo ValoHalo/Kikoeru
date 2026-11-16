@@ -42,10 +42,19 @@ const supportedImageExtList = ['.jpg', '.jpeg', '.png', '.webp'];
 const limit_promise_1 = __importDefault(require("limit-promise"));
 const limitP = new limit_promise_1.default(config_1.config.maxParallelism);
 const fileStatLimit = new limit_promise_1.default(config_1.config.maxParallelism);
-const util_1 = __importDefault(require("util"));
 const idConverter_1 = require("./idConverter");
 const child_process_1 = __importDefault(require("child_process"));
-const execFile = util_1.default.promisify(child_process_1.default.execFile);
+// SEA replaces execFile without preserving its custom promisify result shape.
+const execFile = (file, args) => new Promise((resolve, reject) => {
+    child_process_1.default.execFile(file, args, { windowsHide: true }, (error, stdout, stderr) => {
+        if (error) {
+            reject(error);
+        }
+        else {
+            resolve({ stdout, stderr });
+        }
+    });
+});
 async function recursiveReaddirWithFilter(dir) {
     const matchers = (config_1.config.excludeFolderGlobs || []).map(rule => new minimatch_1.default.Minimatch(rule));
     const files = [];
