@@ -1,5 +1,5 @@
 <template>
-  <q-btn flat round dense icon="manage_search" :aria-label="$t('savedSearch.title')">
+  <q-btn flat no-caps icon="manage_search" :label="$t('savedSearch.title')" :aria-label="$t('savedSearch.title')">
     <AppTooltip>{{ $t('savedSearch.title') }}</AppTooltip>
     <q-menu @before-show="load"><q-list class="saved-search-menu">
       <q-item clickable v-close-popup @click="edit(null)"><q-item-section avatar><q-icon name="bookmark_add" /></q-item-section><q-item-section>{{ $t('savedSearch.save') }}</q-item-section></q-item>
