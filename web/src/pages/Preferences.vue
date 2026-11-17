@@ -463,8 +463,8 @@ export default {
 .preferences-heading { margin: 8px 0 28px; }
 .preferences-section { margin-bottom: 30px; }
 .preferences-section__heading { display: flex; align-items: center; gap: 12px; margin: 0 4px 10px; }
-.preferences-section__heading .q-icon { color: var(--q-color-primary); }
-.preferences-list { overflow: hidden; border-radius: 6px; }
+.preferences-section__heading .q-icon { color: var(--kikoeru-accent-text); }
+.preferences-list { overflow: hidden; border-radius: var(--kikoeru-radius-md); background: var(--kikoeru-surface); border-color: var(--kikoeru-border); }
 .preference-row { min-height: 76px; }
 .preference-control { padding-left: 24px; }
 .preference-control--types { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px; }
@@ -484,13 +484,10 @@ export default {
 .accent-color-control :deep(.q-field__native) { padding: 0 10px; font-family: Consolas, "SFMono-Regular", monospace; font-size: 14px; text-transform: uppercase; letter-spacing: 0; }
 .body--dark .accent-color-input-swatch { border-color: rgba(255, 255, 255, .24); }
 .body--dark .accent-color-reset-button { border-color: rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); }
-.preference-control .q-btn-toggle { gap: 4px; padding: 2px; border: 1px solid rgba(0, 0, 0, .12); border-radius: 5px; background: rgba(0, 0, 0, .045); }
-.preference-control :deep(.q-btn) { min-height: 34px; padding: 4px 12px; border-radius: 3px !important; color: rgba(0, 0, 0, .68); font-size: 14px; line-height: 1.25; }
+.preference-control .q-btn-toggle { gap: 4px; padding: 2px; border: 1px solid var(--kikoeru-border); border-radius: var(--kikoeru-radius-sm); background: var(--kikoeru-inset); }
+.preference-control :deep(.q-btn) { min-height: 34px; padding: 4px 12px; border-radius: 4px !important; color: var(--kikoeru-muted); font-size: 14px; line-height: 1.25; }
 .preference-control :deep(.q-icon) { font-size: 18px; }
-.preference-control .q-btn--active { box-shadow: 0 1px 3px rgba(0, 0, 0, .22); color: #fff; }
-.body--dark .preference-control .q-btn-toggle { border-color: rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); }
-.body--dark .preference-control :deep(.q-btn) { color: rgba(255, 255, 255, .72); }
-.body--dark .preference-control :deep(.q-btn--active) { color: #fff; }
+.preference-control .q-btn--active { box-shadow: 0 1px 3px rgba(0, 0, 0, .2); color: var(--kikoeru-on-accent) !important; }
 
 @media (max-width: 699px) {
   .preferences-page { padding-right: 12px; padding-left: 12px; }

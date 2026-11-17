@@ -1,5 +1,5 @@
 <template>
-  <q-card v-if="!$store.state.AudioPlayer.privacyMode" class="image-editor-card">
+  <q-card v-if="!$store.state.AudioPlayer.privacyMode" class="image-editor-card app-form-dialog">
     <q-card-section>
       <div class="text-h6">{{ $t('imageEditor.title') }}</div>
     </q-card-section>
@@ -12,10 +12,9 @@
       <q-btn-toggle
         v-model="coverType"
         no-caps
-        rounded
         unelevated
+        class="image-editor-toggle"
         toggle-color="primary"
-        text-color="primary"
         :options="coverTypeOptions"
       />
     </q-card-section>
@@ -30,9 +29,9 @@
           :disable="maxOffset < 2"
         />
       </div>
-      <div class="col-auto">
-        <q-btn color="primary" :label="$t('common.confirm')" :loading="saving" @click="confirmCrop" />
-        <q-btn class="app-dialog-cancel" color="negative" :label="$t('common.cancel')" :disable="saving" v-close-popup />
+      <div class="col-auto row q-gutter-sm">
+        <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" :disable="saving" v-close-popup />
+        <q-btn unelevated color="primary" :label="$t('common.confirm')" :loading="saving" @click="confirmCrop" />
       </div>
     </q-card-actions>
   </q-card>
@@ -265,5 +264,21 @@ export default {
 .image-editor-canvas {
   width: 100%;
   height: 100%;
+}
+
+.image-editor-toggle {
+  padding: 2px;
+  border: 1px solid var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-sm);
+  background: var(--kikoeru-inset);
+}
+
+.image-editor-toggle :deep(.q-btn) {
+  border-radius: 4px !important;
+  color: var(--kikoeru-muted);
+}
+
+.image-editor-toggle :deep(.q-btn--active) {
+  color: var(--kikoeru-on-accent) !important;
 }
 </style>

@@ -40,9 +40,9 @@
                   <q-btn flat round dense icon="more_vert" :aria-label="$t('bookmark.actions')" @click.stop>
                     <AppTooltip>{{ $t('bookmark.actions') }}</AppTooltip>
                     <q-menu>
-                      <q-list dense>
+                      <q-list dense style="min-width: 136px">
                         <q-item clickable v-close-popup @click="editingBookmark = bookmark"><q-item-section avatar><q-icon name="edit" /></q-item-section><q-item-section>{{ $t('bookmark.edit') }}</q-item-section></q-item>
-                        <q-item clickable v-close-popup @click="deleteBookmark(bookmark)"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>{{ $t('bookmark.delete') }}</q-item-section></q-item>
+                        <q-item clickable v-close-popup class="kikoeru-danger-text" @click="deleteBookmark(bookmark)"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>{{ $t('bookmark.delete') }}</q-item-section></q-item>
                       </q-list>
                     </q-menu>
                   </q-btn>
@@ -203,7 +203,7 @@ export default {
 </script>
 
 <style scoped>
-.bookmarks-dialog { width: 560px; max-width: 100%; max-height: 80dvh; display: flex; flex-direction: column; border-radius: 8px; }
+.bookmarks-dialog { width: 560px; max-width: 100%; max-height: 80dvh; display: flex; flex-direction: column; border-radius: var(--kikoeru-radius-md); }
 .bookmarks-list { min-height: min(100px, 30dvh); }
 .bookmark-text { overflow-wrap: anywhere; white-space: pre-wrap; }
 </style>

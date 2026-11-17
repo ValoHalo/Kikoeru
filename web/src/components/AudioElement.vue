@@ -1,7 +1,7 @@
 <template>
 
   <!--在进度条周围监听mouseup、mousedown事件，辅助进度条状态切换-->
-  <div class="q-px-md">
+  <div class="audio-element">
     <div class="playback-slider" :class="{ 'has-clip-markers': clipMarkers.length }">
       <q-slider v-model="changeCurrentTime"
         @pointerdown.capture="onPanSlider('start')"

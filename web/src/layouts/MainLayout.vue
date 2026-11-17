@@ -16,24 +16,31 @@
       @focusin="drawerMini = false"
       @focusout="drawerMini = true"
     >
-      <q-scroll-area class="main-drawer-scroll fit" :content-style="{ top: '0', bottom: '0', width: '100%' }" :content-active-style="{ top: '0', bottom: '0', width: '100%' }">
+      <q-scroll-area class="main-drawer-scroll fit" :content-style="{ minHeight: '100%', width: '100%' }" :content-active-style="{ minHeight: '100%', width: '100%' }">
         <div class="drawer-content">
           <q-list padding class="drawer-primary">
-            <q-item v-for="link in getLinks()" :key="link.path" clickable v-ripple exact :to="link.path" active-class="text-primary text-weight-medium">
+            <q-item v-for="link in getLinks()" :key="link.path" clickable v-ripple exact :to="link.path" :aria-label="link.title" active-class="text-primary text-weight-medium">
               <q-item-section avatar><q-icon :name="link.icon" /></q-item-section>
               <q-item-section><q-item-label class="text-subtitle1">{{ link.title }}</q-item-label></q-item-section>
+              <AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ link.title }}</AppTooltip>
             </q-item>
-            <q-item clickable v-ripple @click="randomPlay"><q-item-section avatar><q-icon name="shuffle" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.randomPlay') }}</q-item-label></q-item-section></q-item>
-            <q-item clickable v-ripple @click="showTimer = true">
+            <q-item clickable v-ripple :aria-label="$t('mainLayout.randomPlay')" @click="randomPlay">
+              <q-item-section avatar><q-icon name="shuffle" /></q-item-section>
+              <q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.randomPlay') }}</q-item-label></q-item-section>
+              <AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('mainLayout.randomPlay') }}</AppTooltip>
+            </q-item>
+            <q-item clickable v-ripple :aria-label="$t('mainLayout.sleepTimer')" @click="showTimer = true">
               <q-item-section avatar><q-icon name="timer" /></q-item-section>
               <q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.sleepTimer') }}</q-item-label><q-item-label v-if="sleepMode" caption>{{ sleepTimeCaption }}</q-item-label></q-item-section>
+              <AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('mainLayout.sleepTimer') }}</AppTooltip>
             </q-item>
           </q-list>
 
           <q-list padding class="drawer-secondary">
-            <q-item clickable v-ripple @click="cycleColorScheme">
+            <q-item clickable v-ripple :aria-label="$t('mainLayout.darkMode')" @click="cycleColorScheme">
               <q-item-section avatar><q-icon name="brightness_6" /></q-item-section>
               <q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.darkMode') }}</q-item-label><q-item-label caption>{{ colorSchemeCaption }}</q-item-label></q-item-section>
+              <AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('mainLayout.darkMode') }} · {{ colorSchemeCaption }}</AppTooltip>
               <q-item-section side class="color-scheme-toggle-section">
                 <button
                   type="button"
@@ -49,11 +56,11 @@
                 </button>
               </q-item-section>
             </q-item>
-            <q-item clickable v-ripple to="/about" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="info" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.about') }}</q-item-label></q-item-section></q-item>
-            <q-item clickable v-ripple to="/preferences" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="tune" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.settings') }}</q-item-label></q-item-section></q-item>
-            <q-item v-if="canManage" clickable v-ripple to="/admin" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="admin_panel_settings" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.administration') }}</q-item-label></q-item-section></q-item>
-            <q-item v-if="!isSignedIn" clickable v-ripple @click="openLoginDialog"><q-item-section avatar><q-icon name="login" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.login') }}</q-item-label></q-item-section></q-item>
-            <q-item v-else clickable v-ripple @click="confirm = true"><q-item-section avatar><q-icon name="exit_to_app" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.logout') }}</q-item-label><q-item-label caption lines="1">{{ userName }}</q-item-label></q-item-section></q-item>
+            <q-item clickable v-ripple to="/about" :aria-label="$t('mainLayout.about')" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="info" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.about') }}</q-item-label></q-item-section><AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('mainLayout.about') }}</AppTooltip></q-item>
+            <q-item clickable v-ripple to="/preferences" :aria-label="$t('common.settings')" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="tune" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.settings') }}</q-item-label></q-item-section><AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('common.settings') }}</AppTooltip></q-item>
+            <q-item v-if="canManage" clickable v-ripple to="/admin" :aria-label="$t('common.administration')" active-class="text-primary text-weight-medium"><q-item-section avatar><q-icon name="admin_panel_settings" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.administration') }}</q-item-label></q-item-section><AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('common.administration') }}</AppTooltip></q-item>
+            <q-item v-if="!isSignedIn" clickable v-ripple :aria-label="$t('common.login')" @click="openLoginDialog"><q-item-section avatar><q-icon name="login" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('common.login') }}</q-item-label></q-item-section><AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('common.login') }}</AppTooltip></q-item>
+            <q-item v-else clickable v-ripple :aria-label="$t('mainLayout.logout')" @click="confirm = true"><q-item-section avatar><q-icon name="exit_to_app" /></q-item-section><q-item-section><q-item-label class="text-subtitle1">{{ $t('mainLayout.logout') }}</q-item-label><q-item-label caption lines="1">{{ userName }}</q-item-label></q-item-section><AppTooltip v-if="drawerMini" anchor="center right" self="center left" :offset="[10, 0]">{{ $t('mainLayout.logout') }} ({{ userName }})</AppTooltip></q-item>
           </q-list>
         </div>
       </q-scroll-area>
@@ -64,12 +71,13 @@
         <q-form @submit="login">
           <q-card-section class="row items-center">
             <q-avatar icon="login" color="primary" text-color="white" />
-            <span class="q-ml-sm">{{ $t('common.login') }}</span>
+            <span class="text-h6 q-ml-sm">{{ $t('common.login') }}</span>
           </q-card-section>
           <q-card-section class="q-pt-none q-gutter-md">
             <q-input
               v-model="loginName"
-              filled
+              outlined
+              stack-label
               autofocus
               autocomplete="username"
               :label="$t('common.username')"
@@ -77,7 +85,8 @@
             />
             <q-input
               v-model="loginPassword"
-              filled
+              outlined
+              stack-label
               type="password"
               autocomplete="current-password"
               :label="$t('common.password')"
@@ -86,12 +95,12 @@
           </q-card-section>
           <q-card-actions align="right">
             <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="primary" :disable="loginSubmitting" @click="cancelLogin" />
-            <q-btn flat :label="$t('common.login')" color="primary" type="submit" :loading="loginSubmitting" />
+            <q-btn unelevated :label="$t('common.login')" color="primary" type="submit" :loading="loginSubmitting" />
           </q-card-actions>
         </q-form>
       </q-card>
     </q-dialog>
-    <q-dialog v-model="confirm" persistent><q-card class="auth-dialog-card app-form-dialog"><q-card-section class="row items-center"><q-avatar icon="power_settings_new" color="primary" text-color="white" /><span class="q-ml-sm">{{ $t('mainLayout.logoutPrompt') }}</span></q-card-section><q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="primary" v-close-popup /><q-btn flat :label="$t('mainLayout.exit')" color="primary" @click="logout()" v-close-popup /></q-card-actions></q-card></q-dialog>
+    <q-dialog v-model="confirm" persistent><q-card class="auth-dialog-card app-form-dialog"><q-card-section class="row items-center"><q-avatar icon="power_settings_new" color="primary" text-color="white" /><span class="text-h6 q-ml-sm">{{ $t('mainLayout.logoutPrompt') }}</span></q-card-section><q-card-actions align="right"><q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="primary" v-close-popup /><q-btn unelevated :label="$t('mainLayout.exit')" color="primary" @click="logout()" v-close-popup /></q-card-actions></q-card></q-dialog>
     <SleepMode v-if="oldSleepTimerUIStyle" v-model="showTimer" />
     <CountDownSleepMode v-else v-model="showTimer" />
 
@@ -101,7 +110,7 @@
           <component :is="Component" />
         </keep-alive>
       </router-view>
-      <q-page-scroller v-if="!isFullScreenPage && (!isWorkPage || $route.name === 'lyrics')" position="bottom-right" :scroll-offset="150" :offset="[18, 90]" class="scroller" :class="{'scroller-hide': !showScroller, 'scroller-show': showScroller}"><q-btn dense fab icon="keyboard_arrow_up" color="primary" padding="sm" /></q-page-scroller>
+      <q-page-scroller v-if="!isFullScreenPage && (!isWorkPage || $route.name === 'lyrics')" position="bottom-right" :scroll-offset="150" :offset="[18, 96]" class="scroller" :class="{'scroller-hide': !showScroller, 'scroller-show': showScroller}"><q-btn dense fab icon="keyboard_arrow_up" color="primary" padding="sm" /></q-page-scroller>
     </q-page-container>
     <div style="position: fixed; bottom: 0; z-index: 3001;"><PlayerBar /><AudioPlayer v-if="preferencesLoaded" /><LyricsBar v-if="!enablePIPLyrics" /><PIPLyrics /></div>
     <q-footer class="q-pa-none" />
@@ -465,14 +474,29 @@ export default {
   .q-drawer:has(> .main-drawer) { transition: width .18s ease; }
 }
 .main-drawer .q-item__label { white-space: nowrap; }
-.drawer-content { display: flex; flex-direction: column; height: 100%; }
-.drawer-primary { padding-top: 12px; }
-.drawer-secondary { margin-top: auto; padding-bottom: 12px; }
+.drawer-content { display: flex; flex-direction: column; min-height: 100%; }
+.drawer-primary { padding-top: 8px; }
+.drawer-secondary { margin-top: auto; padding-bottom: 8px; }
 .main-drawer .q-item {
-  min-height: 48px;
-  margin: 2px 0;
+  height: 44px;
+  min-height: 44px;
+  padding: 4px 16px;
+  margin: 1px 0;
   position: relative;
   transition: color .16s ease;
+}
+.main-drawer .q-item__label.text-subtitle1 {
+  font-size: 0.9375rem;
+  line-height: 1.25;
+}
+.main-drawer .q-item__label--caption {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  margin-top: 1px;
+}
+.main-drawer .q-item__section--main {
+  min-width: 0;
+  overflow: hidden;
 }
 // pill 背景用伪元素绘制，item 布局在展开/折叠两种模式下保持一致，避免切换时图标跳动
 .main-drawer .q-item::before {
@@ -502,13 +526,12 @@ export default {
 }
 .main-drawer .q-item.q-router-link--active .q-icon,
 .main-drawer .q-item.q-router-link--exact-active .q-icon { color: var(--kikoeru-accent-text); }
-.drawer-secondary .q-item { height: 54px; min-height: 54px; }
+.drawer-secondary .q-item { height: 44px; min-height: 44px; }
 // 覆盖 Quasar mini 态的 item 居中/去 padding 规则（quasar.css 中 .q-drawer--mini .q-item），
 // 保持与展开态相同的左 padding，图标位置在展开/收起间完全一致，不会左右漂移
 .q-drawer-container .q-drawer--mini .main-drawer .drawer-content .q-item {
-  margin: 2px 0;
-  padding-left: 16px;
-  padding-right: 16px;
+  margin: 1px 0;
+  padding: 4px 16px;
   justify-content: flex-start;
 }
 .q-drawer-container .q-drawer--mini .main-drawer .drawer-content .q-item__section--avatar {

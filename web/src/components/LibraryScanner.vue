@@ -45,15 +45,13 @@
       </div>
       <q-separator />
       <q-list separator>
-        <q-expansion-item v-for="failure in persistedFailures" :key="failure.id" icon="error_outline" :label="failure.code" :caption="failure.message">
-          <q-item dense>
-            <q-item-section>
-              <q-item-label caption>{{ $t('libraryScanner.failureStage', { value: stageLabel(failure.stage), attempts: failure.attempts }) }}</q-item-label>
-              <q-item-label caption>{{ $t(`scanJobs.category.${failure.category || 'unknown'}`) }}</q-item-label>
-              <q-item-label caption>{{ $t('libraryScanner.failureDirectory', { root_folder: failure.root_folder, relative_dir: failure.relative_dir }) }}</q-item-label>
-              <q-item-label caption>{{ $t('libraryScanner.lastFailure', { updated_at: failure.updated_at }) }}</q-item-label>
-            </q-item-section>
-          </q-item>
+        <q-expansion-item v-for="failure in persistedFailures" :key="failure.id" icon="error_outline" :label="failure.code" :caption="failure.message" header-class="scanner-failure-header">
+          <div class="scanner-failure-detail">
+            <div>{{ $t('libraryScanner.failureStage', { value: stageLabel(failure.stage), attempts: failure.attempts }) }}</div>
+            <div>{{ $t(`scanJobs.category.${failure.category || 'unknown'}`) }}</div>
+            <div>{{ $t('libraryScanner.failureDirectory', { root_folder: failure.root_folder, relative_dir: failure.relative_dir }) }}</div>
+            <div>{{ $t('libraryScanner.lastFailure', { updated_at: failure.updated_at }) }}</div>
+          </div>
         </q-expansion-item>
       </q-list>
     </div>
@@ -73,7 +71,7 @@
           </q-item-section>
         </template>
         
-        <q-scroll-area style="height: 256px;" class="scanner-logs bg-dark text-white q-pa-md">
+        <q-scroll-area style="height: 256px;" class="scanner-logs q-pa-md">
           <div v-for="(log, index) in allLogs" :key="index" >
             <span :class="textColorOnLevel(log.level)">➜ {{logMessage(log)}}</span>
           </div>
@@ -86,17 +84,18 @@
         v-model="tab"
         dense
         inline-label
-        class="text-grey"
+        no-caps
+        class="scanner-tabs"
         active-color="primary"
         indicator-color="primary"
         align="justify"
         narrow-indicator
       >
         <q-tab name="tasks" icon="hourglass_full" :label="$t('libraryScanner.processing')">
-          <q-badge v-show="tasks.length > 0" color="primary" floating>{{tasks.length}}</q-badge>
+          <span v-show="tasks.length > 0" class="scanner-tab-count">{{tasks.length}}</span>
         </q-tab>
         <q-tab name="failedTasks" icon="error_outline" :label="$t('libraryScanner.failed')">
-          <q-badge v-show="failedTasks.length > 0" color="red" floating>{{failedTasks.length}}</q-badge>
+          <span v-show="failedTasks.length > 0" class="scanner-tab-count scanner-tab-count--danger">{{failedTasks.length}}</span>
         </q-tab>
       </q-tabs>
 
@@ -123,7 +122,7 @@
                   </q-item-section>
                 </template>
                 
-                <div class="scanner-logs bg-dark text-white q-pa-md">
+                <div class="scanner-logs q-pa-md">
                     <div v-for="(log, index) in item.logs" :key="index">
                       <span :class="textColorOnLevel(log.level)">➜ {{logMessage(log)}}</span>
                     </div>
@@ -144,26 +143,25 @@
               <q-expansion-item
                 expand-separator
                 :key="index"
-                expand-icon-class="text-white"
-                header-class="bg-negative"
+                header-class="scanner-failed-header"
               >
                 <template v-slot:header>
                   <q-item-section avatar>
-                    <q-icon name="bug_report" color="white" size="2em" />
+                    <q-icon name="bug_report" class="kikoeru-danger-text" size="1.75em" />
                   </q-item-section>
 
                   <q-item-section>
-                    <q-item-label class="text-white ellipsis" >
+                    <q-item-label class="ellipsis" >
                       {{logMessage(item.logs[item.logs.length - 1])}}
                     </q-item-label>
 
-                    <q-item-label caption class="text-white">
+                    <q-item-label caption>
                       {{ item.rjcode }}
                     </q-item-label>
                   </q-item-section>
                 </template>
                 
-                <div class="scanner-logs bg-dark text-white q-pa-md">
+                <div class="scanner-logs q-pa-md">
                     <div v-for="(log, index) in item.logs" :key="index">
                       <span :class="textColorOnLevel(log.level)">➜ {{logMessage(log)}}</span>
                     </div>
@@ -417,3 +415,60 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.scanner-status {
+  background: var(--kikoeru-surface);
+  border-color: var(--kikoeru-border);
+}
+
+.scanner-failure-header :deep(.q-item__section--avatar) {
+  color: var(--kikoeru-danger);
+}
+
+.scanner-failure-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px 14px 56px;
+  border-top: 1px solid var(--kikoeru-border);
+  background: var(--kikoeru-inset);
+  color: var(--kikoeru-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.scanner-tabs {
+  color: var(--kikoeru-muted);
+}
+
+.scanner-tab-count {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--kikoeru-active-bg);
+  color: var(--kikoeru-accent-text);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.scanner-tab-count--danger {
+  background: color-mix(in srgb, var(--q-negative) 14%, transparent);
+  color: var(--kikoeru-danger);
+}
+
+:deep(.scanner-failed-header) {
+  background: color-mix(in srgb, var(--q-negative) 10%, transparent);
+}
+
+.scanner-logs {
+  background: #17181c;
+  color: #e5e7eb;
+  border-top: 1px solid var(--kikoeru-border);
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 12px;
+  line-height: 1.65;
+}
+</style>

@@ -150,6 +150,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.countdown-card { width: 520px; max-width: 100vw; padding-bottom: 8px; }
-.countdown-status { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 12px; border-left: 3px solid var(--q-color-primary); background: rgba(var(--kikoeru-accent-rgb), .08); }
+.countdown-card { width: 520px; max-width: 100vw; padding-bottom: 8px; border-radius: var(--kikoeru-radius-md); }
+.countdown-status { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 12px; border-left: 3px solid var(--q-primary); border-radius: 0 var(--kikoeru-radius-sm) var(--kikoeru-radius-sm) 0; background: rgba(var(--kikoeru-accent-rgb), .08); }
 </style>

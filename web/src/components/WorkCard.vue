@@ -28,28 +28,27 @@
           <q-rating
             v-model="rating"
             size="20px"
-            :color="userMarked ? ($q.dark.isActive ? 'blue' : 'blue-8') : ($q.dark.isActive ? 'amber' : 'orange-10')"
+            class="work-card-stars"
+            :class="userMarked ? 'work-card-stars--user' : 'work-card-stars--community'"
             icon="star_border"
             icon-selected="star"
             icon-half="star_half"
           />
 
           <!-- 评价分布明细 -->
-          <AppTooltip v-if=metadata.rate_count_detail class="text-subtitle1">
-            <div>{{ $t('workCard.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
-            <div v-for="(rate, index) in sortedRatings" :key=index class="row items-center">
-              <div class="col">{{ $t('workCard.stars', { count: rate.review_point }) }}</div>
-
-              <!-- 评价占比 -->
-              <q-linear-progress
-                :model-value="rate.ratio/100"
-                color="amber"
-                track-color="white"
-                style="height: 15px; width: 100px"
-                class="col-auto"
-              />
-
-              <div class="col q-mx-sm">({{ rate.count }})</div>
+          <AppTooltip v-if="metadata.rate_count_detail">
+            <div class="kikoeru-rating-tooltip">
+              <div class="kikoeru-rating-tooltip__title">{{ $t('workCard.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
+              <div v-for="(rate, index) in sortedRatings" :key="index" class="kikoeru-rating-tooltip__row">
+                <span>{{ $t('workCard.stars', { count: rate.review_point }) }}</span>
+                <q-linear-progress
+                  :model-value="rate.ratio/100"
+                  color="amber"
+                  track-color="grey-8"
+                  class="kikoeru-rating-tooltip__bar"
+                />
+                <span class="kikoeru-rating-tooltip__count">({{ rate.count }})</span>
+              </div>
             </div>
           </AppTooltip>
         </div>
@@ -225,6 +224,8 @@ export default {
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  background: var(--kikoeru-surface);
+  color: var(--kikoeru-text);
   border-radius: var(--kikoeru-radius-md);
   border: 1px solid var(--card-line);
   box-shadow: none;
@@ -280,6 +281,14 @@ export default {
 .work-card-cover :deep(.q-chip) {
   font-size: 12px;
   box-shadow: none;
+}
+
+.work-card-stars--community {
+  color: var(--kikoeru-star);
+}
+
+.work-card-stars--user {
+  color: var(--kikoeru-accent-text);
 }
 
 .work-card-info {

@@ -40,28 +40,26 @@
               :aria-label="$t('workDetails.workRating')"
               readonly
               size="18px"
-              :color="$q.dark.isActive ? 'amber' : 'orange-10'"
+              class="work-community-stars"
               icon="star_border"
               icon-selected="star"
               icon-half="star_half"
             />
 
             <!-- 评价分布明细 -->
-            <AppTooltip v-if=metadata.rate_count_detail class="text-subtitle1">
-              <div>{{ $t('workDetails.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
-              <div v-for="(rate, index) in sortedRatings" :key=index class="row items-center">
-                <div class="col"> {{ $t('workDetails.stars', { count: rate.review_point }) }}</div>
-
-                <!-- 评价占比 -->
-                <q-linear-progress
-                  :model-value="rate.ratio/100"
-                  color="amber"
-                  track-color="white"
-                  style="height: 15px; width: 100px"
-                  class="col-auto"
-                />
-
-                <div class="col q-mx-sm"> ({{rate.count}}) </div>
+            <AppTooltip v-if="metadata.rate_count_detail">
+              <div class="kikoeru-rating-tooltip">
+                <div class="kikoeru-rating-tooltip__title">{{ $t('workDetails.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
+                <div v-for="(rate, index) in sortedRatings" :key="index" class="kikoeru-rating-tooltip__row">
+                  <span>{{ $t('workDetails.stars', { count: rate.review_point }) }}</span>
+                  <q-linear-progress
+                    :model-value="rate.ratio/100"
+                    color="amber"
+                    track-color="grey-8"
+                    class="kikoeru-rating-tooltip__bar"
+                  />
+                  <span class="kikoeru-rating-tooltip__count">({{rate.count}})</span>
+                </div>
               </div>
             </AppTooltip>
           </div>
@@ -170,7 +168,7 @@
           <q-btn flat round icon="more_horiz" :aria-label="$t('workDetails.moreActions')">
             <AppTooltip>{{ $t('workDetails.moreActions') }}</AppTooltip>
             <q-menu anchor="bottom right" self="top right">
-              <q-list class="work-manage-menu">
+              <q-list dense class="work-manage-menu">
                 <q-item v-if="isAdministrator" clickable v-close-popup @click="showEditMetaDialog = true">
                   <q-item-section avatar><q-icon name="edit" /></q-item-section>
                   <q-item-section>{{ $t('workDetails.editMetadata') }}</q-item-section>
@@ -179,8 +177,8 @@
                   <q-item-section avatar><q-icon name="sync" /></q-item-section>
                   <q-item-section>{{ $t('workDetails.scanFiles') }}</q-item-section>
                 </q-item>
-                <q-separator v-if="metadata.state" class="q-my-xs" />
-                <q-item v-if="metadata.state" clickable v-close-popup class="work-danger" @click="clearThisHistroy">
+                <q-separator v-if="metadata.state" />
+                <q-item v-if="metadata.state" clickable v-close-popup class="kikoeru-danger-text" @click="clearThisHistroy">
                   <q-item-section avatar><q-icon name="delete_sweep" /></q-item-section>
                   <q-item-section>{{ $t('workDetails.deleteHistory') }}</q-item-section>
                 </q-item>
@@ -395,20 +393,18 @@ export default {
 
 <style scoped>
 .work-details {
-  --work-muted: #666;
-  --work-divider: rgba(0, 0, 0, 0.12);
-  --work-chip: #ededed;
+  --work-muted: var(--kikoeru-muted);
+  --work-divider: var(--kikoeru-border);
+  --work-chip: var(--kikoeru-inset);
   display: grid;
   grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
   align-items: start;
   gap: 20px 28px;
-  padding: 16px 16px 0;
+  padding: 8px 0 0;
 }
 
-.body--dark .work-details {
-  --work-muted: #aaa;
-  --work-divider: rgba(255, 255, 255, 0.12);
-  --work-chip: #252525;
+.work-community-stars {
+  color: var(--kikoeru-star);
 }
 
 .work-cover {
@@ -687,20 +683,7 @@ export default {
 }
 
 .work-manage-menu {
-  min-width: 210px;
-  padding: 6px 0;
-}
-
-.work-manage-menu .q-item__section--avatar {
-  min-width: 36px;
-}
-
-.work-danger {
-  color: #c62828;
-}
-
-.body--dark .work-danger {
-  color: #ff7676;
+  min-width: 200px;
 }
 
 @media (min-width: 700px) and (max-width: 899px) {
@@ -755,13 +738,14 @@ export default {
   }
 
   .work-personal-tools {
-    align-items: end;
+    align-items: stretch;
   }
 
   .work-tools-group {
     flex-direction: column;
-    align-items: start;
+    align-items: flex-start;
     gap: 8px;
+    margin-left: 0;
   }
 
   .work-tools-group > .work-field-label {

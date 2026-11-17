@@ -4,35 +4,36 @@
     :src="coverUrl"
     :ratio="4/3"
     :img-class="imgClass"
+    class="cover-sfw-img"
     style="max-width: 560px;"
     transition="fade"
     @mouseover="toggleBlurFlag()"
     @mouseout="toggleBlurFlag()"
   >
     <div v-if="!$store.state.AudioPlayer.privacyMode" class="absolute-top-left transparent" style="padding: 0;">
-      <q-chip dense square color="brown" text-color="white" class="q-ma-sm shadow-3">
+      <q-chip dense square text-color="white" class="q-ma-sm cover-badge cover-badge--code">
         {{ workCode }}
       </q-chip>
     </div>
 
     <div v-if="release !== ''" class="absolute-bottom-right transparent" style="padding: 0px;">
-      <q-chip dense square color="blue-grey" text-color="white" class="q-ma-sm shadow-3">
+      <q-chip dense square text-color="white" class="q-ma-sm cover-badge cover-badge--date">
         {{release}}
       </q-chip>
     </div>
 
     <div v-if="lyricList.length > 0" class="absolute-top-right transparent" style="padding: 0px;">
-      <q-chip v-for="lyric in lyricList" :key="lyric" dense square color="green-7" text-color="white" class="q-ma-sm shadow-3">{{ $t('common.localLyrics') }}</q-chip>
+      <q-chip v-for="lyric in lyricList" :key="lyric" dense square text-color="white" class="q-ma-sm cover-badge cover-badge--lyric">{{ $t('common.localLyrics') }}</q-chip>
     </div>
 
     <!-- 标签 -->
-    <div v-if="!$store.state.AudioPlayer.privacyMode" class="q-pa-none q-ma-sm absolute-bottom-left tags-panel">
+    <div v-if="!$store.state.AudioPlayer.privacyMode" class="q-pa-none q-ma-sm absolute-bottom-left transparent tags-panel">
       <router-link
         v-for="tag in tags"
         :key='tag.id'
         :to="`/works?tagId=${tag.id}`"
         >
-        <q-chip dense square class="shadow-3">
+        <q-chip dense square text-color="white" class="cover-badge cover-badge-tag">
           {{ tag.name }}
         </q-chip>
       </router-link>
@@ -121,19 +122,54 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.cover-sfw-img {
+  background: var(--kikoeru-inset);
+}
+
 .blur-image {
   filter: blur(10px);
 }
 
+.cover-badge {
+  background: rgba(20, 22, 26, 0.78) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.cover-badge--code {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.cover-badge--lyric {
+  background: rgba(22, 101, 52, 0.86) !important;
+  border-color: rgba(134, 239, 172, 0.28);
+}
+
+.cover-badge-tag {
+  margin: 0;
+  transition: background-color .16s ease, border-color .16s ease;
+}
+
+.tags-panel a:hover .cover-badge-tag {
+  background: rgba(36, 40, 48, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
 .tags-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   opacity: calc(var(--hover-work-card) + var(--active-work-card) + var(--sim-hover-work-card));
   transition: opacity 0.2s;
   padding: 0;
-  max-width: 70%;
-  background: rgba(0,0,0,0.5);
-  border-radius: 5px;
-  // background: radial-gradient(closest-side at center, rgba(0, 0, 0, 0.8) 0, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0) 100%);
-  // background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0,0,0,0.4) 30%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0));
+  max-width: calc(100% - 16px);
+  background: transparent;
 }
 
 </style>

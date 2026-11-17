@@ -41,14 +41,20 @@ a {
   // 全局表面 token（浅色）
   --kikoeru-page-bg: #f2f3f5;
   --kikoeru-surface: #ffffff;
+  --kikoeru-surface-elevated: #ffffff;
+  --kikoeru-text: #25272b;
   --kikoeru-border: rgba(0, 0, 0, .1);
   --kikoeru-muted: #686b71;
   --kikoeru-inset: #f5f6f7;
+  --kikoeru-danger: #c62828;
+  --kikoeru-star: #e67e00;
+  --kikoeru-active-bg: color-mix(in srgb, var(--q-primary) 13%, transparent);
   --kikoeru-radius-sm: 6px;
   --kikoeru-radius-md: 10px;
   --kikoeru-radius-lg: 14px;
   --kikoeru-shadow-card: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .08);
   --kikoeru-shadow-card-hover: 0 10px 24px rgba(16, 24, 40, .14);
+  --kikoeru-shadow-float: 0 10px 28px rgba(16, 24, 40, .14), 0 2px 6px rgba(16, 24, 40, .06);
 }
 
 :root:lang(ja) {
@@ -65,11 +71,17 @@ a {
   // 全局表面 token（深色）
   --kikoeru-page-bg: #121212;
   --kikoeru-surface: #1d1d1f;
+  --kikoeru-surface-elevated: #232326;
+  --kikoeru-text: #eceef1;
   --kikoeru-border: rgba(255, 255, 255, .12);
   --kikoeru-muted: #aaadb3;
   --kikoeru-inset: #262628;
+  --kikoeru-danger: #ff7b86;
+  --kikoeru-star: #fbbf24;
+  --kikoeru-active-bg: color-mix(in srgb, var(--q-primary) 18%, transparent);
   --kikoeru-shadow-card: 0 1px 2px rgba(0, 0, 0, .4), 0 1px 3px rgba(0, 0, 0, .32);
   --kikoeru-shadow-card-hover: 0 10px 28px rgba(0, 0, 0, .55);
+  --kikoeru-shadow-float: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 8px rgba(0, 0, 0, .35);
 }
 
 .bg-primary,
@@ -84,6 +96,114 @@ a {
 
 .q-breadcrumbs .text-primary {
   color: var(--kikoeru-accent-text) !important;
+}
+
+.kikoeru-danger-text {
+  color: var(--kikoeru-danger) !important;
+}
+
+.kikoeru-active-item {
+  background: var(--kikoeru-active-bg) !important;
+  color: var(--kikoeru-accent-text) !important;
+}
+
+// 统一悬浮菜单与下拉选择弹出层外观
+.q-menu {
+  background: var(--kikoeru-surface-elevated);
+  color: var(--kikoeru-text);
+  border: 1px solid var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-md);
+  box-shadow: var(--kikoeru-shadow-float);
+
+  > .q-list {
+    padding: 5px;
+  }
+
+  > .q-list .q-item {
+    min-height: 38px;
+    border-radius: var(--kikoeru-radius-sm);
+    transition: background-color .14s ease, color .14s ease;
+  }
+
+  > .q-list .q-item + .q-item {
+    margin-top: 2px;
+  }
+
+  > .q-list .q-item--clickable:hover {
+    background: var(--kikoeru-inset);
+  }
+
+  > .q-list .q-item--active {
+    background: var(--kikoeru-active-bg);
+    color: var(--kikoeru-accent-text);
+    font-weight: 500;
+  }
+
+  .q-item__section--avatar {
+    min-width: 34px;
+    padding-right: 10px;
+    color: var(--kikoeru-muted);
+  }
+
+  .q-item--active .q-item__section--avatar {
+    color: inherit;
+  }
+
+  .q-item.text-negative,
+  .q-item.kikoeru-danger-text {
+    color: var(--kikoeru-danger) !important;
+    .q-item__section--avatar { color: inherit; }
+  }
+
+  .q-separator {
+    background: var(--kikoeru-border);
+    margin: 4px 2px;
+  }
+}
+
+// 统一全局 Tooltip 样式
+.q-tooltip {
+  background: rgba(26, 28, 32, .94);
+  color: #f4f5f7;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--kikoeru-radius-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .28);
+}
+
+.kikoeru-rating-tooltip {
+  min-width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+
+  &__title {
+    font-weight: 600;
+    margin-bottom: 2px;
+    color: #fff;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 38px 96px 40px;
+    align-items: center;
+    gap: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__bar {
+    height: 6px !important;
+    border-radius: 3px;
+  }
+
+  &__count {
+    text-align: right;
+    color: rgba(255, 255, 255, .72);
+  }
 }
 
 .plyr .plyr__controls {

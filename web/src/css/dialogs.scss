@@ -1,24 +1,17 @@
 .q-dialog {
-  --dialog-surface: #fff;
-  --dialog-border: rgba(0, 0, 0, .12);
-  --dialog-muted: #666970;
-  --dialog-text: #25272b;
-  --dialog-inset: #f5f6f7;
-}
-.body--dark .q-dialog {
-  --dialog-surface: #1b1b1b;
-  --dialog-border: rgba(255, 255, 255, .12);
-  --dialog-muted: #aaadb3;
-  --dialog-text: #ececee;
-  --dialog-inset: #242426;
+  --dialog-surface: var(--kikoeru-surface-elevated);
+  --dialog-border: var(--kikoeru-border);
+  --dialog-muted: var(--kikoeru-muted);
+  --dialog-text: var(--kikoeru-text);
+  --dialog-inset: var(--kikoeru-inset);
 }
 
 .q-dialog .q-dialog__inner > .q-card {
   background: var(--dialog-surface);
   color: var(--dialog-text);
   border: 1px solid var(--dialog-border);
-  border-radius: 10px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, .3);
+  border-radius: var(--kikoeru-radius-md);
+  box-shadow: var(--kikoeru-shadow-float);
 }
 .q-dialog .q-dialog__backdrop { background: rgba(0, 0, 0, .55); }
 .q-dialog .q-card__actions {
@@ -28,16 +21,16 @@
 .q-dialog .q-card__actions .q-btn:not(.q-btn--round) {
   min-height: 40px;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: var(--kikoeru-radius-sm);
   font-weight: 500;
   letter-spacing: 0;
   line-height: 1.4;
 }
 .q-dialog .app-dialog-cancel.q-btn { color: var(--dialog-muted) !important; background: var(--dialog-inset) !important; }
 .q-dialog .q-card__actions .q-btn:before { box-shadow: none; }
-.q-dialog .q-field--outlined .q-field__control { border-radius: 6px; }
+.q-dialog .q-field--outlined .q-field__control { border-radius: var(--kikoeru-radius-sm); }
 .q-dialog .q-btn:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: 2px; }
-.body--dark .q-dialog .q-btn--flat.text-negative { color: #ff8795 !important; }
+.q-dialog .q-btn--flat.text-negative { color: var(--kikoeru-danger) !important; }
 
 .q-dialog .q-dialog__inner > .app-confirm-dialog { width: 440px; }
 .app-confirm-dialog .q-dialog__title { padding: 24px 24px 12px; font-size: 20px; font-weight: 500; line-height: 1.5; letter-spacing: 0; }

@@ -328,12 +328,11 @@ export default {
 .recent-works-actions :deep(.q-icon) { font-size: 19px; }
 .recent-works-placeholder { display: flex; align-items: center; gap: 16px; min-height: 100px; padding: 24px; border: 1px solid var(--recent-border); border-radius: 6px; background: var(--recent-inset); color: var(--recent-muted); }
 .recent-work-item { width: 328px; max-width: 82vw; padding: 0 14px 6px 0; }
-.recent-work-cover { display: block; width: 100%; border: 0; padding: 0; border-radius: 8px; overflow: hidden; background: transparent; color: white; text-align: left; font: inherit; cursor: pointer; }
+.recent-work-cover { display: block; width: 100%; border: 1px solid var(--recent-border); padding: 0; border-radius: 8px; overflow: hidden; background: var(--recent-inset); color: white; text-align: left; font: inherit; cursor: pointer; }
 .recent-work-cover :deep(.q-img) { display: block; }
-.recent-work-cover :deep(.bg-brown) { background: rgba(25,25,25,.8) !important; backdrop-filter: blur(8px); box-shadow: none; }
-.recent-work-overlay { padding: 28px 12px 12px; background: linear-gradient(transparent, rgba(0,0,0,.8)); }
-.recent-work-track { font-size: 14px; font-weight: 600; line-height: 1.6; }
-.recent-work-title { margin-top: 4px; color: #ddd; font-size: 12px; }
+.recent-work-overlay { padding: 38px 12px 12px; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.52) 42%, rgba(0,0,0,.88) 100%); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.recent-work-track { font-size: 14px; font-weight: 600; line-height: 1.5; }
+.recent-work-title { margin-top: 3px; color: rgba(255,255,255,.82); font-size: 12px; }
 .recent-work-cover:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: -2px; }
 .scroll-style-change { scrollbar-color: #888 transparent; scrollbar-width: thin; }
 @media (max-width: 699px) {

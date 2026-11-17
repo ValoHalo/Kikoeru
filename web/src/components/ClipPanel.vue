@@ -50,9 +50,9 @@
         <q-item-section side>
           <q-btn flat round dense icon="more_vert" :aria-label="$t('clips.actions')" :disable="saving">
             <AppTooltip>{{ $t('clips.actions') }}</AppTooltip>
-            <q-menu><q-list dense>
+            <q-menu><q-list dense style="min-width: 136px">
               <q-item clickable v-close-popup @click="editClip(clip)"><q-item-section avatar><q-icon name="edit" /></q-item-section><q-item-section>{{ $t('clips.edit') }}</q-item-section></q-item>
-              <q-item clickable v-close-popup @click="deleteClip(clip)"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>{{ $t('bookmark.delete') }}</q-item-section></q-item>
+              <q-item clickable v-close-popup class="kikoeru-danger-text" @click="deleteClip(clip)"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>{{ $t('bookmark.delete') }}</q-item-section></q-item>
             </q-list></q-menu>
           </q-btn>
         </q-item-section>

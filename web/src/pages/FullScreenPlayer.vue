@@ -640,9 +640,9 @@ export default {
   position: absolute;
   left: 0;
   bottom: 0;
-  height: 2px;
+  height: 3px;
   /* width: 100%; */
-  background-color: var(--q-color-positive);
+  background-color: var(--q-primary);
 }
 
 .footer {
@@ -655,8 +655,10 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  color: white;
-  text-shadow: 1px 1px 0px rgb(82, 82, 82);
+  padding: 14px 20px 32px;
+  background: linear-gradient(rgba(0, 0, 0, .58), transparent);
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .55);
 }
 
 </style>

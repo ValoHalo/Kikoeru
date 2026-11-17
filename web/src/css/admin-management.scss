@@ -61,10 +61,13 @@
   .scanner-status { overflow: hidden; border: 1px solid var(--admin-border); border-radius: 6px; }
   .scanner-logs { overflow-wrap: anywhere; }
 
-  .admin-page-actions { position: fixed; right: max(16px, calc((100vw - 56px - 920px) / 2 + 16px)); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 900; margin: 0; padding: 0; border: 0; background: transparent; }
-  .settings-save-button { width: 56px; height: 56px; min-width: 56px; min-height: 56px; color: var(--admin-muted); background: var(--admin-surface); box-shadow: 0 4px 16px rgba(0, 0, 0, .2); transition: color .18s ease, background-color .18s ease; }
-  .settings-save-button--active { color: var(--kikoeru-on-accent); background: var(--q-primary); }
-  .settings-save-button .q-icon { font-size: 28px; }
+  .admin-page-actions { position: fixed; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 900; margin: 0; padding: 0; border: 0; background: transparent; }
+  @media (min-width: 1180px) {
+    .admin-page-actions { right: 24px; }
+  }
+  .settings-save-button { width: 52px; height: 52px; min-width: 52px; min-height: 52px; border: 1px solid var(--admin-border); color: var(--admin-muted); background: var(--admin-surface); box-shadow: var(--kikoeru-shadow-float); transition: color .18s ease, background-color .18s ease, border-color .18s ease; }
+  .settings-save-button--active { border-color: transparent; color: var(--kikoeru-on-accent); background: var(--q-primary); }
+  .settings-save-button .q-icon { font-size: 26px; }
 }
 
 .body--dark .admin-page {

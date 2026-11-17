@@ -1,5 +1,5 @@
 <template>
-  <q-card style="width: 70vw; max-width: 760px; min-width: 320px">
+  <q-card class="app-form-dialog edit-meta-card">
     <q-card-section class="q-pb-sm">
       <div class="text-h6">{{ $t('editMeta.title') }}</div>
     </q-card-section>
@@ -7,100 +7,105 @@
     <q-card-section class="q-pt-none">
       <q-input
         v-model="editTitle"
-        filled
+        outlined
+        dense
         :label="$t('editMeta.editTitle')"
         :disable="saving"
       />
     </q-card-section>
 
     <q-card-section class="q-pt-none">
-      <div class="text-caption text-grey q-mb-xs">{{ $t('common.circles') }}</div>
-      <q-chip size="md" color="primary" text-color="white" class="shadow-4">
-        {{ editCircle.name }}
-      </q-chip>
-      <q-btn
-        round
-        color="deep-orange"
-        icon="swap_horiz"
-        size="sm"
-        class="q-ml-sm"
-        :aria-label="$t('editMeta.replaceCircle')"
-        :disable="saving"
-        @click="openCandidateDialog('circles')"
-      />
+      <div class="text-caption edit-meta-label q-mb-xs">{{ $t('common.circles') }}</div>
+      <div class="row items-center q-gutter-xs">
+        <q-chip size="md" class="edit-meta-chip edit-meta-chip--accent">
+          {{ editCircle.name }}
+        </q-chip>
+        <q-btn
+          outline
+          round
+          color="primary"
+          icon="swap_horiz"
+          size="sm"
+          :aria-label="$t('editMeta.replaceCircle')"
+          :disable="saving"
+          @click="openCandidateDialog('circles')"
+        />
+      </div>
     </q-card-section>
 
     <q-card-section class="q-pt-none">
-      <div class="text-caption text-grey q-mb-xs">{{ $t('common.tags') }}</div>
-      <q-chip
-        v-for="(tag, index) in editTags"
-        :key="`${tag.id}-${tag.name}`"
-        removable
-        size="md"
-        color="secondary"
-        text-color="white"
-        class="shadow-4"
-        :disable="saving"
-        @remove="removeTagAt(index)"
-      >
-        {{ tag.name }}
-      </q-chip>
-      <q-btn
-        round
-        color="deep-orange"
-        icon="add"
-        size="sm"
-        class="q-ml-sm"
-        :aria-label="$t('editMeta.addTag')"
-        :disable="saving"
-        @click="openCandidateDialog('tags')"
-      />
+      <div class="text-caption edit-meta-label q-mb-xs">{{ $t('common.tags') }}</div>
+      <div class="row items-center q-gutter-xs">
+        <q-chip
+          v-for="(tag, index) in editTags"
+          :key="`${tag.id}-${tag.name}`"
+          removable
+          size="md"
+          class="edit-meta-chip"
+          :disable="saving"
+          @remove="removeTagAt(index)"
+        >
+          {{ tag.name }}
+        </q-chip>
+        <q-btn
+          outline
+          round
+          color="primary"
+          icon="add"
+          size="sm"
+          :aria-label="$t('editMeta.addTag')"
+          :disable="saving"
+          @click="openCandidateDialog('tags')"
+        />
+      </div>
     </q-card-section>
 
     <q-card-section class="q-pt-none">
-      <div class="text-caption text-grey q-mb-xs">{{ $t('common.voiceActors') }}</div>
-      <q-chip
-        v-for="(va, index) in editVas"
-        :key="`${va.id}-${va.name}`"
-        removable
-        square
-        size="md"
-        color="primary"
-        text-color="white"
-        icon="mic"
-        class="shadow-4"
-        :disable="saving"
-        @remove="removeVaAt(index)"
-      >
-        {{ va.name }}
-      </q-chip>
-      <q-btn
-        round
-        color="deep-orange"
-        icon="add"
-        size="sm"
-        class="q-ml-sm"
-        :aria-label="$t('editMeta.addVoiceActor')"
-        :disable="saving"
-        @click="openCandidateDialog('vas')"
-      />
+      <div class="text-caption edit-meta-label q-mb-xs">{{ $t('common.voiceActors') }}</div>
+      <div class="row items-center q-gutter-xs">
+        <q-chip
+          v-for="(va, index) in editVas"
+          :key="`${va.id}-${va.name}`"
+          removable
+          square
+          size="md"
+          icon="mic"
+          class="edit-meta-chip edit-meta-chip--accent"
+          :disable="saving"
+          @remove="removeVaAt(index)"
+        >
+          {{ va.name }}
+        </q-chip>
+        <q-btn
+          outline
+          round
+          color="primary"
+          icon="add"
+          size="sm"
+          :aria-label="$t('editMeta.addVoiceActor')"
+          :disable="saving"
+          @click="openCandidateDialog('vas')"
+        />
+      </div>
     </q-card-section>
 
     <q-card-actions align="right">
-      <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="grey" :disable="saving" v-close-popup />
-      <q-btn :label="$t('common.ok')" color="primary" :loading="saving" @click="confirmChange" />
+      <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" :disable="saving" v-close-popup />
+      <q-btn unelevated :label="$t('common.ok')" color="primary" :loading="saving" @click="confirmChange" />
     </q-card-actions>
 
     <q-dialog v-model="showCandidateDialog">
-      <q-card style="width: 70vw; max-width: 680px">
+      <q-card class="app-form-dialog edit-meta-candidate-card">
         <q-card-section>
-          <div class="text-h6">{{ searchTitle }}</div>
-          <q-input v-model="searchCandidate" :label="$t('common.search')" autofocus clearable>
+          <div class="text-h6 q-mb-sm">{{ searchTitle }}</div>
+          <q-input v-model="searchCandidate" outlined dense :label="$t('common.search')" autofocus clearable>
             <template v-slot:append>
               <q-btn
                 v-if="canAddCustomCandidate"
                 flat
                 dense
+                no-caps
+                color="primary"
                 :label="$t('editMeta.addCustom')"
                 @click="chooseCandidate({ id: 0, name: normalizedSearchCandidate })"
               />
@@ -110,7 +115,7 @@
 
         <q-card-section class="q-pt-none">
           <q-scroll-area style="height: 40vh">
-            <q-list dense bordered separator class="rounded-borders">
+            <q-list dense bordered separator class="edit-meta-candidate-list">
               <q-item
                 v-for="candidate in filteredCandidates"
                 :key="`${candidate.id}-${candidate.name}`"
@@ -126,7 +131,7 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" color="negative" v-close-popup />
+          <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -306,3 +311,36 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.edit-meta-card {
+  width: min(760px, calc(100vw - 32px));
+}
+
+.edit-meta-candidate-card {
+  width: min(680px, calc(100vw - 32px));
+}
+
+.edit-meta-label {
+  color: var(--kikoeru-muted);
+}
+
+.edit-meta-chip {
+  margin: 0;
+  background: var(--kikoeru-inset);
+  color: var(--kikoeru-text);
+  border: 1px solid var(--kikoeru-border);
+  border-radius: 4px;
+}
+
+.edit-meta-chip--accent {
+  background: var(--kikoeru-active-bg);
+  color: var(--kikoeru-accent-text);
+  border-color: transparent;
+}
+
+.edit-meta-candidate-list {
+  border-color: var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-sm);
+}
+</style>

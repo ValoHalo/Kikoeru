@@ -13,6 +13,8 @@
     <q-card-section class="row items-center lyric-actions">
       <q-btn
         v-if="isAdministrator"
+        outline
+        no-caps
         color="primary"
         :icon="isEditingLyrics ? 'edit_off' : 'edit'"
         :label="$q.screen.lt.sm ? undefined : (isEditingLyrics ? $t('lyricSelection.exitEdit') : $t('lyricSelection.edit'))"
@@ -22,7 +24,9 @@
       />
       <q-btn
         v-if="isEditingLyrics"
-        color="warning"
+        unelevated
+        no-caps
+        color="primary"
         icon="save"
         :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.save')"
         :round="$q.screen.lt.sm"
@@ -33,7 +37,9 @@
       />
       <q-btn
         v-if="!isEditingLyrics"
-        color="secondary"
+        outline
+        no-caps
+        color="primary"
         icon="library_music"
         :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.selectOther')"
         :round="$q.screen.lt.sm"
@@ -44,7 +50,9 @@
       />
       <q-btn
         v-if="!isEditingLyrics"
-        color="negative"
+        flat
+        no-caps
+        class="kikoeru-danger-text"
         icon="subtitles_off"
         :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.disable')"
         :round="$q.screen.lt.sm"
@@ -54,6 +62,8 @@
       />
       <q-btn
         v-if="!isEditingLyrics"
+        flat
+        no-caps
         color="primary"
         icon="my_location"
         :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.currentLine')"
@@ -64,6 +74,7 @@
       <q-btn
         v-if="isEditingLyrics"
         outline
+        no-caps
         color="primary"
         icon="timer"
         :label="$q.screen.lt.sm ? undefined : $t('lyricSelection.setLineEnd')"
@@ -73,13 +84,13 @@
         @click="setCurrentLineEndTime"
       />
       <q-toggle v-if="!isEditingLyrics" class="lyric-auto-track" v-model="autoTrackCurrentLine" :label="$t('lyricSelection.autoFollow')" />
-      <div v-if="!isAdministrator" class="text-caption text-grey-7">{{ $t('lyricSelection.permissionHint') }}</div>
+      <div v-if="!isAdministrator" class="text-caption lyric-muted">{{ $t('lyricSelection.permissionHint') }}</div>
     </q-card-section>
 
     <q-separator />
 
     <q-card-section class="lyric-list-container">
-      <div v-if="lyricLines.length === 0" class="text-grey-7 text-center q-pa-xl">{{ $t('lyricSelection.noLyrics') }}</div>
+      <div v-if="lyricLines.length === 0" class="lyric-empty text-center q-pa-xl">{{ $t('lyricSelection.noLyrics') }}</div>
       <q-list v-else separator class="scroll lyric-list">
         <q-item
           v-for="(line, index) in lyricLines"
@@ -88,14 +99,14 @@
           clickable
           v-ripple
           :active="index === currentLyricLineNumber"
-          active-class="bg-green-2 text-dark"
+          active-class="kikoeru-active-item"
           @click="seekToLine(line)"
         >
           <q-item-section side>
-            <q-chip size="sm" color="primary" text-color="white">
+            <span class="lyric-time-badge">
               {{ formatSeconds(line.time / 1000, true) }}
-            </q-chip>
-            <div v-if="hasExplicitEnd(line)" class="text-caption">{{ $t('lyricSelection.until', { value: formatSeconds(line.timeEnd / 1000, true) }) }}
+            </span>
+            <div v-if="hasExplicitEnd(line)" class="text-caption lyric-muted">{{ $t('lyricSelection.until', { value: formatSeconds(line.timeEnd / 1000, true) }) }}
             </div>
           </q-item-section>
 
@@ -139,14 +150,14 @@
     </q-card-section>
 
     <q-dialog v-model="openLyricFileSelection">
-      <q-card class="lyric-option-card">
+      <q-card class="lyric-option-card app-form-dialog">
         <q-card-section class="row items-center justify-between">
-          <div class="text-h5">{{ $t('lyricSelection.selectFile') }}</div>
-          <q-btn v-close-popup flat round icon="close" />
+          <div class="text-h6">{{ $t('lyricSelection.selectFile') }}</div>
+          <q-btn v-close-popup flat round dense icon="close" :aria-label="$t('common.close')" />
         </q-card-section>
         <q-separator />
-        <q-card-section>
-          <div v-if="lyricOptionList.length === 0" class="text-grey-7 text-center q-pa-lg">{{ $t('lyricSelection.noCandidates') }}</div>
+        <q-card-section class="q-pa-none">
+          <div v-if="lyricOptionList.length === 0" class="lyric-empty text-center q-pa-xl">{{ $t('lyricSelection.noCandidates') }}</div>
           <q-list v-else separator class="scroll lyric-option-list">
             <q-item
               v-for="(option, index) in lyricOptionList"
@@ -161,8 +172,8 @@
               </q-item-section>
               <q-item-section side>
                 <div class="row items-center q-gutter-xs">
-                  <q-chip dense color="primary" text-color="white">{{ subtitleLanguageLabel(option.language) }}</q-chip>
-                  <q-chip dense outline color="grey-7">{{ $t('lyricSelection.match', { value: formatMatchLevel(option.matchLevel) }) }}</q-chip>
+                  <span class="lyric-option-badge lyric-option-badge--accent">{{ subtitleLanguageLabel(option.language) }}</span>
+                  <span class="lyric-option-badge">{{ $t('lyricSelection.match', { value: formatMatchLevel(option.matchLevel) }) }}</span>
                 </div>
               </q-item-section>
             </q-item>
@@ -172,9 +183,9 @@
     </q-dialog>
 
     <q-dialog v-model="openEditor">
-      <q-card class="lyric-editor-card">
+      <q-card class="lyric-editor-card app-form-dialog">
         <q-card-section class="text-h6">{{ $t('lyricSelection.editLineTitle') }}</q-card-section>
-        <q-card-section class="q-gutter-md">
+        <q-card-section class="q-pt-none q-gutter-md">
           <q-input v-model="editLyricText" outlined autogrow :label="$t('lyricSelection.text')" />
           <q-input
             v-model.number="editStartSeconds"
@@ -197,7 +208,7 @@
         </q-card-section>
         <q-card-actions align="right">
           <q-btn class="app-dialog-cancel" v-close-popup flat :label="$t('common.cancel')" />
-          <q-btn color="primary" :label="$t('lyricSelection.apply')" @click="confirmLyricChange" />
+          <q-btn unelevated color="primary" :label="$t('lyricSelection.apply')" @click="confirmLyricChange" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -498,11 +509,64 @@ export default {
 
 .lyric-list {
   max-height: 100%;
+  scrollbar-color: rgba(127, 127, 127, .45) transparent;
+  scrollbar-width: thin;
+}
+
+.lyric-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lyric-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lyric-list::-webkit-scrollbar-thumb {
+  background: rgba(127, 127, 127, .4);
+  border-radius: 999px;
+}
+
+.lyric-muted,
+.lyric-empty {
+  color: var(--kikoeru-muted);
+}
+
+.lyric-time-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--kikoeru-inset);
+  color: var(--kikoeru-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kikoeru-active-item .lyric-time-badge {
+  background: color-mix(in srgb, var(--q-primary) 20%, transparent);
+  color: var(--kikoeru-accent-text);
+  font-weight: 600;
+}
+
+.lyric-option-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--kikoeru-border);
+  background: var(--kikoeru-inset);
+  color: var(--kikoeru-muted);
+  font-size: 12px;
+}
+
+.lyric-option-badge--accent {
+  border-color: transparent;
+  background: var(--kikoeru-active-bg);
+  color: var(--kikoeru-accent-text);
+  font-weight: 500;
 }
 
 .lyric-line-deleted {
-  color: #9e9e9e;
+  color: var(--kikoeru-muted);
   text-decoration: line-through;
+  opacity: 0.7;
 }
 
 .lyric-option-card {

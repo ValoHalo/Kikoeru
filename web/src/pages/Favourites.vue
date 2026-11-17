@@ -55,7 +55,7 @@
           <q-btn v-if="$q.screen.lt.md" flat round dense icon="arrow_back" :aria-label="$t('favourites.backToCollections')" @click="closeCollection" />
           <div class="col text-subtitle1 text-weight-medium ellipsis q-ml-sm">{{ selectedCollection.name }}</div>
           <q-btn flat round dense icon="more_vert" :aria-label="$t('favourites.moreActions')">
-            <q-menu><q-list dense style="min-width: 140px"><q-item clickable v-close-popup @click="openRenameDialog"><q-item-section avatar><q-icon name="edit" /></q-item-section><q-item-section>{{ $t('common.rename') }}</q-item-section></q-item><q-item clickable v-close-popup class="text-negative" @click="confirmDeleteCollection"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>{{ $t('common.delete') }}</q-item-section></q-item></q-list></q-menu>
+            <q-menu><q-list dense style="min-width: 150px"><q-item clickable v-close-popup @click="openRenameDialog"><q-item-section avatar><q-icon name="edit" /></q-item-section><q-item-section>{{ $t('common.rename') }}</q-item-section></q-item><q-item clickable v-close-popup class="kikoeru-danger-text" @click="confirmDeleteCollection"><q-item-section avatar><q-icon name="delete" /></q-item-section><q-item-section>{{ $t('common.delete') }}</q-item-section></q-item></q-list></q-menu>
           </q-btn>
         </div>
 

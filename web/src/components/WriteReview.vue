@@ -19,13 +19,10 @@
             <q-btn-toggle
               v-model="progress"
               no-caps
-              :class="$q.screen.lt.sm ? 'my-custom-toggle q-mx-none q-mt-sm' : 'my-custom-toggle q-mx-md'"
-              rounded
+              class="my-custom-toggle"
               unelevated
               :padding="$q.screen.width < 400 ? 'sm': ''"
               toggle-color="primary"
-              color="white"
-              text-color="primary"
               :options="[
                 {label: $t('writeReview.marked'), value: 'marked'},
                 {label: $t('writeReview.listening'), value: 'listening'},
@@ -40,7 +37,7 @@
             <div style="min-width: 0">
               <q-input
                 v-model="reviewText"
-                filled
+                outlined
                 type="textarea"
               />
             </div>
@@ -185,5 +182,7 @@ export default {
 
 <style lang="sass" scoped>
 .my-custom-toggle
-  border: 1px solid var(--q-color-primary)
+  border: 1px solid var(--kikoeru-border)
+  background: var(--kikoeru-inset)
+  padding: 2px
 </style>

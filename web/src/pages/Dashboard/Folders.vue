@@ -14,14 +14,14 @@
       </div>
       <q-form class="library-folder-form" @submit="onSubmitRootFolder">
         <q-input
-          outlined dense hide-bottom-space
+          outlined dense stack-label hide-bottom-space
           v-model="rootFolder.name"
           required lazy-rules
           :rules="[val => !config.rootFolders.find(rootFolder => rootFolder.name === val) || $t('folders.duplicateName')]"
           :label="$t('folders.alias')"
         />
         <q-input
-          outlined dense hide-bottom-space
+          outlined dense stack-label hide-bottom-space
           v-model="rootFolder.path"
           required lazy-rules
           :rules="[val => !config.rootFolders.find(rootFolder => rootFolder.path === val) || $t('folders.duplicatePath')]"

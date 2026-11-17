@@ -52,7 +52,7 @@
         </q-card-section>
         <q-card-actions align="right">
           <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup />
-          <q-btn flat color="primary" :label="$t('libraryActions.add')" :disable="!selectedCollectionId" :loading="saving" @click="addToCollection" />
+          <q-btn unelevated color="primary" :label="$t('libraryActions.add')" :disable="!selectedCollectionId" :loading="saving" @click="addToCollection" />
         </q-card-actions>
       </q-card>
     </q-dialog>

@@ -11,11 +11,11 @@
         </div>
       </div>
     </template>
-    <div v-show="!isLyricsPage">
-      <div class="q-px-md q-pt-sm">
+    <div v-show="!isLyricsPage" class="work-page">
+      <div class="work-page-back">
         <q-btn flat dense no-caps icon="arrow_back" :label="$t('common.back')" color="primary" @click="backToWorks" />
       </div>
-      <div v-if="workUnavailable" class="q-pa-xl text-center text-grey">{{ $t('work.unavailable') }}</div>
+      <div v-if="workUnavailable" class="work-page-unavailable">{{ $t('work.unavailable') }}</div>
       <template v-if="metadataLoaded">
         <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy" @history-cleared="clearPlaybackHistory">
           <template #folder-action>
@@ -33,8 +33,8 @@
           </template>
         </WorkDetails>
         <RelatedWorks :metadata="metadata" />
-        <div class="q-px-md q-pt-sm">
-          <q-btn flat no-caps icon="bookmarks" :label="$t('bookmark.currentWork')" @click="showBookmarks = true" />
+        <div class="work-bookmarks-bar">
+          <q-btn outline no-caps size="sm" color="primary" icon="bookmarks" :label="$t('bookmark.currentWork')" class="work-bookmarks-btn" @click="showBookmarks = true" />
         </div>
         <BookmarksDialog v-if="showBookmarks" :work-id="Number(workid)" @close="showBookmarks = false" />
         <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
@@ -319,3 +319,37 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.work-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 12px 16px 32px;
+}
+
+.work-page-back {
+  margin-bottom: 4px;
+}
+
+.work-page-unavailable {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--kikoeru-muted);
+}
+
+.work-bookmarks-bar {
+  display: flex;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.work-bookmarks-btn {
+  border-radius: var(--kikoeru-radius-sm);
+}
+
+@media (max-width: 699px) {
+  .work-page {
+    padding: 8px 12px 24px;
+  }
+}
+</style>

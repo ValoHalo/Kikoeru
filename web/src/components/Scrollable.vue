@@ -1,5 +1,5 @@
 <template>
-  <div ref="container" class="container">
+  <div ref="container" class="scrollable-container" :class="{ 'is-scrolling': needScroll }">
     <div class="scrolling" :style="scrollStyle">
       <div ref="slot" class="one-line-expand">
         <slot name="default"></slot>
@@ -65,6 +65,9 @@ export default {
     this.resizeObserver.observe(this.slot);
     this.resizeObserver.observe(this.container);
   },
+  beforeUnmount() {
+    this.resizeObserver?.disconnect();
+  },
   methods: {
     onSlotResize() {
       const containerWidth = Math.round(this.container.getBoundingClientRect().width);
@@ -95,7 +98,7 @@ export default {
   }
 }
 </script>
-<style >
+<style scoped>
 @keyframes scrollAnime {
   0% {
     transform: translateX(0);
@@ -107,11 +110,16 @@ export default {
   100% {
     transform: translateX(var(--max-scroll));
   }
-  
 }
 
-.container {
+.scrollable-container {
   overflow: hidden;
+  min-width: 0;
+}
+
+.scrollable-container.is-scrolling {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
 }
 
 .one-line-expand {

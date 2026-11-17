@@ -29,11 +29,13 @@
           <span>{{ $privateText(item.title) }}</span>
         </span>
         <q-menu touch-position context-menu auto-close>
-          <q-list separator>
+          <q-list dense style="min-width: 150px">
             <q-item v-if="canEdit" clickable @click="$emit('edit', item)">
+              <q-item-section avatar><q-icon name="edit" /></q-item-section>
               <q-item-section>{{ $t('workTree.editCover') }}</q-item-section>
             </q-item>
             <q-item clickable @click="$emit('download', item)">
+              <q-item-section avatar><q-icon name="download" /></q-item-section>
               <q-item-section>{{ $t('workTree.download') }}</q-item-section>
             </q-item>
           </q-list>

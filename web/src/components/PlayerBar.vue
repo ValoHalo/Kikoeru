@@ -39,35 +39,32 @@
         width: showVolumeIndicator ? `${volumeIndicatorWidth}px` : 0,
       }"></div>
       <q-item 
-        style="padding: 0px 5px;"
-        class="col non-selectable"
+        class="col non-selectable playBar-info"
         @mousedown.prevent.stop="mouseDown"
         @touchstart.prevent.stop="touchStart" 
         @touchend.prevent.stop="touchEnd" 
         @touchmove.prevent.stop="touchMove" 
         @touchcancel.prevent.stop="touchCancel" 
       >
-        <q-item-section avatar>
-          <q-img :key="samCoverUrl" transition="fade" :src="samCoverUrl" style="height: 50px; width: 50px" class="rounded-borders" />
+        <q-item-section avatar class="playBar-avatar">
+          <q-img :key="samCoverUrl" transition="fade" :src="samCoverUrl" ratio="1" class="playBar-cover" />
         </q-item-section>
         
-        <q-item-section>
+        <q-item-section class="playBar-text">
           <Scrollable class="full-width" :stop="!hide">
             <span class="audio-name relative-position">{{ $privateText(currentPlayingFile.title) }}</span>
           </Scrollable>
           <Scrollable class="full-width" :stop="!hide">
             <span class="work-name relative-position">{{ $privateText(currentPlayingFile.workTitle) }}</span>
           </Scrollable>
-          <!--
-          <q-item-label lines="2">{{ $privateText(currentPlayingFile.title) }}</q-item-label>
-          <q-item-label caption lines="1">{{ $privateText(currentPlayingFile.workTitle) }}</q-item-label>
-          -->
         </q-item-section>
       </q-item>
 
-      <q-btn flat size="lg" :icon="swapSeekButton ? rewindIcon : 'skip_previous'" @click.prevent.stop="swapSeekButton ? rewind(true) : previousTrack()" style="height: 60px; width: 60px" class="col-auto gt-xs"/>
-      <q-btn flat size="lg" :icon="playingIcon" @click.prevent.stop="togglePlaying()" style="height: 60px; width: 60px" class="col-auto" />
-      <q-btn flat size="lg" :icon="swapSeekButton ? forwardIcon : 'skip_next'" @click.prevent.stop="swapSeekButton ? forward(true) : nextTrack()" style="height: 60px; width: 60px" class="col-auto gt-xs"/>
+      <div class="row items-center no-wrap playBar-controls">
+        <q-btn flat round :icon="swapSeekButton ? rewindIcon : 'skip_previous'" @click.prevent.stop="swapSeekButton ? rewind(true) : previousTrack()" class="gt-xs playBar-btn"/>
+        <q-btn flat round :icon="playingIcon" @click.prevent.stop="togglePlaying()" class="playBar-btn playBar-btn--main" />
+        <q-btn flat round :icon="swapSeekButton ? forwardIcon : 'skip_next'" @click.prevent.stop="swapSeekButton ? forward(true) : nextTrack()" class="gt-xs playBar-btn"/>
+      </div>
     </div>
   </q-card >
 </template>
@@ -373,28 +370,28 @@ export default {
 .simple-progress {
   position: absolute;
   left: 0;
-  top: 0;
-  height: 100%;
-  /* width: 100%; */
-  opacity: 1;
-  transition: 0.5s;
+  bottom: 0;
+  height: 3px;
+  opacity: 0.9;
+  transition: width 0.25s linear;
+  pointer-events: none;
 }
 
 .volumeIndicator {
   position: absolute;
-  background: rgba($warning, $alpha: 0.8);
+  background: rgba($warning, $alpha: 0.85);
   height: 100%;
   right: 0;
   bottom: 0;
   border-radius: 3px 3px 0 0;
-  transition: 0.5s;
+  transition: 0.3s;
 }
 
 .simple-progress-dark {
-  background-color: rgba(var(--kikoeru-accent-rgb), 0.5);
+  background-color: var(--q-primary);
 }
 .simple-progress-light {
-  background-color: rgba(var(--kikoeru-accent-rgb), 0.3);
+  background-color: var(--q-primary);
 }
 
 .new-progress {
@@ -402,9 +399,9 @@ export default {
   left: 0;
   top: 0;
   height: 100%;
-  /* width: 100%; */
-  background-color: rgba($warning, $alpha: 0.5);
-  transition: opacity 0.5s;
+  background-color: rgba($warning, $alpha: 0.28);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
 }
 
 .hideNewProgress {
@@ -412,19 +409,68 @@ export default {
 }
 
 .playBar {
-  bottom: 20px;
+  bottom: 16px;
   left: 50%;
   margin-left: 0;
-  max-width: 500px;
+  max-width: 520px;
   transform: translateX(-50%) translateY(0);
 
-  border-radius: 8px;
-  /* background: white; */
-  box-shadow: black 0px 0px 8px;
+  background: var(--kikoeru-surface-elevated);
+  color: var(--kikoeru-text);
+  border: 1px solid var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-md);
+  box-shadow: var(--kikoeru-shadow-float);
   overflow: hidden;
   position: fixed;
-  transition: 0.5s;
-  color: inherit;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), padding 0.25s ease, width 0.25s ease;
+}
+
+.playBar-info {
+  min-width: 0;
+  min-height: 60px;
+  padding: 5px 8px 5px 10px;
+  gap: 10px;
+}
+
+.playBar-avatar {
+  min-width: 48px;
+  padding-right: 0;
+}
+
+.playBar-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--kikoeru-radius-sm);
+  background: var(--kikoeru-inset);
+}
+
+.playBar-text {
+  min-width: 0;
+  gap: 2px;
+}
+
+.playBar-controls {
+  padding-right: 6px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.playBar-btn {
+  width: 44px;
+  height: 44px;
+  color: var(--kikoeru-muted);
+}
+
+.playBar-btn--main {
+  color: var(--kikoeru-text);
+}
+
+.playBar-btn :deep(.q-icon) {
+  font-size: 24px;
+}
+
+.playBar-btn--main :deep(.q-icon) {
+  font-size: 28px;
 }
 
 // 左右拖拽playBar的时候，将控件顶部突出一些部分展示更多进度条，方便观察拖拽的进度
@@ -432,7 +478,7 @@ export default {
 
   @media (min-width: $breakpoint-sm-min) {
     padding: 4rem 10px 0 10px;
-    max-width: 520px !important;
+    max-width: 540px !important;
   }
 
   // 宽度 < $breakpoint-xs-max (599px)
@@ -453,23 +499,25 @@ export default {
   }
   // 宽度 < $breakpoint-xs-max (599px)
   @media (max-width: $breakpoint-xs-max) {
-    width: 80vw;
+    width: 88vw;
   }
 }
 
 .showStyle {
   transform: translateX(-50%) translateY(0);
-  width: 80vw;
+  width: min(520px, calc(100vw - 32px));
 }
 
 
 .audio-name {
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .work-name {
-  opacity: 0.7;
+  font-size: 12px;
+  color: var(--kikoeru-muted);
   white-space: nowrap;
 }
 

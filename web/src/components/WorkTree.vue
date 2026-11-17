@@ -1,5 +1,5 @@
 <template>
-  <div class="q-ma-md " style="">
+  <div class="work-tree-section">
     <div class="work-tree-toolbar">
       <q-breadcrumbs gutter="xs" class="work-tree-breadcrumbs">
         <q-breadcrumbs-el>
@@ -71,7 +71,7 @@
       </q-card>
     </q-dialog>
 
-    <q-card v-if="folderEntries.length">
+    <q-card v-if="folderEntries.length" flat bordered class="work-tree-card">
       <q-list separator>
         <q-item
           clickable
@@ -79,21 +79,21 @@
           v-for="item in folderEntries"
           :key="item.hash"
           :active="item.type === 'audio' && currentPlayingFile.hash === item.hash"
-          active-class="text-white bg-teal"
+          active-class="work-tree-item--active"
           @click="onClickItem(item)"
-          class="non-selectable"
+          class="non-selectable work-tree-item"
         >
           <q-item-section avatar style="position: relative;">
-            <q-icon size="34px" v-if="item.type === 'folder'" color="amber" name="folder" />
-            <q-icon size="34px" v-else-if="isSubtitle(item)" color="info" name="subtitles" />
-            <q-icon size="34px" v-else-if="item.type === 'text'" color="info" name="description" />
-            <q-icon size="34px" v-else-if="item.type === 'other'" color="info" name="description" />
-            <q-btn v-else round dense color="primary" :icon="playIcon(item.hash)" @click="onClickPlayButton(item.hash)" />
+            <q-icon size="32px" v-if="item.type === 'folder'" color="amber" name="folder" />
+            <q-icon size="32px" v-else-if="isSubtitle(item)" color="info" name="subtitles" />
+            <q-icon size="32px" v-else-if="item.type === 'text'" color="info" name="description" />
+            <q-icon size="32px" v-else-if="item.type === 'other'" color="info" name="description" />
+            <q-btn v-else round dense unelevated color="primary" :icon="playIcon(item.hash)" @click="onClickPlayButton(item.hash)" />
 
           </q-item-section>
 
           <q-item-section class="work-tree-filename">
-            <q-item-label>{{ $privateText(item.title) }}</q-item-label>
+            <q-item-label :class="{ 'text-weight-medium': item.type === 'audio' && currentPlayingFile.hash === item.hash }">{{ $privateText(item.title) }}</q-item-label>
             <q-item-label v-if="item.children" caption lines="1">{{ $t('workTree.itemCount', { count: visibleFiles(item.children).length }) }}</q-item-label>
 
             <q-item-label
@@ -102,11 +102,10 @@
               class="work-tree-audio-meta"
             >
               <span v-if="Number.isFinite(item.duration) && item.duration >= 0" class="work-tree-duration">
-                <q-icon size="0.8rem" name="schedule" class="q-mr-xs" />
+                <q-icon size="0.85rem" name="schedule" class="q-mr-xs" />
                 {{ formatSeconds(item.duration) }}
               </span>
-              <span v-if="isLastPlayed(item)" class="work-tree-last-played"
-                :class="currentPlayingFile.hash === item.hash ? 'text-white' : 'text-primary'">
+              <span v-if="isLastPlayed(item)" class="work-tree-last-played">
                 {{ $t('workTree.lastPlayed', { time: lastPlayed.time }) }}
               </span>
             </q-item-label>
@@ -116,13 +115,13 @@
             <div class="row no-wrap items-center q-gutter-x-xs">
               <q-btn
                 flat round dense icon="playlist_play"
-                :color="currentPlayingFile.hash === item.hash ? 'white' : 'primary'"
+                class="work-tree-track-btn"
                 :aria-label="$t('workTree.playNext')"
                 @click.stop="playNext(item)"
               ><AppTooltip>{{ $t('workTree.playNext') }}</AppTooltip></q-btn>
               <q-btn
                 flat round dense icon="playlist_add"
-                :color="currentPlayingFile.hash === item.hash ? 'white' : 'primary'"
+                class="work-tree-track-btn"
                 :aria-label="$t('workTree.addToQueue')"
                 @click.stop="addToQueue(item)"
               ><AppTooltip>{{ $t('workTree.addToQueue') }}</AppTooltip></q-btn>
@@ -138,20 +137,24 @@
             transition-show="jump-down"
             transition-hide="jump-up"
           >
-            <q-list separator>
+            <q-list dense style="min-width: 170px">
               <q-item clickable @click="addToQueue(item)" v-if="item.type === 'audio'">
+                <q-item-section avatar><q-icon name="playlist_add" /></q-item-section>
                 <q-item-section>{{ $t('workTree.addToQueue') }}</q-item-section>
               </q-item>
 
               <q-item clickable @click="playNext(item)" v-if="item.type === 'audio'">
+                <q-item-section avatar><q-icon name="playlist_play" /></q-item-section>
                 <q-item-section>{{ $t('workTree.playNext') }}</q-item-section>
               </q-item>
 
               <q-item clickable @click="openPlaylistPicker(item.type === 'folder' ? collectAudioTracks(item.children) : [item])" v-if="item.type === 'folder' || item.type === 'audio'">
+                <q-item-section avatar><q-icon name="queue_music" /></q-item-section>
                 <q-item-section>{{ $t('workTree.addToPlaylist') }}</q-item-section>
               </q-item>
 
               <q-item clickable @click="download(item)" v-if="item.type !== 'folder'">
+                <q-item-section avatar><q-icon name="download" /></q-item-section>
                 <q-item-section>{{ $t('workTree.download') }}</q-item-section>
               </q-item>
 
@@ -532,13 +535,33 @@ export default {
 </script>
 
 <style scoped>
+.work-tree-section { margin: 12px 0 24px; }
+.work-tree-card {
+  background: var(--kikoeru-surface);
+  border-color: var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-md);
+  overflow: hidden;
+  box-shadow: none;
+}
+.work-tree-item {
+  min-height: 58px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  transition: background-color .15s ease;
+}
+.work-tree-item--active {
+  background: var(--kikoeru-active-bg);
+  color: var(--kikoeru-accent-text);
+  box-shadow: inset 3px 0 0 var(--q-primary);
+}
 .work-tree-filename { min-width: 0; overflow-wrap: anywhere; }
-.work-tree-audio-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.work-tree-audio-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; color: var(--kikoeru-muted); }
+.work-tree-item--active .work-tree-audio-meta { color: inherit; opacity: 0.85; }
 .work-tree-duration { display: inline-flex; align-items: center; white-space: nowrap; }
-.work-tree-last-played { white-space: normal; overflow-wrap: anywhere; }
+.work-tree-last-played { color: var(--kikoeru-accent-text); white-space: normal; overflow-wrap: anywhere; }
 .work-tree-track-actions { padding-left: 8px; }
-.work-tree-track-actions .q-btn { width: 32px; height: 32px; min-width: 32px; min-height: 32px; }
-.work-tree-actions { display: flex; gap: 4px; }
+.work-tree-track-actions .q-btn { width: 32px; height: 32px; min-width: 32px; min-height: 32px; color: var(--kikoeru-accent-text); }
+.work-tree-actions { display: flex; gap: 4px; color: var(--kikoeru-muted); }
 
 .work-tree-toolbar {
   display: grid;

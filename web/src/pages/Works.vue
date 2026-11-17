@@ -25,6 +25,7 @@
       <q-select
         dense
         outlined
+        stack-label
         transition-show="scale"
         transition-hide="scale"
         v-model="sortCategoryOption"
@@ -38,6 +39,7 @@
       <q-select
         dense
         outlined
+        stack-label
         transition-show="scale"
         transition-hide="scale"
         :model-value="$store.getters['AudioPlayer/sfwOnly'] ? 'nsfw_1' : nsfwOption"
@@ -53,11 +55,13 @@
       <q-select
         dense
         outlined
+        stack-label
         transition-show="scale"
         transition-hide="scale"
         v-model="lyricOption"
         :options="lyricOptions"
         :option-label="humanReadableLabel"
+        :display-value="lyricOption && lyricOption.length ? lyricOption.map(humanReadableLabel).join(', ') : $t('common.all')"
         :label="$t('works.subtitleFilter')"
         clearable
         multiple
@@ -67,6 +71,7 @@
       <q-select
         dense
         outlined
+        stack-label
         :model-value="collectionId"
         @update:model-value="setCollectionFilter"
         :options="collectionOptions"
@@ -123,14 +128,14 @@
           ref="virtualList"
           :items="works"
           scroll-target="body"
-          :virtual-scroll-item-size="90"
-          bordered separator class="shadow-2"
+          :virtual-scroll-item-size="96"
+          bordered separator class="works-list"
         >
           <template #default="{ item }">
             <WorkSelection :key="item.id" :label="$privateText(item.title)" list :enabled="selecting" :selected="selectedWorks.includes(item.id)" @select="toggleSelection(item.id, $event)"><WorkListItem :metadata="item" :showLabel="showLabel && $q.screen.width > 700" /></WorkSelection>
           </template>
         </q-virtual-scroll>
-        <q-list v-else-if="listMode && works.length" bordered separator class="shadow-2">
+        <q-list v-else-if="listMode && works.length" bordered separator class="works-list">
           <WorkSelection v-for="work in works" :key="work.id" :label="work.title" list :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><WorkListItem :metadata="work" :showLabel="showLabel && $q.screen.width > 700" /></WorkSelection>
         </q-list>
 
@@ -178,7 +183,7 @@
           </div>
         </section>
 
-        <div v-if="workListMode === WORK_LIST_MODES.WATERFALL && stopLoad && !isLoading && worksLoadState === 'success' && works.length" class="q-mt-lg q-mb-xl text-h6 text-bold text-center">{{ $t('works.noMoreWorks') }}</div>
+        <div v-if="workListMode === WORK_LIST_MODES.WATERFALL && stopLoad && !isLoading && worksLoadState === 'success' && works.length" class="works-end-note">{{ $t('works.noMoreWorks') }}</div>
 
         <template v-slot:loading>
           <div class="row justify-center q-my-md">
@@ -833,8 +838,21 @@ export default {
 .works-filter-fields :deep(.q-field__label) { color: var(--toolbar-muted); }
 .works-filter-fields :deep(.q-field__native) { letter-spacing: 0; }
 .works-search-chips { margin: 12px -4px -4px; }
-.works-toolbar--selecting { position: sticky; top: 56px; z-index: 20; background: #fff; }
-.body--dark .works-toolbar--selecting { background: #121212; }
+.works-toolbar--selecting { position: sticky; top: 56px; z-index: 20; background: var(--kikoeru-surface); }
+.works-list {
+  background: var(--kikoeru-surface);
+  border-color: var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-md);
+  overflow: hidden;
+  box-shadow: none;
+}
+.works-list :deep(.q-separator) { background: var(--kikoeru-border); }
+.works-end-note {
+  padding: 28px 0 36px;
+  color: var(--kikoeru-muted);
+  font-size: 13px;
+  text-align: center;
+}
 .works-toolbar .q-btn:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: 2px; }
 @media (max-width: 699px) {
   .works-results { margin: 0 12px; }
