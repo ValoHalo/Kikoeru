@@ -1,7 +1,7 @@
 <template>
   <q-card class="card hover-show" :class="{ 'card--thumbnail': thumbnailMode }">
     <router-link :to="`/work/${metadata.id}`" class="work-card-cover" :aria-label="$privateText(metadata.title)">
-      <CoverSFW :workid="metadata.id" :nsfw="false" :release="thumbnailMode ? metadata.release : ''" :lyric_status="metadata.lyric_status" :tags="fullDetails ? [] : metadata.tags" />
+      <CoverSFW :workid="metadata.id" :nsfw="false" :release="thumbnailMode ? metadata.release : ''" :lyric_status="metadata.lyric_status" :tags="thumbnailMode ? metadata.tags : []" />
     </router-link>
 
     <q-separator />
@@ -79,10 +79,14 @@
       </div>
     </div>
 
-    <div v-if="fullDetails && !thumbnailMode && visibleTags.length" class="work-card-tags">
-      <router-link v-for="tag in visibleTags" :key="tag.id" :to="`/works?tagId=${tag.id}`" class="work-card-tag">
+    <div v-if="!thumbnailMode && visibleTags.length" class="work-card-tags">
+      <router-link v-for="tag in displayedTags" :key="tag.id" :to="`/works?tagId=${tag.id}`" class="work-card-tag">
         {{ $privateText(tag.name) }}
       </router-link>
+      <span v-if="hiddenTagCount > 0" class="work-card-tag work-card-tag--more">
+        +{{ hiddenTagCount }}
+        <AppTooltip>{{ hiddenTagNames }}</AppTooltip>
+      </span>
     </div>
 
     <WorkSearchMatch v-if="metadata.searchMatch" :match="metadata.searchMatch" class="q-mx-md q-mb-sm" />
@@ -152,6 +156,15 @@ export default {
   computed: {
     visibleTags () {
       return (this.metadata.tags || []).filter(tag => tag && tag.id != null && tag.name)
+    },
+    displayedTags () {
+      return this.fullDetails ? this.visibleTags : this.visibleTags.slice(0, 3)
+    },
+    hiddenTagCount () {
+      return Math.max(0, this.visibleTags.length - this.displayedTags.length)
+    },
+    hiddenTagNames () {
+      return this.visibleTags.slice(this.displayedTags.length).map(tag => this.$privateText(tag.name)).join(' · ')
     },
     sortedRatings: function() {
       function compare(a, b) {
@@ -409,20 +422,25 @@ export default {
 .work-card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 16px 14px;
+  gap: 5px;
+  padding: 0 16px 12px;
 }
 
 .work-card-tag {
   max-width: 100%;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border: 1px solid var(--card-line);
   border-radius: 4px;
   background: var(--card-chip);
   color: var(--card-muted);
-  font-size: 12px;
-  line-height: 20px;
+  font-size: 11.5px;
+  line-height: 18px;
   overflow-wrap: anywhere;
+}
+
+.work-card-tag--more {
+  cursor: default;
+  font-variant-numeric: tabular-nums;
 }
 
 .work-card-tag:hover {

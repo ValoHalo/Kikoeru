@@ -4,9 +4,9 @@
   --fav-border: rgba(0, 0, 0, .1);
   --fav-muted: #666970;
   --fav-text: #25272b;
-  max-width: 1160px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 28px 24px 120px;
+  padding: 20px 24px 36px;
   color: var(--fav-text);
   letter-spacing: 0;
 
@@ -118,7 +118,7 @@
 
 @media (max-width: 699px) {
   .favourites-page {
-    padding: 20px 12px 120px;
+    padding: 16px 12px 28px;
     .favourites-heading { margin-bottom: 20px; gap: 10px; }
     h1 { font-size: 24px; }
     .favourites-tabs .q-tabs__content { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }

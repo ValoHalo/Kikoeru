@@ -32,36 +32,43 @@
 
       <div class="work-facts">
         <div class="work-community-rating">
-          <span class="work-field-label">{{ $t('workDetails.workRating') }}</span>
+          <div class="work-rating-header">
+            <span class="work-field-label">{{ $t('workDetails.workRating') }}</span>
+            <span v-if="rating > 0" class="work-my-rating-tag">{{ $t('workDetails.myRating') }} {{ rating }}</span>
+          </div>
           <div class="work-rating-value">
-            <span class="work-score">{{metadata.rate_average_2dp}}</span>
             <q-rating
-              :model-value="Number(metadata.rate_average_2dp) || 0"
-              :aria-label="$t('workDetails.workRating')"
-              readonly
-              size="18px"
-              class="work-community-stars"
+              :model-value="displayRating"
+              @update:model-value="onRatingChange"
+              :no-reset="rating === 0"
+              :aria-label="$t('workDetails.myRating')"
+              name="rating"
+              size="22px"
+              class="work-rating-stars"
+              :class="rating > 0 ? 'work-rating-stars--user' : 'work-rating-stars--community'"
               icon="star_border"
               icon-selected="star"
               icon-half="star_half"
             />
-
-            <!-- 评价分布明细 -->
-            <AppTooltip v-if="metadata.rate_count_detail">
-              <div class="kikoeru-rating-tooltip">
-                <div class="kikoeru-rating-tooltip__title">{{ $t('workDetails.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
-                <div v-for="(rate, index) in sortedRatings" :key="index" class="kikoeru-rating-tooltip__row">
-                  <span>{{ $t('workDetails.stars', { count: rate.review_point }) }}</span>
-                  <q-linear-progress
-                    :model-value="rate.ratio/100"
-                    color="amber"
-                    track-color="grey-8"
-                    class="kikoeru-rating-tooltip__bar"
-                  />
-                  <span class="kikoeru-rating-tooltip__count">({{rate.count}})</span>
+            <span class="work-score" tabindex="0">
+              {{ metadata.rate_average_2dp }}
+              <!-- 评价分布明细 -->
+              <AppTooltip v-if="metadata.rate_count_detail">
+                <div class="kikoeru-rating-tooltip">
+                  <div class="kikoeru-rating-tooltip__title">{{ $t('workDetails.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
+                  <div v-for="(rate, index) in sortedRatings" :key="index" class="kikoeru-rating-tooltip__row">
+                    <span>{{ $t('workDetails.stars', { count: rate.review_point }) }}</span>
+                    <q-linear-progress
+                      :model-value="rate.ratio/100"
+                      color="amber"
+                      track-color="grey-8"
+                      class="kikoeru-rating-tooltip__bar"
+                    />
+                    <span class="kikoeru-rating-tooltip__count">({{rate.count}})</span>
+                  </div>
                 </div>
-              </div>
-            </AppTooltip>
+              </AppTooltip>
+            </span>
           </div>
 
           <span class="work-muted work-fact-note">{{ $t('workDetails.reviewCounts', { rate_count: metadata.rate_count, review_count: metadata.review_count }) }}</span>
@@ -125,32 +132,24 @@
           />
         </div>
 
-        <div class="work-personal-tools">
-          <div class="work-personal-rating">
-          <span id="work-rating-label" class="work-field-label">{{ $t('workDetails.myRating') }}</span>
-          <q-rating
-            v-model="rating"
-            @update:model-value="setRating"
-            aria-labelledby="work-rating-label"
-            name="rating"
-            size="22px"
-            icon="star_border"
-            icon-selected="star"
-            icon-half="star_half"
-          />
-        </div>
-
-          <div class="work-tools-group">
-            <span class="work-field-label">{{ $t('workDetails.actions') }}</span>
-            <div class="work-tools">
+        <div class="work-tools-group">
+          <span class="work-field-label">{{ $t('workDetails.actions') }}</span>
+          <div class="work-tools">
           <q-btn
             v-if="metadata.state && !metadata.files_missing && playWorkId !== metadata.id"
             flat
             round
+            color="primary"
             icon="history"
             :aria-label="$t('workDetails.resume')"
             @click="resumeThisHistroy"
-          ><AppTooltip>{{ $t('workDetails.resume') }}</AppTooltip></q-btn>
+          >
+            <AppTooltip>
+              <span>{{ $t('workDetails.resume') }}</span>
+              <span v-if="lastPlayedInfo && lastPlayedInfo.title">：{{ $privateText(lastPlayedInfo.title) }}</span>
+              <span v-if="lastPlayedInfo && lastPlayedInfo.seconds !== null"> ({{ formatSeconds(lastPlayedInfo.seconds) }})</span>
+            </AppTooltip>
+          </q-btn>
           <q-btn flat round icon="rate_review" :aria-label="$t('workDetails.writeReview')" @click="showReviewDialog = true">
             <AppTooltip>{{ $t('workDetails.writeReview') }}</AppTooltip>
           </q-btn>
@@ -185,7 +184,6 @@
               </q-list>
             </q-menu>
           </q-btn>
-            </div>
           </div>
         </div>
       </div>
@@ -211,7 +209,7 @@ import EditMeta from './EditMeta.vue'
 import LibraryActions from './LibraryActions.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { mapState } from 'vuex'
-import { idNumberToCode } from 'src/utils'
+import { formatSeconds, idNumberToCode } from 'src/utils'
 import { coverTransition } from '../coverTransition'
 
 export default {
@@ -264,6 +262,21 @@ export default {
       return idNumberToCode(this.metadata.id)
     },
 
+    displayRating () {
+      return this.rating > 0 ? this.rating : (Number(this.metadata.rate_average_2dp) || 0)
+    },
+
+    lastPlayedInfo () {
+      const state = this.metadata.state
+      const index = Number(state?.index)
+      const track = Array.isArray(state?.queue) && Number.isInteger(index) ? state.queue[index] : null
+      if (!track) return null
+      return {
+        title: track.title || '',
+        seconds: Number.isFinite(Number(state?.seconds)) ? Number(state.seconds) : null
+      }
+    },
+
     isAdministrator () {
       return this.$store.state.User.canManage === true
     },
@@ -276,29 +289,33 @@ export default {
 
   watch: {
     // 需要用watch因为父component pages/work.vue是先用空值初始化的
-    metadata (newMetaData) {
-      this.rating = newMetaData.userRating || 0;
-      this.progress = newMetaData.progress;
+    metadata: {
+      immediate: true,
+      handler (newMetaData) {
+        this.rating = newMetaData.userRating || 0;
+        this.progress = newMetaData.progress;
 
-      // 极个别作品没有标签
-      if (newMetaData.tags && newMetaData.tags.length > 0 && newMetaData.tags[0].name === null) {
-        this.showTags = false;
-      }
+        // 极个别作品没有标签
+        if (newMetaData.tags && newMetaData.tags.length > 0 && newMetaData.tags[0].name === null) {
+          this.showTags = false;
+        }
+      },
     },
   },
 
   methods: {
     setProgress (newProgress) {
+      const previousProgress = this.progress;
       this.progress = newProgress;
       const submitPayload = {
         'user_name': this.$store.state.User.name, // 用户名不会被后端使用
         'work_id': this.metadata.id,
         'progress': newProgress
       };
-      this.submitProgress(submitPayload);
+      this.submitProgress(submitPayload, previousProgress);
     },
 
-    submitProgress (payload) {
+    submitProgress (payload, previousProgress = this.progress) {
       const params = {
         starOnly: false,
         progressOnly: true
@@ -309,6 +326,7 @@ export default {
           this.$emit('reset');
         })
         .catch((error) => {
+          this.progress = previousProgress;
           if (error.response) {
             // 请求已发出，但服务器响应的状态码不在 2xx 范围内
             this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
@@ -318,22 +336,29 @@ export default {
         })
     },
 
-    setRating (newRating) {
+    onRatingChange (newRating) {
+      const previousRating = this.rating;
+      this.rating = newRating;
+      this.setRating(newRating, previousRating);
+    },
+
+    setRating (newRating, previousRating = this.rating) {
       const submitPayload = {
         'user_name': this.$store.state.User.name, // 用户名不会被后端使用
         'work_id': this.metadata.id,
         'rating': newRating
       };
-      this.submitRating(submitPayload);
+      this.submitRating(submitPayload, previousRating);
     },
 
-    submitRating (payload) {
+    submitRating (payload, previousRating = this.rating) {
       this.$axios.put('/api/review', payload)
         .then((response) => {
           this.showSuccNotif(response.data.message);
           this.$emit('reset');
         })
         .catch((error) => {
+          this.rating = previousRating;
           if (error.response) {
             // 请求已发出，但服务器响应的状态码不在 2xx 范围内
             this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
@@ -355,6 +380,8 @@ export default {
     resumeThisHistroy() {
       this.$emit("resumeHistroy")
     },
+
+    formatSeconds,
 
     clearThisHistroy() {
       const workId = this.metadata.id
@@ -397,14 +424,46 @@ export default {
   --work-divider: var(--kikoeru-border);
   --work-chip: var(--kikoeru-inset);
   display: grid;
-  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
   align-items: start;
-  gap: 20px 28px;
-  padding: 8px 0 0;
+  gap: 18px 24px;
+  padding: 20px;
+  background: var(--kikoeru-surface);
+  border: 1px solid var(--work-divider);
+  border-radius: var(--kikoeru-radius-md);
 }
 
-.work-community-stars {
+.work-rating-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.work-my-rating-tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(var(--kikoeru-accent-rgb), 0.14);
+  color: var(--kikoeru-accent-text);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.work-rating-stars :deep(.q-rating__icon) {
+  color: var(--work-muted);
+  opacity: 0.72;
+  text-shadow: none;
+}
+
+.work-rating-stars--community :deep(.q-rating__icon--active) {
   color: var(--kikoeru-star);
+  opacity: 1;
+}
+
+.work-rating-stars--user :deep(.q-rating__icon--active),
+.work-rating-stars :deep(.q-rating__icon--hovered) {
+  color: var(--kikoeru-accent-text);
+  opacity: 1;
 }
 
 .work-cover {
@@ -416,10 +475,10 @@ export default {
 }
 
 .work-title {
-  margin: 10px 0 0;
-  font-size: 24px;
+  margin: 6px 0 0;
+  font-size: 19px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.42;
   letter-spacing: 0;
   overflow-wrap: anywhere;
   text-wrap: pretty;
@@ -464,8 +523,9 @@ export default {
 .work-facts {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px 24px;
-  margin: 18px 0;
+  align-items: center;
+  gap: 14px 24px;
+  margin: 16px 0;
 }
 
 .work-community-rating,
@@ -494,9 +554,11 @@ export default {
 }
 
 .work-score {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 500;
-  line-height: 30px;
+  line-height: 28px;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
 }
 
 .work-price {
@@ -573,43 +635,29 @@ export default {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px 28px;
+  justify-content: space-between;
+  gap: 12px 20px;
   border-top: 1px solid var(--work-divider);
-  border-bottom: 1px solid var(--work-divider);
-  padding: 14px 0;
-}
-
-.work-progress,
-.work-personal-rating {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  padding: 16px 0 0;
 }
 
 .work-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
   max-width: 100%;
   flex: 0 0 auto;
 }
 
-.work-progress > .work-field-label,
-.work-personal-rating > .work-field-label {
+.work-progress > .work-field-label {
   flex-shrink: 0;
-}
-
-.work-personal-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px 24px;
-  min-width: 0;
-  flex: 1 1 350px;
 }
 
 .work-tools-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-left: auto;
 }
 
@@ -618,7 +666,7 @@ export default {
 }
 
 .work-progress-toggle {
-  flex: 1;
+  flex: 0 0 auto;
   padding: 3px;
   background: var(--work-chip);
   border-radius: 6px;
@@ -626,33 +674,17 @@ export default {
 }
 
 .work-progress-toggle :deep(.q-btn) {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 36px;
+  flex: 0 0 auto;
+  min-width: 52px;
+  min-height: 34px;
   padding: 4px 10px;
   border-radius: 4px !important;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .work-progress-toggle :deep(.q-btn[aria-pressed='true']) {
   box-shadow: inset 0 0 0 1px var(--kikoeru-accent-text);
   font-weight: 600;
-}
-
-.work-personal-rating > .q-rating {
-  height: 40px;
-  color: var(--kikoeru-accent-text);
-}
-
-.work-personal-rating :deep(.q-rating__icon) {
-  color: var(--work-muted);
-  opacity: 1;
-  text-shadow: none;
-}
-
-.work-personal-rating :deep(.q-rating__icon--active),
-.work-personal-rating :deep(.q-rating__icon--hovered) {
-  color: var(--kikoeru-accent-text);
 }
 
 .work-tools {
@@ -686,40 +718,33 @@ export default {
   min-width: 200px;
 }
 
-@media (min-width: 700px) and (max-width: 899px) {
+@media (min-width: 700px) and (max-width: 959px) {
   .work-details {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-    gap: 24px;
-  }
-
-  .work-progress {
-    flex-basis: 100%;
-  }
-
-  .work-personal-tools {
-    justify-content: space-between;
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    gap: 18px 20px;
   }
 }
 
 @media (max-width: 699px) {
   .work-details {
     grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    padding: 8px 8px 0;
+    gap: 16px;
+    padding: 14px;
   }
 
   .work-cover {
+    max-width: 360px;
     justify-self: center;
   }
 
   .work-title {
-    font-size: 20px;
-    margin-top: 8px;
+    font-size: 18px;
+    margin-top: 6px;
   }
 
   .work-facts {
-    margin: 20px 0;
-    gap: 16px;
+    margin: 14px 0;
+    gap: 14px 16px;
   }
 
   .work-commerce {
@@ -727,21 +752,23 @@ export default {
   }
 
   .work-progress {
-    flex-basis: 100%;
-  }
-
-  .work-progress,
-  .work-personal-rating {
+    width: 100%;
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
   }
 
-  .work-personal-tools {
-    align-items: stretch;
+  .work-progress-toggle {
+    flex: 1;
+  }
+
+  .work-progress-toggle :deep(.q-btn) {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .work-tools-group {
+    width: 100%;
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
@@ -753,8 +780,8 @@ export default {
   }
 
   .work-actions {
-    row-gap: 16px;
-    padding: 16px 0;
+    row-gap: 14px;
+    padding: 14px 0 0;
   }
 
   .work-tools,

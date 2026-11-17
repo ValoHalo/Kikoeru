@@ -71,6 +71,16 @@ import { appDialog } from '../utils/appDialog'
 import CoverSFW from './CoverSFW.vue';
 import { clearPlaybackHistory } from '../utils/playbackHistory.mjs';
 
+const RECENT_WORKS_EXPANDED_KEY = 'recent-works-expanded';
+
+function readInitialExpanded () {
+  try {
+    return localStorage.getItem(RECENT_WORKS_EXPANDED_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
 export default {
   name: 'RecentWorks',
 
@@ -84,7 +94,7 @@ export default {
       requestId: 0,
       loadError: false,
       clearing: false,
-      expanded: true,
+      expanded: readInitialExpanded(),
       currentPage: 0,
       pagination: { currentPage:0, pageSize:12, totalCount:0 },
       works: [],
@@ -134,6 +144,11 @@ export default {
 
     async toggleExpanded() {
       this.expanded = !this.expanded;
+      try {
+        localStorage.setItem(RECENT_WORKS_EXPANDED_KEY, String(this.expanded));
+      } catch {
+        // Ignore storage quota / privacy mode errors.
+      }
       if (this.expanded) {
         await this.$nextTick();
         this.$refs.scroll?.refresh();
@@ -278,7 +293,7 @@ export default {
   overflow: hidden;
 }
 
-.recent-works-collapse-inner > :first-child { margin-top: 16px; }
+.recent-works-collapse-inner > :first-child { margin-top: 12px; }
 
 .recent-works-chevron {
   transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -311,36 +326,36 @@ export default {
   --recent-border: var(--kikoeru-border);
   --recent-muted: var(--kikoeru-muted);
   --recent-inset: var(--kikoeru-inset);
-  margin: 24px 16px 0;
-  padding: 16px;
+  margin: 16px 16px 0;
+  padding: 12px 16px;
   border: 1px solid var(--recent-border);
   border-radius: var(--kikoeru-radius-md);
   background: var(--recent-surface);
 }
-.recent-works-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-.recent-works-heading { display: flex; align-items: center; gap: 10px; }
+.recent-works-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.recent-works-heading { display: flex; align-items: center; gap: 8px; }
 .recent-works-heading > .q-icon { color: var(--kikoeru-accent-text); }
-.recent-works-heading h2 { margin: 0; font-size: 22px; line-height: 32px; letter-spacing: 0; font-weight: 500; }
+.recent-works-heading h2 { margin: 0; font-size: 18px; line-height: 28px; letter-spacing: 0; font-weight: 500; }
 .recent-works-heading .q-btn { color: var(--recent-muted); }
 .recent-works-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.recent-works-actions .q-btn { color: var(--recent-muted); min-height: 38px; padding: 6px 12px; border-radius: 6px; }
+.recent-works-actions .q-btn { color: var(--recent-muted); min-height: 36px; padding: 4px 10px; border-radius: 6px; }
 .recent-works-actions .recent-works-favourites { color: var(--kikoeru-accent-text); background: color-mix(in srgb, var(--q-primary) 10%, transparent); }
-.recent-works-actions :deep(.q-icon) { font-size: 19px; }
-.recent-works-placeholder { display: flex; align-items: center; gap: 16px; min-height: 100px; padding: 24px; border: 1px solid var(--recent-border); border-radius: 6px; background: var(--recent-inset); color: var(--recent-muted); }
-.recent-work-item { width: 328px; max-width: 82vw; padding: 0 14px 6px 0; }
+.recent-works-actions :deep(.q-icon) { font-size: 18px; }
+.recent-works-placeholder { display: flex; align-items: center; gap: 16px; min-height: 88px; padding: 20px; border: 1px solid var(--recent-border); border-radius: 6px; background: var(--recent-inset); color: var(--recent-muted); }
+.recent-work-item { width: 256px; max-width: 78vw; padding: 0 12px 6px 0; }
 .recent-work-cover { display: block; width: 100%; border: 1px solid var(--recent-border); padding: 0; border-radius: 8px; overflow: hidden; background: var(--recent-inset); color: white; text-align: left; font: inherit; cursor: pointer; }
 .recent-work-cover :deep(.q-img) { display: block; }
-.recent-work-overlay { padding: 38px 12px 12px; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.52) 42%, rgba(0,0,0,.88) 100%); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
-.recent-work-track { font-size: 14px; font-weight: 600; line-height: 1.5; }
-.recent-work-title { margin-top: 3px; color: rgba(255,255,255,.82); font-size: 12px; }
+.recent-work-overlay { padding: 34px 10px 10px; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.52) 42%, rgba(0,0,0,.88) 100%); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.recent-work-track { font-size: 13px; font-weight: 600; line-height: 1.45; }
+.recent-work-title { margin-top: 2px; color: rgba(255,255,255,.82); font-size: 12px; }
 .recent-work-cover:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: -2px; }
 .scroll-style-change { scrollbar-color: #888 transparent; scrollbar-width: thin; }
 @media (max-width: 699px) {
-  .recent-works { margin: 20px 12px 0; padding: 14px 12px; }
-  .recent-works-heading h2 { font-size: 20px; }
+  .recent-works { margin: 12px 12px 0; padding: 12px; }
+  .recent-works-heading h2 { font-size: 18px; }
   .recent-works-actions { width: 100%; justify-content: flex-start; gap: 8px; }
-  .recent-works-actions .q-btn { padding: 6px 10px; min-height: 40px; }
-  .recent-work-item { width: 290px; }
-  .recent-works-placeholder { min-height: 96px; padding: 20px 16px; }
+  .recent-works-actions .q-btn { padding: 6px 10px; min-height: 38px; }
+  .recent-work-item { width: 224px; }
+  .recent-works-placeholder { min-height: 84px; padding: 16px; }
 }
 </style>

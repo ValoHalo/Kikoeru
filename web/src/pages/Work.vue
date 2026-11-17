@@ -16,8 +16,21 @@
         <q-btn flat dense no-caps icon="arrow_back" :label="$t('common.back')" color="primary" @click="backToWorks" />
       </div>
       <div v-if="workUnavailable" class="work-page-unavailable">{{ $t('work.unavailable') }}</div>
+      <div v-else-if="loadingData && !metadataLoaded" class="work-skeleton">
+        <div class="work-skeleton-header">
+          <q-skeleton height="255px" class="work-skeleton-cover" />
+          <div class="work-skeleton-info">
+            <q-skeleton type="text" width="32%" />
+            <q-skeleton type="text" width="88%" height="34px" />
+            <q-skeleton type="text" width="54%" />
+            <q-skeleton type="text" width="72%" />
+          </div>
+        </div>
+        <q-skeleton height="56px" class="q-mt-md" />
+        <q-skeleton v-for="n in 4" :key="n" height="58px" class="q-mt-sm" />
+      </div>
       <template v-if="metadataLoaded">
-        <WorkDetails :metadata="metadata" @reset="requestData()" @resumeHistroy="resumeMetadataPlayHistroy" @history-cleared="clearPlaybackHistory">
+        <WorkDetails :metadata="metadata" @reset="requestMetaData({ silent: true })" @resumeHistroy="resumeMetadataPlayHistroy" @history-cleared="clearPlaybackHistory">
           <template #folder-action>
             <q-btn
               v-if="!metadata.files_missing"
@@ -33,9 +46,6 @@
           </template>
         </WorkDetails>
         <RelatedWorks :metadata="metadata" />
-        <div class="work-bookmarks-bar">
-          <q-btn outline no-caps size="sm" color="primary" icon="bookmarks" :label="$t('bookmark.currentWork')" class="work-bookmarks-btn" @click="showBookmarks = true" />
-        </div>
         <BookmarksDialog v-if="showBookmarks" :work-id="Number(workid)" @close="showBookmarks = false" />
         <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
         <WorkTree
@@ -47,7 +57,11 @@
           :default-folder="defaultFolder"
           @path-change="currentFolder = $event"
           :editable="false"
-        />
+        >
+          <template #toolbar-actions>
+            <q-btn outline no-caps size="sm" color="primary" icon="bookmarks" :label="$t('bookmark.currentWork')" class="work-bookmarks-btn" @click="showBookmarks = true" />
+          </template>
+        </WorkTree>
       </template>
     </div>
   </div>
@@ -224,7 +238,7 @@ export default {
       if (typeof previous === 'string' && previous.startsWith('/') && !previous.startsWith('//')) this.$router.back()
       else this.$router.push('/works')
     },
-    async requestMetaData() {
+    async requestMetaData({ silent = false } = {}) {
       const request = ++this.metadataRequest
       const historyRequest = this.historyRequest
       const workId = this.workid
@@ -232,6 +246,7 @@ export default {
       try {
         const response = await this.$axios.get(`/api/work/${workId}`);
         if (request !== this.metadataRequest || workId !== this.workid || user !== this.$store.state.User.name) return false
+        if (silent && !this.metadataLoaded) return false
         if (historyRequest !== this.historyRequest) {
           response.data.state = null
           response.data.play_updated_at = null
@@ -241,12 +256,12 @@ export default {
         this.metadataLoaded = true
         // 如果有播放状态记录
         // 同时当前尚未播放，则设置历史播放进度
-        if (!this.metadata.files_missing && !this.isLyricsPage && this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length > 0 && this.playWorkId == 0) {
+        if (!silent && !this.metadata.files_missing && !this.isLyricsPage && this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length > 0 && this.playWorkId == 0) {
           this.resumeMetadataPlayHistroy()
         }
         return true
       } catch (error ) {
-        if (request !== this.metadataRequest || workId !== this.workid || user !== this.$store.state.User.name) return false
+        if (silent || request !== this.metadataRequest || workId !== this.workid || user !== this.$store.state.User.name) return false
         if (error.response && error.response.status === 404 && this.$store.getters['AudioPlayer/sfwOnly']) {
           this.workUnavailable = true
           return false
@@ -337,19 +352,40 @@ export default {
   color: var(--kikoeru-muted);
 }
 
-.work-bookmarks-bar {
+.work-skeleton {
+  padding-top: 8px;
+}
+
+.work-skeleton-header {
+  display: grid;
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  gap: 20px 28px;
+  align-items: start;
+}
+
+.work-skeleton-cover {
+  border-radius: 8px;
+}
+
+.work-skeleton-info {
   display: flex;
-  align-items: center;
-  margin-top: 14px;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 6px;
 }
 
 .work-bookmarks-btn {
   border-radius: var(--kikoeru-radius-sm);
+  min-height: 36px;
 }
 
 @media (max-width: 699px) {
   .work-page {
     padding: 8px 12px 24px;
+  }
+
+  .work-skeleton-header {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

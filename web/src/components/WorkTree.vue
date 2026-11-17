@@ -12,6 +12,7 @@
       </q-breadcrumbs>
 
       <div class="work-tree-actions">
+        <slot name="toolbar-actions" />
         <q-btn flat round class="work-tree-playlist" icon="keyboard_arrow_up" :aria-label="$t('workTree.backToTop')" @click="scrollToTop"><AppTooltip>{{ $t('workTree.backToTop') }}</AppTooltip></q-btn>
         <q-btn flat round class="work-tree-playlist" icon="playlist_add" :disable="allAudioTracks.length === 0" :aria-label="$t('workTree.addWorkToPlaylist')" @click="openPlaylistPicker(allAudioTracks)"><AppTooltip>{{ $t('workTree.addWorkToPlaylist') }}</AppTooltip></q-btn>
       </div>
@@ -561,7 +562,7 @@ export default {
 .work-tree-last-played { color: var(--kikoeru-accent-text); white-space: normal; overflow-wrap: anywhere; }
 .work-tree-track-actions { padding-left: 8px; }
 .work-tree-track-actions .q-btn { width: 32px; height: 32px; min-width: 32px; min-height: 32px; color: var(--kikoeru-accent-text); }
-.work-tree-actions { display: flex; gap: 4px; color: var(--kikoeru-muted); }
+.work-tree-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; color: var(--kikoeru-muted); }
 
 .work-tree-toolbar {
   display: grid;
@@ -651,6 +652,15 @@ export default {
 }
 
 @media (max-width: 599px) {
+  .work-tree-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .work-tree-actions {
+    justify-content: flex-end;
+  }
+
   .image-preview-title {
     flex-basis: 100%;
   }

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="works-page">
     <!--没有搜索的情况下，显示最近播放作品-->
     <RecentWorks v-if="enableShowRecent && !isAdvanceSearch && searchMetas.length == 0 && !collectionId" />
 
@@ -91,23 +91,23 @@
 
     </div>
     <div v-if="!selecting && (advanceSearchKeywords.length || searchMetas.length)" class="works-search-chips">
-      <div v-if="isAdvanceSearch"><!--高级搜索模式的多关键字展示-->
-        <q-badge class="q-ma-xs" v-for="meta,index in advanceSearchKeywords" :key="meta.t+meta.d">
-          {{ $privateText(meta.d) }}
+      <div v-if="isAdvanceSearch" class="works-search-chip-list"><!--高级搜索模式的多关键字展示-->
+        <span class="works-search-chip" v-for="(meta, index) in advanceSearchKeywords" :key="meta.t + meta.d">
+          <span>{{ $privateText(meta.d) }}</span>
           <q-btn
-            class="q-ml-sm search-tag-close-btn"
-            padding="xs"
+            class="works-search-chip-close"
             round
             flat
+            dense
             size="xs"
             icon="close"
             :aria-label="$t('works.removeKeyword', { d: $privateText(meta.d) })"
             @click="removeAdvanceSearchKeyword(index)"
           />
-        </q-badge>
+        </span>
       </div>
-      <div v-else> <!--普通搜索模式的信息展示-->
-        <q-badge class="q-ma-xs" v-for="meta, index in searchMetas" :key="meta">{{ index == 0 ? "":"," }} {{ $privateText(meta) }}</q-badge>
+      <div v-else class="works-search-chip-list"> <!--普通搜索模式的信息展示-->
+        <span class="works-search-chip" v-for="meta in searchMetas" :key="meta">{{ $privateText(meta) }}</span>
       </div>
     </div>
     </section>
@@ -119,12 +119,30 @@
           <q-pagination :model-value="displayPage" :max="maxPages" :max-pages="7" boundary-links direction-links color="primary" @update:model-value="gotoPage" />
         </div>
 
-        <div v-if="workListMode === WORK_LIST_MODES.PAGINATION && isLoading" class="row justify-center q-py-xl">
-          <q-spinner-dots color="primary" size="40px" />
+        <div v-if="isLoading && !works.length">
+          <q-list v-if="listMode" bordered separator class="works-list">
+            <q-item v-for="n in 6" :key="n" class="q-py-sm">
+              <q-item-section avatar><q-skeleton type="QAvatar" size="68px" square /></q-item-section>
+              <q-item-section>
+                <q-skeleton type="text" width="58%" />
+                <q-skeleton type="text" width="34%" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <div v-else class="works-grid" :class="{ 'works-grid--compact': !detailMode }">
+            <q-card v-for="n in 8" :key="n" flat bordered class="works-skeleton-card">
+              <q-skeleton height="180px" square />
+              <q-card-section class="q-pa-md q-gutter-xs">
+                <q-skeleton type="text" width="42%" />
+                <q-skeleton type="text" width="88%" />
+                <q-skeleton type="text" width="65%" />
+              </q-card-section>
+            </q-card>
+          </div>
         </div>
 
         <q-virtual-scroll
-          v-if="listMode && works.length && workListMode === WORK_LIST_MODES.WATERFALL"
+          v-else-if="listMode && works.length && workListMode === WORK_LIST_MODES.WATERFALL"
           ref="virtualList"
           :items="works"
           scroll-target="body"
@@ -140,19 +158,16 @@
         </q-list>
 
         <!--完整作品卡片-->
-        <div v-if="!listMode && works.length && oldWorkCardUIStyle" class="row q-col-gutter-x-md q-col-gutter-y-lg">
-          <div class="col-xs-12 col-sm-6 col-md-4" v-for="work in works" :key="work.id"
-            :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
-          >
+        <div v-else-if="!listMode && works.length && oldWorkCardUIStyle" class="works-grid" :class="{ 'works-grid--compact': !detailMode }">
+          <div class="works-grid-item" v-for="work in works" :key="work.id">
             <WorkSelection :label="work.title" :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><OldWorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/></WorkSelection>
           </div>
         </div>
 
         <!--解决android平台hover事件不像safari那样及时响应的问题，需要手动添加触摸响应时间-->
-        <div v-else-if="!listMode && works.length && $q.platform.is.android && $q.platform.has.touch" class="row q-col-gutter-x-md q-col-gutter-y-lg">
-          <div class="col-xs-12 col-sm-6 col-md-4" v-for="work in works" :key="work.id"
+        <div v-else-if="!listMode && works.length && $q.platform.is.android && $q.platform.has.touch" class="works-grid" :class="{ 'works-grid--compact': !detailMode }">
+          <div class="works-grid-item" v-for="work in works" :key="work.id"
             @touchstart="()=>onWorkCardTouch(work.id)"
-            :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
             :style="{ '--sim-hover-work-card': work.id === touchedWorkId ? '1' : '0'}"
           >
             <WorkSelection :label="work.title" :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/></WorkSelection>
@@ -160,9 +175,8 @@
         </div>
 
         <!--正常的workCard展示-->
-        <div v-else-if="!listMode && works.length" class="row q-col-gutter-x-md q-col-gutter-y-lg">
-          <div class="col-xs-12 col-sm-6 col-md-4" v-for="work in works" :key="work.id"
-            :class="detailMode ? 'col-lg-3 col-xl-2': 'col-lg-2 col-xl-2'"
+        <div v-else-if="!listMode && works.length" class="works-grid" :class="{ 'works-grid--compact': !detailMode }">
+          <div class="works-grid-item" v-for="work in works" :key="work.id"
             style="--sim-hover-work-card: 0"
           >
             <WorkSelection :label="work.title" :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><WorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/></WorkSelection>
@@ -802,7 +816,25 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.works-page { max-width: 1560px; margin: 0 auto; }
 .works-results { margin: 0 16px; }
+.works-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
+  gap: 18px 16px;
+  align-items: stretch;
+}
+.works-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 14px;
+}
+.works-grid-item { min-width: 0; }
+.works-skeleton-card {
+  background: var(--kikoeru-surface);
+  border-color: var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-md);
+  overflow: hidden;
+}
 .works-empty { padding: 40px 20px; margin: 8px 0 32px; text-align: center; background: var(--kikoeru-surface); border: 1px solid var(--kikoeru-border); border-radius: var(--kikoeru-radius-md); }
 .works-empty > .q-icon { color: var(--kikoeru-muted); }
 .works-empty h3 { margin: 14px 0 8px; font-size: 20px; line-height: 28px; font-weight: 500; }
@@ -814,16 +846,16 @@ export default {
   --toolbar-border: var(--kikoeru-border);
   --toolbar-muted: var(--kikoeru-muted);
   --toolbar-inset: var(--kikoeru-inset);
-  margin: 28px 16px 18px;
-  padding: 16px;
+  margin: 14px 16px 16px;
+  padding: 14px 16px;
   border: 1px solid var(--toolbar-border);
   border-radius: var(--kikoeru-radius-md);
   background: var(--toolbar-surface);
 }
-.works-toolbar-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.works-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.works-toolbar-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.works-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .works-title > .q-icon { color: var(--kikoeru-accent-text); flex-shrink: 0; }
-.works-title h2 { margin: 0; font-size: 22px; font-weight: 500; line-height: 32px; letter-spacing: 0; overflow-wrap: anywhere; }
+.works-title h2 { margin: 0; font-size: 20px; font-weight: 500; line-height: 28px; letter-spacing: 0; overflow-wrap: anywhere; }
 .works-count { padding: 2px 8px; border-radius: 5px; color: var(--toolbar-muted); background: var(--toolbar-inset); font-size: 13px; font-variant-numeric: tabular-nums; }
 .works-display-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
 .works-display-controls :deep(.q-btn) { height: 40px; min-height: 40px; padding: 0 10px; border-radius: 6px; color: var(--toolbar-muted); }
@@ -837,9 +869,27 @@ export default {
 .works-filter-fields :deep(.q-field__control) { border-radius: 6px; }
 .works-filter-fields :deep(.q-field__label) { color: var(--toolbar-muted); }
 .works-filter-fields :deep(.q-field__native) { letter-spacing: 0; }
-.works-search-chips { margin: 12px -4px -4px; }
+.works-search-chips { margin: 12px 0 0; }
+.works-search-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.works-search-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--kikoeru-inset);
+  border: 1px solid var(--kikoeru-border);
+  color: var(--kikoeru-text);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.works-search-chip-close { color: var(--kikoeru-muted); margin-right: -4px; }
+.works-search-chip-close:hover { color: var(--kikoeru-text); }
 .works-toolbar--selecting { position: sticky; top: 56px; z-index: 20; background: var(--kikoeru-surface); }
 .works-list {
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
   background: var(--kikoeru-surface);
   border-color: var(--kikoeru-border);
   border-radius: var(--kikoeru-radius-md);
@@ -856,13 +906,15 @@ export default {
 .works-toolbar .q-btn:focus-visible { outline: 2px solid var(--kikoeru-accent-text); outline-offset: 2px; }
 @media (max-width: 699px) {
   .works-results { margin: 0 12px; }
-  .works-toolbar { margin: 24px 12px 16px; padding: 14px 12px; }
-  .works-title h2 { font-size: 20px; }
-  .works-toolbar-heading { gap: 14px; }
+  .works-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .works-grid--compact { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .works-toolbar { margin: 12px 12px 14px; padding: 12px; }
+  .works-title h2 { font-size: 18px; }
+  .works-toolbar-heading { gap: 12px; }
   .works-display-controls { flex-basis: 100%; gap: 8px; }
   .works-display-controls > :deep(.q-btn) { flex: 1 0 auto; }
   .works-view-options { flex-basis: 100%; }
-  .works-filter-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+  .works-filter-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 }
 
   .list {
@@ -878,8 +930,4 @@ export default {
       width: 560px;
     }
   }
-.search-tag-close-btn {
-  background: rgba(144, 144, 144, 0.4);
-  color: white
-}
 </style>
