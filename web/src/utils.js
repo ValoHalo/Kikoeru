@@ -90,8 +90,8 @@ export const ServerApi = {
     return response.data.lyricList
   },
 
-  async fetchLyric(workId, lyricTrack) {
-    const response = await axios.get(`/api/media/fetch-lrc/${lyricTrack.hash}`)
+  async fetchLyric(lyricHash) {
+    const response = await axios.get(`/api/media/fetch-lrc/${lyricHash}`)
     return response.data.lrc
   },
 

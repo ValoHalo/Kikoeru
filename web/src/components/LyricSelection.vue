@@ -251,12 +251,14 @@ export default {
       'currentLyricLineNumber',
       'hasLyric',
       'lyricLines',
+      'lyricRequestId',
       'playWorkId',
       'defaultSubtitleLanguage',
     ]),
 
     ...mapGetters('AudioPlayer', [
       'currentPlayingFile',
+      'lyricSelectionKey',
     ]),
 
     isAdministrator () {
@@ -277,7 +279,7 @@ export default {
       }
     },
 
-    'currentPlayingFile.hash' () {
+    lyricSelectionKey () {
       this.lyricOptionList = []
       this.openLyricFileSelection = false
       this.$nextTick(this.showCurrentLyric)
@@ -293,6 +295,7 @@ export default {
       'SET_CURRENT_LYRIC_LINE_NUMBER',
       'SET_HAS_LYRIC',
       'SET_LYRIC_LINES',
+      'INVALIDATE_LYRIC_REQUESTS',
       'REQUEST_MANUAL_SEEK',
     ]),
 
@@ -431,31 +434,42 @@ export default {
     },
 
     async fetchOtherLyricFiles () {
+      const key = this.lyricSelectionKey
       this.loadingOptions = true
       try {
         const options = await ServerApi.queryLyric(this.currentPlayingFile.hash, this.defaultSubtitleLanguage)
+        if (key !== this.lyricSelectionKey) return
         this.lyricOptionList = options.slice()
         this.openLyricFileSelection = true
       } catch (error) {
-        this.showErrNotif(this.errorMessage(error))
+        if (key === this.lyricSelectionKey) this.showErrNotif(this.errorMessage(error))
       } finally {
         this.loadingOptions = false
       }
     },
 
     async selectLyricOption (option) {
+      const key = this.lyricSelectionKey
+      if (!key) return
+      this.INVALIDATE_LYRIC_REQUESTS()
+      const requestId = this.lyricRequestId
+      const isCurrentRequest = () => requestId === this.lyricRequestId && key === this.lyricSelectionKey
       try {
-        const lines = await ServerApi.fetchLyric(this.playWorkId, option)
+        const lines = await ServerApi.fetchLyric(option.hash)
+        if (!isCurrentRequest()) return
+        this.$q.localStorage.set(key, option.hash)
         this.SET_LYRIC_LINES(lines)
         this.SET_HAS_LYRIC(Array.isArray(lines) && lines.length > 0)
         this.SET_CURRENT_LYRIC_LINE_NUMBER(0)
         this.openLyricFileSelection = false
       } catch (error) {
-        this.showErrNotif(this.errorMessage(error))
+        if (isCurrentRequest()) this.showErrNotif(this.errorMessage(error))
       }
     },
 
     closeLyric () {
+      this.INVALIDATE_LYRIC_REQUESTS()
+      if (this.lyricSelectionKey) this.$q.localStorage.remove(this.lyricSelectionKey)
       this.SET_HAS_LYRIC(false)
       this.SET_CURRENT_LYRIC('')
       this.SET_CURRENT_LYRIC_LINE_NUMBER(0)

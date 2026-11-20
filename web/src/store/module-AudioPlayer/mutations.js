@@ -356,6 +356,7 @@ const mutations = {
   SET_FORWARD_SEEK_MODE: (state, value) => {
     state.forwardSeekMode = value
   },
+  INVALIDATE_LYRIC_REQUESTS (state) { state.lyricRequestId++ },
   SET_HAS_LYRIC: (state, value) => {
     state.hasLyric = value;
   },

@@ -149,6 +149,7 @@ export default function () {
     restoreLastQueue: !LocalStorage.has(RESTORE_LAST_QUEUE_KEY) || Boolean(LocalStorage.getItem(RESTORE_LAST_QUEUE_KEY)),
     defaultSubtitleLanguage: normalizeSubtitleLanguage(LocalStorage.has(DEFAULT_SUBTITLE_LANGUAGE_KEY) ? LocalStorage.getItem(DEFAULT_SUBTITLE_LANGUAGE_KEY) : 'auto'),
     hasLyric: false,
+    lyricRequestId: 0,
     currentLyric: '',
     currentLyricLineNumber: 0,
     lyricLines: [],

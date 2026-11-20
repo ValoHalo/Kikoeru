@@ -165,7 +165,6 @@ export default {
       lrcContent: "",
       lrcObj: null,
       lrcAvailable: false,
-      lrcRequestId: 0,
       playableLyricLineIndexes: [],
       preTranscodeTimerId: null,
       playerInstance: null,
@@ -247,6 +246,7 @@ export default {
       'lyricOffsetSeconds',
       'enablePIPLyrics',
       'lyricLines',
+      'lyricRequestId',
       'transcodeOption',
       'transcodeFromTypes',
       'defaultSubtitleLanguage',
@@ -255,6 +255,7 @@ export default {
     ...mapGetters('AudioPlayer', [
       'hideNsfwCovers',
       'currentPlayingFile',
+      'lyricSelectionKey',
       'resumeHistroyDone',
       'transcodeBitRate',
     ]),
@@ -288,6 +289,9 @@ export default {
     'currentPlayingFile.hash' () {
       this.$store.commit('AudioPlayer/CLEAR_SEEK_UNDO')
     },
+    lyricSelectionKey () {
+      this.loadLrcFile()
+    },
     hideNsfwCovers () {
       this.updateMediaSessionMetadata()
     },
@@ -311,7 +315,6 @@ export default {
       this.positionChangeReason = 'interval'
       this.clearPreTranscodeTimer()
       this.SET_PLAYING_TRANSCODE(this.shouldTranscodeTrack(this.currentPlayingFile))
-      this.loadLrcFile();
       if (url) {
         // 加载新音频/视频文件
         this.player.media.load();
@@ -450,6 +453,7 @@ export default {
       'SET_CURRENT_LYRIC',
       'SET_CURRENT_LYRIC_LINE_NUMBER',
       'SET_LYRIC_LINES',
+      'INVALIDATE_LYRIC_REQUESTS',
       'SET_VOLUME',
       'CLEAR_SLEEP_MODE',
       'SET_REWIND_SEEK_MODE',
@@ -686,15 +690,28 @@ export default {
     },
 
     async loadLrcFile () {
-      const requestId = ++this.lrcRequestId
+      this.INVALIDATE_LYRIC_REQUESTS()
+      const requestId = this.lyricRequestId
+      const key = this.lyricSelectionKey
       const fileHash = this.currentPlayingFile.hash;
-      const isCurrentRequest = () => requestId === this.lrcRequestId && fileHash === this.currentPlayingFile.hash
+      const isCurrentRequest = () => requestId === this.lyricRequestId && key === this.lyricSelectionKey
       this.resetToNoLyricStatus()
       if (!fileHash) return
       const url = `/api/media/check-lrc/${fileHash}`;
 
       try {
-        // 首先向服务器查询是否有歌词
+        const selected = this.$q.localStorage.getItem(key)
+        if (selected) {
+          try {
+            const lines = await ServerApi.fetchLyric(selected)
+            if (isCurrentRequest()) this.SET_LYRIC_LINES(lines)
+            return
+          } catch (error) {
+            if (!isCurrentRequest()) return
+            if (error.response?.status !== 404) throw error
+            if (this.$q.localStorage.getItem(key) === selected) this.$q.localStorage.remove(key)
+          }
+        }
         const check_response = await this.$axios.get(url, { params: { language: this.defaultSubtitleLanguage } })
         if (!isCurrentRequest()) return
         if (!check_response.data.result) {
@@ -915,7 +932,7 @@ export default {
   beforeUnmount () {
     document.removeEventListener('click', this.initAudioHandler)
     this.releaseAudioGraph()
-    this.lrcRequestId++
+    this.INVALIDATE_LYRIC_REQUESTS()
     this.clearPreTranscodeTimer()
     this.clearMediaSessionActionHandlers()
     this.SET_PLAYING_TRANSCODE(false)

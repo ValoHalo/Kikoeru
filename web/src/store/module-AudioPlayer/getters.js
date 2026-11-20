@@ -27,6 +27,11 @@ const getters = {
     }
   },
 
+  lyricSelectionKey: (_state, getters, rootState) => {
+    const { hash } = getters.currentPlayingFile
+    return hash ? `lyric-selection:${encodeURIComponent(rootState.User.name)}:${hash}` : ''
+  },
+
   canUndoSeek: (state) => {
     const hash = getters.currentPlayingFile(state).hash
     return Boolean(hash && state.seekUndoHash === hash && state.seekUndo.length)
