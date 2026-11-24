@@ -114,7 +114,7 @@ export default {
     },
 
     lyricList() {
-      return String(this.lyric_status || '').includes('local') ? ['local'] : [];
+      return this.lyric_status?.includes('local') ? ['local'] : [];
     }
   },
 

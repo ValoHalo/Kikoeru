@@ -17,7 +17,7 @@ axios.interceptors.response.use(response => {
   if (!response.config.url.startsWith('/api/')) return response
   const data = response.data
   const works = Array.isArray(data) ? data : data && (data.works || data.items) || (data ? [data] : [])
-  const ratings = works.flatMap(work => [work, ...(work.state && Array.isArray(work.state.queue) ? work.state.queue : [])])
+  const ratings = works.flatMap(work => [work, ...(work.state?.queue || [])])
   store.commit('AudioPlayer/SET_WORK_RATINGS', ratings)
   return response
 })

@@ -1,4 +1,5 @@
 import { LocalStorage } from 'quasar'
+import { getTrackWorkId } from '../../utils'
 import getters from './getters'
 import {
   SWAP_SEEK_BUTTON_KEY,
@@ -26,23 +27,16 @@ import {
   DEFAULT_SUBTITLE_LANGUAGE_KEY,
   PLAY_MODES,
   TRANSCODE_OPTIONS,
-  TRANSCODE_FILE_TYPES,
   WORK_LIST_MODES,
   normalizePlaybackRate,
   normalizeSubtitleLanguage,
   normalizeSmartPathAudioTypes,
+  normalizeTranscodeFromTypes,
 } from './state'
-
-function trackWorkId (track, fallback = 0) {
-  const explicitId = Number(track && track.workId)
-  if (Number.isInteger(explicitId) && explicitId > 0) return explicitId
-  const hashId = Number(String((track && track.hash) || '').split('/')[0])
-  return Number.isInteger(hashId) && hashId > 0 ? hashId : Number(fallback) || 0
-}
 
 function syncCurrentTrackContext (state, fallbackWorkId = 0) {
   const track = getters.currentPlayingFile(state)
-  const workId = trackWorkId(track, fallbackWorkId)
+  const workId = getTrackWorkId(track, fallbackWorkId)
   if (workId === 0) {
     state.playWorkId = 0
     state.visualPlayerCoverUrl = ''
@@ -57,7 +51,7 @@ function syncCurrentTrackContext (state, fallbackWorkId = 0) {
 
 const MAX_SEEK_HISTORY = 100
 const sameSeekPosition = (left, right) => Math.abs(left - right) < 0.01
-const currentSeekPosition = state => Number.isFinite(state.newCurrentTime) && state.newCurrentTime >= 0 ? state.newCurrentTime : state.currentTime
+const currentSeekPosition = state => state.newCurrentTime >= 0 ? state.newCurrentTime : state.currentTime
 
 const mutations = {
   SET_CLIP_RANGE (state, value) { state.clipRange = value },
@@ -92,12 +86,10 @@ const mutations = {
   HYDRATE_SEEK_UNDO (state, { hash, positions, snapshot }) {
     if (!hash || hash !== getters.currentPlayingFile(state).hash || snapshot !== state.seekUndo) return
     if (state.seekUndoHash && state.seekUndoHash !== hash) return
-    const duration = Number.isFinite(state.duration) && state.duration > 0 ? state.duration : Infinity
-    const saved = (Array.isArray(positions) ? positions : [])
-      .map(position => position?.seconds)
-      .filter(seconds => (typeof seconds === 'number' || (typeof seconds === 'string' && seconds.trim())) && Number.isFinite(Number(seconds)) && Number(seconds) >= 0)
-      .map(Number)
-      .filter(seconds => seconds <= duration)
+    const duration = state.duration > 0 ? state.duration : Infinity
+    const saved = (positions || [])
+      .map(position => Number(position.seconds))
+      .filter(seconds => seconds >= 0 && seconds <= duration)
     const currentTime = currentSeekPosition(state)
     while (saved.length && Math.abs(saved[0] - currentTime) < 1) saved.shift()
     saved.reverse()
@@ -113,9 +105,9 @@ const mutations = {
   },
   REQUEST_MANUAL_SEEK (state, value) {
     const seconds = Math.max(0, Math.min(state.duration, Number(value.seconds)))
-    const from = Number.isFinite(value.from) ? value.from : currentSeekPosition(state)
+    const from = value.from != null ? value.from : currentSeekPosition(state)
     const hash = getters.currentPlayingFile(state).hash
-    if (!hash || !Number.isFinite(seconds) || !Number.isFinite(from) || from < 0 || sameSeekPosition(from, seconds)) return
+    if (!hash || !Number.isFinite(seconds) || from < 0 || sameSeekPosition(from, seconds)) return
     if (state.seekUndoHash !== hash) state.seekUndo = []
     state.seekUndoHash = hash
     state.seekUndo = [...state.seekUndo, from].slice(-MAX_SEEK_HISTORY)
@@ -126,18 +118,14 @@ const mutations = {
   },
   UNDO_SEEK (state) {
     if (!getters.canUndoSeek(state)) return
-    const from = currentSeekPosition(state)
-    if (!Number.isFinite(from) || from < 0) return
-    state.seekRedo = [...state.seekRedo, from].slice(-MAX_SEEK_HISTORY)
+    state.seekRedo = [...state.seekRedo, currentSeekPosition(state)].slice(-MAX_SEEK_HISTORY)
     state.newCurrentTime = state.seekUndo[state.seekUndo.length - 1]
     state.seekUndo = state.seekUndo.slice(0, -1)
     state.seekCause = 'undo'
   },
   REDO_SEEK (state) {
     if (!getters.canRedoSeek(state)) return
-    const from = currentSeekPosition(state)
-    if (!Number.isFinite(from) || from < 0) return
-    state.seekUndo = [...state.seekUndo, from].slice(-MAX_SEEK_HISTORY)
+    state.seekUndo = [...state.seekUndo, currentSeekPosition(state)].slice(-MAX_SEEK_HISTORY)
     state.newCurrentTime = state.seekRedo[state.seekRedo.length - 1]
     state.seekRedo = state.seekRedo.slice(0, -1)
     state.seekCause = 'redo'
@@ -169,9 +157,7 @@ const mutations = {
     assignWhenUnset(ENABLE_SHOW_RECENT_KEY, 'enableShowRecent', booleanValue)
     assignWhenUnset(WORK_LIST_MODE_KEY, 'workListMode', value => Object.values(WORK_LIST_MODES).includes(value) ? value : WORK_LIST_MODES.WATERFALL)
     assignWhenUnset(TRANSCODE_OPTION_KEY, 'transcodeOption', value => Object.values(TRANSCODE_OPTIONS).includes(value) ? value : TRANSCODE_OPTIONS.OFF)
-    assignWhenUnset(TRANSCODE_FROM_TYPES_KEY, 'transcodeFromTypes', value => typeof value === 'string'
-      ? value.split(',').map(type => type.trim().toLowerCase()).filter(type => TRANSCODE_FILE_TYPES.includes(type)).filter((type, index, types) => types.indexOf(type) === index).join(',')
-      : '')
+    assignWhenUnset(TRANSCODE_FROM_TYPES_KEY, 'transcodeFromTypes', normalizeTranscodeFromTypes)
     assignWhenUnset(SMART_PATH_ENABLED_KEY, 'smartPathEnabled', booleanValue)
     assignWhenUnset(SMART_PATH_PREFER_EFFECT_KEY, 'smartPathPreferEffect', booleanValue)
     assignWhenUnset(SMART_PATH_AUDIO_TYPES_KEY, 'smartPathAudioTypes', normalizeSmartPathAudioTypes)
@@ -228,7 +214,7 @@ const mutations = {
 
   SET_QUEUE (state, payload) {
     state.clipRange = null
-    state.queue = Array.isArray(payload.queue) ? payload.queue : []
+    state.queue = payload.queue || []
     if (state.queue.length === 0) {
       state.queueIndex = 0
       state.playing = false
@@ -263,7 +249,7 @@ const mutations = {
     state.resumeHistroySeconds = -1
   },
   ADD_TO_QUEUE: (state, file) => {
-    if (state.contentDisplayMode === 'sfw' && state.workNsfw[trackWorkId(file)] !== false) return
+    if (state.contentDisplayMode === 'sfw' && state.workNsfw[getTrackWorkId(file)] !== false) return
     // 重新赋值以触发 queue 的浅层 watcher
     state.queue = state.queue.concat(file)
     syncCurrentTrackContext(state)
@@ -298,7 +284,7 @@ const mutations = {
 
   // Add a file after the current playing item in the queue.
   PLAY_NEXT: (state, file) => {
-    if (state.contentDisplayMode === 'sfw' && state.workNsfw[trackWorkId(file)] !== false) return
+    if (state.contentDisplayMode === 'sfw' && state.workNsfw[getTrackWorkId(file)] !== false) return
     // 重新赋值以触发 queue 的浅层 watcher
     const queue = state.queue.slice()
     queue.splice(state.queueIndex + 1, 0, file)
@@ -367,7 +353,7 @@ const mutations = {
     state.currentLyricLineNumber = lineNumber
   },
   SET_LYRIC_LINES: (state, lines) => {
-    state.lyricLines = Array.isArray(lines) ? lines : []
+    state.lyricLines = lines || []
     if (state.lyricLines.length === 0 || state.currentLyricLineNumber >= state.lyricLines.length) {
       state.currentLyricLineNumber = 0
     }
@@ -469,7 +455,7 @@ const mutations = {
   FILTER_CURRENT_QUEUE: (state) => {
     if (state.contentDisplayMode !== 'sfw') return
     const current = state.queue[state.queueIndex]
-    const queue = state.queue.filter(track => state.workNsfw[trackWorkId(track, state.playWorkId)] === false)
+    const queue = state.queue.filter(track => state.workNsfw[getTrackWorkId(track, state.playWorkId)] === false)
     if (queue.length === state.queue.length) return
     if (queue.length === 0) {
       mutations.EMPTY_QUEUE(state)
@@ -515,14 +501,7 @@ const mutations = {
   },
 
   SET_TRANSCODE_FROM_TYPES: (state, value) => {
-    const normalized = typeof value === 'string'
-      ? value
-        .split(',')
-        .map(type => type.trim().toLowerCase())
-        .filter(type => TRANSCODE_FILE_TYPES.includes(type))
-        .filter((type, index, types) => types.indexOf(type) === index)
-        .join(',')
-      : ''
+    const normalized = normalizeTranscodeFromTypes(value)
     state.transcodeFromTypes = normalized
     LocalStorage.set(TRANSCODE_FROM_TYPES_KEY, normalized)
   },

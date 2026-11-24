@@ -138,7 +138,7 @@
                   </div>
                 </AppTooltip>
               </span>
-              <span class="work-rating-count work-tabular">({{ formattedRateCount }})</span>
+              <span class="work-rating-count work-tabular">({{ formatCount(metadata.rate_count) }})</span>
             </div>
 
             <div class="work-interactive-links">
@@ -170,15 +170,15 @@
           <div class="work-archive-row">
             <span class="work-kv-item">
               <span class="work-kv-key">{{ $t('workDetails.reviewsCount') }}</span>
-              <span class="work-kv-val work-tabular">{{ formattedReviewCount }}</span>
+              <span class="work-kv-val work-tabular">{{ formatCount(metadata.review_count) }}</span>
             </span>
             <span class="work-kv-item">
               <span class="work-kv-key">{{ $t('workDetails.price') }}</span>
-              <span class="work-kv-val work-tabular">¥{{ formattedPrice }}</span>
+              <span class="work-kv-val work-tabular">¥{{ formatCount(metadata.price) }}</span>
             </span>
             <span class="work-kv-item">
               <span class="work-kv-key">{{ $t('workDetails.salesLabel') }}</span>
-              <span class="work-kv-val work-tabular">{{ formattedSales }}</span>
+              <span class="work-kv-val work-tabular">{{ formatCount(metadata.dl_count) }}</span>
             </span>
             <span v-if="metadata.release" class="work-kv-item">
               <span class="work-kv-key">{{ $t('workDetails.releaseDate') }}</span>
@@ -452,7 +452,7 @@ import EditMeta from './EditMeta.vue'
 import LibraryActions from './LibraryActions.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { mapGetters, mapState } from 'vuex'
-import { formatSeconds, idNumberToCode } from 'src/utils'
+import { formatSeconds, getLastPlayedTrack, idNumberToCode } from 'src/utils'
 import { coverTransition } from '../coverTransition'
 
 export default {
@@ -507,36 +507,20 @@ export default {
     showBackdrop () {
       return !this.$store.state.AudioPlayer.privacyMode && Boolean(this.coverUrl)
     },
-    formattedPrice () {
-      const value = Number(this.metadata.price)
-      return Number.isFinite(value) ? value.toLocaleString() : this.metadata.price
-    },
-    formattedSales () {
-      const value = Number(this.metadata.dl_count)
-      return Number.isFinite(value) ? value.toLocaleString() : this.metadata.dl_count
-    },
-    formattedRateCount () {
-      const value = Number(this.metadata.rate_count)
-      return Number.isFinite(value) ? value.toLocaleString() : this.metadata.rate_count
-    },
-    formattedReviewCount () {
-      const value = Number(this.metadata.review_count)
-      return Number.isFinite(value) ? value.toLocaleString() : this.metadata.review_count
-    },
     hasCreators () {
-      return Boolean((this.metadata.circle && this.metadata.circle.id != null) || (this.metadata.vas && this.metadata.vas.length))
+      return Boolean(this.metadata.circle?.id != null || this.metadata.vas?.length)
     },
     visibleTags () {
-      return (this.metadata.tags || []).filter(tag => tag && tag.id != null && tag.name)
+      return (this.metadata.tags || []).filter(tag => tag.id != null && tag.name)
     },
     hasReviewText () {
-      return typeof this.metadata.review_text === 'string' && this.metadata.review_text.trim().length > 0
+      return Boolean(this.metadata.review_text?.trim())
     },
     isCurrentPlayingWork () {
       return Number(this.playWorkId) === Number(this.metadata.id)
     },
     hasResumeHistory () {
-      return Boolean(this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length > 0)
+      return Boolean(this.metadata.state?.queue?.length)
     },
     progressOptions () {
       return [
@@ -548,8 +532,7 @@ export default {
       ]
     },
     sortedRatings () {
-      if (!Array.isArray(this.metadata.rate_count_detail)) return []
-      return this.metadata.rate_count_detail.slice().sort((a, b) => (a.review_point > b.review_point ? -1 : 1))
+      return (this.metadata.rate_count_detail || []).slice().sort((a, b) => (a.review_point > b.review_point ? -1 : 1))
     },
     dlsiteCode () {
       return idNumberToCode(this.metadata.id)
@@ -559,12 +542,11 @@ export default {
     },
     lastPlayedInfo () {
       const state = this.metadata.state
-      const index = Number(state?.index)
-      const track = Array.isArray(state?.queue) && Number.isInteger(index) ? state.queue[index] : null
+      const track = getLastPlayedTrack(state)
       if (!track) return null
       return {
         title: track.title || '',
-        seconds: Number.isFinite(Number(state?.seconds)) ? Number(state.seconds) : null
+        seconds: state.seconds != null ? Number(state.seconds) : null
       }
     },
     isAdministrator () {
@@ -591,6 +573,9 @@ export default {
 
   methods: {
     formatSeconds,
+    formatCount (value) {
+      return value == null ? '' : Number(value).toLocaleString()
+    },
 
     async copyWorkCode () {
       try {

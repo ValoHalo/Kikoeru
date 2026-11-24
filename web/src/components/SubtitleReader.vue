@@ -88,8 +88,7 @@ export default {
       try {
         const { data } = await this.$axios.get(`/api/media/fetch-lrc/${this.file.hash}`, { signal: this.controller.signal })
         if (requestId !== this.requestId) return
-        if (!Array.isArray(data.lrc)) throw new Error('Invalid subtitle response')
-        this.lines = data.lrc.filter(line => Number.isFinite(line.time) && typeof line.text === 'string' && line.text.trim()).map((line, id) => ({ ...line, id }))
+        this.lines = data.lrc.filter(line => line.text.trim()).map((line, id) => ({ ...line, id }))
       } catch (error) {
         if (requestId === this.requestId) this.error = true
       } finally {

@@ -71,7 +71,7 @@
 
 <script>
 import { mapState, mapGetters, mapMutations } from 'vuex'
-import { formatSeconds } from '../utils'
+import { formatSeconds, getTrackWorkId } from '../utils'
 import Scrollable from 'components/Scrollable.vue'
 const OpState = {
   idle: 0,
@@ -87,8 +87,7 @@ export default {
   },
   computed: {
     samCoverUrl () {
-      const hash = this.currentPlayingFile.hash
-      return this.$store.getters['AudioPlayer/coverUrl'](hash ? hash.split('/')[0] : 0, 'sam')
+      return this.$store.getters['AudioPlayer/coverUrl'](getTrackWorkId(this.currentPlayingFile), 'sam')
     },
 
     showPlayBar () {

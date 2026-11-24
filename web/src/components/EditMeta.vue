@@ -185,9 +185,7 @@ import { ServerApi } from 'src/utils'
 const DEFAULT_VA = { id: 0, name: 'N/A' }
 
 function cloneList (list) {
-  return Array.isArray(list)
-    ? list.filter(item => item && item.name !== null).map(item => ({ id: item.id, name: item.name }))
-    : []
+  return (list || []).filter(item => item.name != null).map(item => ({ id: item.id, name: item.name }))
 }
 
 export default {
@@ -229,14 +227,14 @@ export default {
       return this.showCandidateType === 'circles' ? t('editMeta.replaceCircle') : t('editMeta.addCandidate', { value: this.candidateLabel(this.showCandidateType) })
     },
     normalizedSearchCandidate () {
-      return String(this.searchCandidate || '').trim()
+      return (this.searchCandidate || '').trim()
     },
 
     filteredCandidates () {
       const keyword = this.normalizedSearchCandidate.toLocaleLowerCase()
       const candidates = this.candidates[this.showCandidateType] || []
       if (!keyword) return candidates
-      return candidates.filter(candidate => String(candidate.name).toLocaleLowerCase().includes(keyword))
+      return candidates.filter(candidate => candidate.name.toLocaleLowerCase().includes(keyword))
     },
 
     canAddCustomCandidate () {

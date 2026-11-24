@@ -14,7 +14,7 @@ const router = express.Router();
 
 function flattenAudioTracks(tree, result = []) {
     for (const item of tree) {
-        if (item.type === 'folder' && Array.isArray(item.children)) {
+        if (item.type === 'folder') {
             flattenAudioTracks(item.children, result);
         }
         else if (item.type === 'audio') {

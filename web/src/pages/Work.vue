@@ -90,8 +90,8 @@ function summarizeTreeAudio (items) {
   for (const item of items || []) {
     if (item.type === 'audio') {
       count += 1
-      if (Number.isFinite(item.duration) && item.duration > 0) duration += item.duration
-    } else if (item.type === 'folder' && Array.isArray(item.children)) {
+      if (item.duration > 0) duration += item.duration
+    } else if (item.type === 'folder') {
       const nested = summarizeTreeAudio(item.children)
       count += nested.count
       duration += nested.duration
@@ -141,7 +141,7 @@ export default {
       return workFolderStorageKey(this.$store.state.User.name, this.workid)
     },
     isDefaultFolder () {
-      return Array.isArray(this.defaultFolder) && JSON.stringify(this.defaultFolder) === JSON.stringify(this.currentFolder)
+      return Boolean(this.defaultFolder) && JSON.stringify(this.defaultFolder) === JSON.stringify(this.currentFolder)
     },
     totalAudioCount () {
       return summarizeTreeAudio(this.tree).count
@@ -236,7 +236,7 @@ export default {
       this.defaultFolder = null
       try {
         const saved = JSON.parse(localStorage.getItem(this.defaultFolderKey))
-        if (Array.isArray(saved) && saved.every(part => typeof part === 'string' && part.length > 0)) this.defaultFolder = saved
+        if (Array.isArray(saved)) this.defaultFolder = saved
       } catch {
         // Unavailable storage or an invalid saved value leaves the global preference in effect.
       }
@@ -288,7 +288,7 @@ export default {
         if (!deferReveal) this.metadataLoaded = true
         // 如果有播放状态记录
         // 同时当前尚未播放，则设置历史播放进度
-        if (!silent && !this.metadata.files_missing && !this.isLyricsPage && this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length > 0 && this.playWorkId == 0) {
+        if (!silent && !this.metadata.files_missing && !this.isLyricsPage && this.metadata.state?.queue?.length && this.playWorkId == 0) {
           this.resumeMetadataPlayHistroy()
         }
         return true
@@ -372,19 +372,17 @@ export default {
     },
 
     resumeMetadataPlayHistroy ({ autoPlay = false } = {}) {
-      if (!this.metadata.state || !Array.isArray(this.metadata.state.queue) || this.metadata.state.queue.length === 0) {
-        return
-      }
+      const state = this.metadata.state
+      if (!state?.queue?.length) return
       this.$store.commit('AudioPlayer/SET_QUEUE', {
         workId: this.metadata.id,
-        queue: this.metadata.state.queue,
-        index: this.metadata.state.index,
+        queue: state.queue,
+        index: state.index,
         resetPlaying: autoPlay,
-        resumeHistroySeconds: this.metadata.state.seconds,
+        resumeHistroySeconds: state.seconds,
       })
-      if (this.metadata.state.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', this.metadata.state.playMode)
-      if (Object.prototype.hasOwnProperty.call(this.metadata.state, 'playbackRate')) this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', this.metadata.state.playbackRate)
-      console.log(`resume seconds = ${this.metadata.state.seconds}`)
+      if (state.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', state.playMode)
+      if (state.playbackRate != null) this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', state.playbackRate)
     }
   }
 }

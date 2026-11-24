@@ -86,74 +86,6 @@ const MEDIA_SESSION_ACTIONS = [
   'seekto',
 ]
 
-function convert_srt_vtt_to_lrc(text) {
-  let lines = text.split("\n").map(l => l.trim())
-  let isVtt = lines[0] == 'WEBVTT';
-  if (isVtt) {
-    lines = lines.slice(1)
-  }
-
-  const timeParseRe = /(\d*):(\d*):(\d*)(\.|,)(\d*)\s*-->\s*[\d:.]*/
-
-  const parsingUnit = []; // [([minute, seconds, millseconds], '文字\n文字'), (), ..., ()]
-  let i = 0;
-  while(i < lines.length) {
-
-    // 注意 srt 和 vtt 字幕的毫秒区分符号一个是`,'另一个是`.
-    // audio.srt be like
-    // 1
-    // 00:01:22,343 --> 00:03:22,344
-    // 字幕，字幕
-    // 
-    // 2
-    // ...
-
-    // audio.vtt be like
-    // WEBVTT
-    // 
-    // 1
-    // 00:01:22.343 --> 00:03:22.344
-    // 字幕，字幕
-    // 
-    // 2
-    // ...
-
-    if (/^\d*$/.test(lines[i++])) { /* parse 序号 */
-      if (timeParseRe.test(lines[i])) { /* parse 时间戳 */
-        const [_/* whole string */ , h, m, s, _mill_sep /* ignore */, ms] = timeParseRe.exec(lines[i]).map(x => parseInt(x));
-        let texts = [];
-        i++;
-        while(i < lines.length && lines[i] != "") { /* parse 文字，直到空行 */
-          texts.push(lines[i++]);
-        }
-        parsingUnit.push([
-          [h, m, s, ms],
-          texts.join(' '),
-        ]);
-      }
-    }
-  } // parse srt vtt 完成
-
-  function padding(n, len) {
-    n = Math.ceil(n);
-    let s = `${n}`;
-    let pad = len - s.length;
-    if (pad > 0) {
-      for (let i = 0; i < pad; ++i) {
-        s = "0" + s;
-      }
-    }
-    return s;
-  }
-
-  function formatLrcTime([h, m, s, ms]) {
-    return padding(h * m, 2) + ":" + padding(m, 2) + ":" + padding(s, 2) + "." + padding(ms, 3);
-  }
-
-  const lrcContent = parsingUnit.map(([time, text]) => `[${formatLrcTime(time)}] ${text}`).join("\n");
-  return lrcContent;
-}
-
 export default {
   name: 'AudioElement',
   emits: ['position-changed'],
@@ -466,11 +398,7 @@ export default {
     ]),
 
     transcodeExtensions () {
-      if (typeof this.transcodeFromTypes !== 'string') return []
-      return this.transcodeFromTypes
-        .split(',')
-        .map(type => type.trim().toLowerCase())
-        .filter(Boolean)
+      return this.transcodeFromTypes ? this.transcodeFromTypes.split(',') : []
     },
 
     shouldTranscodeTrack (track) {
@@ -668,9 +596,8 @@ export default {
 
     applyLyricLines(lines) {
       if (!this.lrcObj) return
-      const sourceLines = Array.isArray(lines) ? lines : []
       this.playableLyricLineIndexes = []
-      const playableLines = sourceLines.filter((line, index) => {
+      const playableLines = lines.filter((line, index) => {
         if (!line.deleted) {
           this.playableLyricLineIndexes.push(index)
           return true
@@ -719,23 +646,7 @@ export default {
           return;
         }
 
-        // 新后端直接返回解析后的歌词；旧后端仍返回可下载的文件 hash。
-        let lyricLines = []
-        if (Array.isArray(check_response.data.lrc)) {
-          lyricLines = check_response.data.lrc
-        } else {
-          const lrcUrl = `/api/media/stream/${check_response.data.hash}`;
-          const lyricExtension = String(check_response.data.lyricExtension || '').toLowerCase();
-          const response = await this.$axios.get(lrcUrl)
-          if (!isCurrentRequest()) return
-          let lrcContent = response.data
-          if (lyricExtension == ".srt" || lyricExtension == ".vtt") {
-            lrcContent = convert_srt_vtt_to_lrc(lrcContent);
-          }
-          this.lrcObj.setLyric(lrcContent)
-          lyricLines = (this.lrcObj.lines || []).map(line => ({ ...line }))
-        }
-        this.SET_LYRIC_LINES(lyricLines)
+        this.SET_LYRIC_LINES(check_response.data.lrc)
       } catch(error) {
         if (!isCurrentRequest()) return
         if (error.response) {

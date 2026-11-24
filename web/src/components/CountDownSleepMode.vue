@@ -69,7 +69,7 @@ export default {
     },
     ...mapState('AudioPlayer', ['sleepTime', 'sleepMode']),
     numericSleepTime () {
-      return typeof this.sleepTime === 'number' && Number.isFinite(this.sleepTime)
+      return typeof this.sleepTime === 'number'
     },
     remainingLabel () {
       const totalSeconds = Math.max(0, Math.ceil(this.remainingMs / 1000))

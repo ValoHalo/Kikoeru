@@ -373,7 +373,7 @@ import LyricSelection from 'components/LyricSelection.vue'
 import TranscodingStatus from 'components/TranscodingStatus.vue'
 import BookmarksDialog from 'components/BookmarksDialog.vue'
 import { mapState, mapGetters, mapMutations } from 'vuex'
-import { formatSeconds } from '../utils'
+import { formatSeconds, getTrackWorkId, toPlaylistItem } from '../utils'
 import { debounce } from 'quasar'
 import { CLEARED_LAST_QUEUE_KEY_PREFIX, PLAYBACK_RATES } from '../store/module-AudioPlayer/state'
 
@@ -551,13 +551,12 @@ export default {
     },
 
     coverUrl () {
-      const hash = this.currentPlayingFile.hash
-      return this.$store.getters['AudioPlayer/coverUrl'](hash ? hash.split('/')[0] : 0)
+      return this.$store.getters['AudioPlayer/coverUrl'](getTrackWorkId(this.currentPlayingFile))
     },
 
     workDetailUrl () {
-      const hash = this.currentPlayingFile.hash
-      return hash ? `/work/${hash.split('/')[0]}` : ""
+      const workId = getTrackWorkId(this.currentPlayingFile)
+      return workId ? `/work/${workId}` : ""
     },
 
     volume: {
@@ -737,7 +736,7 @@ export default {
     ]),
 
     samCoverUrl (hash) {
-      return this.$store.getters['AudioPlayer/coverUrl'](hash ? hash.split('/')[0] : 0, 'sam')
+      return this.$store.getters['AudioPlayer/coverUrl'](getTrackWorkId({ hash }), 'sam')
     },
 
     openSaveQueueDialog () {
@@ -747,9 +746,7 @@ export default {
     },
 
     playlistItemFromTrack (track) {
-      const workId = Number(track.workId) || Number(String(track.hash || '').split('/')[0])
-      const relativePath = track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/')
-      return { workId, relativePath: String(relativePath).replace(/\\/g, '/'), title: track.title, workTitle: track.workTitle || '' }
+      return toPlaylistItem(track)
     },
 
     async saveQueueAsPlaylist () {

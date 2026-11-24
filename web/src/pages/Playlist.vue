@@ -82,6 +82,7 @@ import { appDialog } from '../utils/appDialog'
 import { t } from '../i18n'
 import draggable from 'vuedraggable'
 import { mapMutations, mapState } from 'vuex'
+import { getTrackWorkId, toPlaylistItem } from '../utils'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {
@@ -105,13 +106,10 @@ export default {
   methods: {
     ...mapMutations('AudioPlayer', ['ADD_TO_QUEUE', 'EMPTY_QUEUE', 'REMOVE_FROM_QUEUE', 'SET_QUEUE', 'SET_TRACK']),
     coverUrl (track) {
-      const workId = Number(track && track.workId) || Number(String((track && track.hash) || '').split('/')[0])
-      return this.$store.getters['AudioPlayer/coverUrl'](workId, 'sam')
+      return this.$store.getters['AudioPlayer/coverUrl'](getTrackWorkId(track), 'sam')
     },
     toPlaylistItem (track) {
-      const workId = Number(track.workId) || Number(String(track.hash || '').split('/')[0])
-      const relativePath = track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/')
-      return { workId, relativePath: String(relativePath).replace(/\\/g, '/'), title: track.title, workTitle: track.workTitle || '' }
+      return toPlaylistItem(track)
     },
     onCurrentQueueMoved (event) {
       if (!event.moved) return

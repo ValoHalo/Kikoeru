@@ -94,11 +94,11 @@
             </q-item-label>
 
             <q-item-label
-              v-if="item.type === 'audio' && ((Number.isFinite(item.duration) && item.duration >= 0) || isLastPlayed(item))"
+              v-if="item.type === 'audio' && (item.duration != null || isLastPlayed(item))"
               caption
               class="work-tree-audio-meta"
             >
-              <span v-if="Number.isFinite(item.duration) && item.duration >= 0" class="work-tree-duration work-tree-tabular">
+              <span v-if="item.duration != null" class="work-tree-duration work-tree-tabular">
                 <q-icon size="13px" name="schedule" />
                 <span>{{ formatSeconds(item.duration) }}</span>
               </span>
@@ -363,7 +363,7 @@ import { t } from '../i18n'
 import ImageEditor from './ImageEditor.vue'
 import WorkImageGallery from './WorkImageGallery.vue'
 import { mapState, mapGetters } from 'vuex'
-import { formatSeconds } from '../utils'
+import { formatSeconds, getLastPlayedTrack, toPlaylistItem } from '../utils'
 import NotifyMixin from '../mixins/Notification.js'
 import { initialWorkFolder } from '../utils/workFolder.mjs'
 
@@ -433,14 +433,12 @@ export default {
 
   computed: {
     lastPlayed () {
-      const state = this.metadata.state
-      const index = Number(state?.index)
-      const track = Array.isArray(state?.queue) && Number.isInteger(index) ? state.queue[index] : null
+      const track = getLastPlayedTrack(this.metadata.state)
       if (!track || !this.metadata.play_updated_at_full) return null
       const reference = this.playlistItemFromTrack(track)
       if (reference.workId !== Number(this.metadata.id) || !reference.relativePath) return null
       const date = new Date(this.metadata.play_updated_at_full)
-      if (!Number.isFinite(date.getTime())) return null
+      if (Number.isNaN(date.getTime())) return null
       const time = new Intl.DateTimeFormat(this.$i18n.locale, {
         year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
       }).format(date)
@@ -479,7 +477,7 @@ export default {
     },
 
     currentFolderDuration () {
-      return this.queue.reduce((sum, item) => (Number.isFinite(item.duration) && item.duration > 0 ? sum + item.duration : sum), 0)
+      return this.queue.reduce((sum, item) => (item.duration > 0 ? sum + item.duration : sum), 0)
     },
 
     allAudioTracks () {
@@ -554,15 +552,13 @@ export default {
     collectAudioTracks (items, result = []) {
       for (const item of items || []) {
         if (item.type === 'audio') result.push(item)
-        else if (item.type === 'folder' && Array.isArray(item.children)) this.collectAudioTracks(item.children, result)
+        else if (item.type === 'folder') this.collectAudioTracks(item.children, result)
       }
       return result
     },
 
     playlistItemFromTrack (track) {
-      const workId = Number(track.workId) || Number(String(track.hash || '').split('/')[0]) || Number(this.metadata.id)
-      const relativePath = track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/')
-      return { workId, relativePath: String(relativePath).replace(/\\/g, '/'), title: track.title, workTitle: track.workTitle || this.metadata.title || '' }
+      return toPlaylistItem(track, this.metadata.id, this.metadata.title)
     },
 
     async openPlaylistPicker (tracks) {

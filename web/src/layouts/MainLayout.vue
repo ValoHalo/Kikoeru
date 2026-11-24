@@ -267,28 +267,23 @@ export default {
         const response = await this.$axios.get('/api/histroy', { params: { page: 1, sort: 'desc' } })
         if (this.$store.state.User.name !== userName || this.$store.state.AudioPlayer.queue.length > 0) return
         if (!this.$store.state.AudioPlayer.restoreLastQueue || this.$q.localStorage.getItem(clearedQueueKey) === true) return
-        const work = response.data && Array.isArray(response.data.works) ? response.data.works[0] : null
+        const work = response.data.works?.[0]
         this.offerLocalRecovery(userName, work)
         if (this.$store.getters['AudioPlayer/sfwOnly'] && work?.nsfw !== false) return
-        const historyState = work && work.state
-        if (!historyState || !Array.isArray(historyState.queue) || historyState.queue.length === 0) return
-        const indexValue = Number(historyState.index)
-        const index = Number.isInteger(indexValue)
-          ? Math.min(Math.max(indexValue, 0), historyState.queue.length - 1)
-          : 0
-        const secondsValue = Number(historyState.seconds)
-        const seconds = Number.isFinite(secondsValue) && secondsValue >= 0 ? secondsValue : 0
+        const historyState = work?.state
+        if (!historyState?.queue?.length) return
+        const seconds = Math.max(0, Number(historyState.seconds) || 0)
         this.$store.commit('AudioPlayer/PAUSE')
         this.$store.commit('AudioPlayer/SET_QUEUE', {
           workId: work.id,
           queue: historyState.queue,
-          index,
+          index: historyState.index,
           resetPlaying: false,
           resumeHistroySeconds: seconds,
           notifyHistoryRestore: false,
         })
         if (historyState.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', historyState.playMode)
-        if (Object.prototype.hasOwnProperty.call(historyState, 'playbackRate')) {
+        if (historyState.playbackRate != null) {
           this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', historyState.playbackRate)
         }
       } catch (error) {

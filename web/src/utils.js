@@ -83,6 +83,24 @@ export function extname(string) {
   return extIdx >= 0 ? string.substr(extIdx) : "";
 }
 
+export function getTrackWorkId(track, fallback = 0) {
+  return Number(track?.workId) || Number(String(track?.hash || '').split('/')[0]) || Number(fallback) || 0
+}
+
+export function toPlaylistItem(track, fallbackWorkId = 0, fallbackWorkTitle = '') {
+  const relativePath = track.relativePath || [track.subtitle, track.title].filter(Boolean).join('/')
+  return {
+    workId: getTrackWorkId(track, fallbackWorkId),
+    relativePath: String(relativePath).replace(/\\/g, '/'),
+    title: track.title,
+    workTitle: track.workTitle || fallbackWorkTitle || '',
+  }
+}
+
+export function getLastPlayedTrack(state) {
+  return state?.queue?.[state.index] || null
+}
+
 
 export const ServerApi = {
   async queryLyric(trackHash, language = 'auto') {

@@ -343,7 +343,7 @@ function getSmartAudioFolderPath(tree, options = {}) {
                 totalCount: audioFiles.length,
             });
         }
-        for (const folder of items.filter(item => item.type === 'folder' && Array.isArray(item.children))) {
+        for (const folder of items.filter(item => item.type === 'folder')) {
             collectCandidates(folder.children, folderPath.concat(folder.title), getAudioEffectState(folder.title, hasEffects));
         }
     };

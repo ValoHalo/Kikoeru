@@ -1,9 +1,9 @@
 export function folderExists (tree, path) {
-  if (!Array.isArray(path) || !path.every(part => typeof part === 'string' && part.length > 0)) return false
+  if (!Array.isArray(path)) return false
   let children = tree
   for (const title of path) {
     const folder = children.find(item => item.type === 'folder' && item.title === title)
-    if (!folder || !Array.isArray(folder.children)) return false
+    if (!folder?.children) return false
     children = folder.children
   }
   return true

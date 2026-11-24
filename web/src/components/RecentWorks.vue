@@ -259,7 +259,7 @@ export default {
         resumeHistroySeconds: work.state.seconds,
       })
       if (work.state.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', work.state.playMode)
-      if (Object.prototype.hasOwnProperty.call(work.state, 'playbackRate')) this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', work.state.playbackRate)
+      if (work.state.playbackRate != null) this.$store.commit('AudioPlayer/SET_PLAYBACK_RATE', work.state.playbackRate)
 
     }
 

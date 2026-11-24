@@ -304,7 +304,7 @@ export default {
     },
 
     hasExplicitEnd (line) {
-      return Number.isFinite(Number(line.timeEnd)) && Number(line.timeEnd) >= 0
+      return line.timeEnd != null && line.timeEnd >= 0
     },
 
     formatMatchLevel (value) {
@@ -459,7 +459,7 @@ export default {
         if (!isCurrentRequest()) return
         this.$q.localStorage.set(key, option.hash)
         this.SET_LYRIC_LINES(lines)
-        this.SET_HAS_LYRIC(Array.isArray(lines) && lines.length > 0)
+        this.SET_HAS_LYRIC(lines.length > 0)
         this.SET_CURRENT_LYRIC_LINE_NUMBER(0)
         this.openLyricFileSelection = false
       } catch (error) {

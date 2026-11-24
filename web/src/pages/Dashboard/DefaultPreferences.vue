@@ -241,7 +241,7 @@ export default {
       return normalizeAccentColor(this.config.accentColor) || DEFAULT_ACCENT_COLOR
     },
     accentColorInvalid () {
-      return Object.prototype.hasOwnProperty.call(this.config, 'accentColor') && normalizeAccentColor(this.config.accentColor) === null
+      return this.config.accentColor != null && normalizeAccentColor(this.config.accentColor) === null
     },
     hasUnsavedChanges () {
       return this.savedConfigSnapshot !== '' && JSON.stringify(this.config) !== this.savedConfigSnapshot
@@ -259,13 +259,11 @@ export default {
       if (normalized) this.config.accentColor = normalized
     },
     isTranscodeTypeEnabled (type) {
-      return typeof this.config.transcodeFromTypes === 'string' && this.config.transcodeFromTypes.split(',').includes(type)
+      return (this.config.transcodeFromTypes || '').split(',').includes(type)
     },
 
     setTranscodeType (type, enabled) {
-      const selected = typeof this.config.transcodeFromTypes === 'string' && this.config.transcodeFromTypes
-        ? this.config.transcodeFromTypes.split(',')
-        : []
+      const selected = this.config.transcodeFromTypes ? this.config.transcodeFromTypes.split(',') : []
       const next = enabled
         ? selected.concat(type).filter((value, index, values) => values.indexOf(value) === index)
         : selected.filter(value => value !== type)

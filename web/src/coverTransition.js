@@ -35,7 +35,7 @@ export function prepareCoverTransition (event) {
 
 function beginCoverTransition (source, id, destination, returning = false) {
   cancelCoverTransition()
-  if (reducedMotion() || typeof Element.prototype.animate !== 'function') return
+  if (reducedMotion()) return
   const sourceImage = source?.querySelector('img.q-img__image')
   if (!sourceImage?.complete || !sourceImage.naturalWidth) return
   const rect = source.getBoundingClientRect()
@@ -143,7 +143,7 @@ export async function finishCoverTransition (id, target) {
     }
   }
   if (active !== current) return
-  if (!target.isConnected || reducedMotion()) return cancelCoverTransition()
+  if (!target.isConnected) return cancelCoverTransition()
   const rect = target.getBoundingClientRect()
   if (!rect.width || !rect.height || rect.bottom <= 0 || rect.top >= window.innerHeight) return cancelCoverTransition()
 
@@ -165,30 +165,21 @@ export async function finishCoverTransition (id, target) {
     borderRadius: targetRadius
   })
 
-  // Track minor layout shifts (e.g. async track/metadata load) without aborting the flight.
-  const trackedRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
-  const checkPosition = () => {
+  // Follow layout shifts during flight (e.g. async metadata load) instead of aborting.
+  const trackedRect = { left: rect.left, top: rect.top }
+  const syncPosition = () => {
     if (active !== current) return
     if (!target.isConnected) return cancelCoverTransition()
     const latest = target.getBoundingClientRect()
-    if (!latest.width || !latest.height || latest.bottom <= 0 || latest.top >= window.innerHeight) {
-      return cancelCoverTransition()
-    }
-    if (Math.abs(latest.width - trackedRect.width) > 4 || Math.abs(latest.height - trackedRect.height) > 4) {
-      return cancelCoverTransition()
-    }
-    if (Math.abs(latest.left - trackedRect.left) > 80 || Math.abs(latest.top - trackedRect.top) > 80) {
-      return cancelCoverTransition()
-    }
     if (Math.abs(latest.left - trackedRect.left) > 0.5 || Math.abs(latest.top - trackedRect.top) > 0.5) {
       trackedRect.left = latest.left
       trackedRect.top = latest.top
       current.overlay.style.left = `${latest.left}px`
       current.overlay.style.top = `${latest.top}px`
     }
-    current.positionFrame = requestAnimationFrame(checkPosition)
+    current.positionFrame = requestAnimationFrame(syncPosition)
   }
-  current.positionFrame = requestAnimationFrame(checkPosition)
+  current.positionFrame = requestAnimationFrame(syncPosition)
 
   current.animation = current.overlay.animate([
     { transform: `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})` },
@@ -197,11 +188,6 @@ export async function finishCoverTransition (id, target) {
 
   try {
     await current.animation.finished
-    const image = target.querySelector('img.q-img__image')
-    if (image && (!image.complete || !image.naturalWidth)) return cancelCoverTransition()
-    while (active === current && image && Number(getComputedStyle(image).opacity) < 0.99) {
-      await new Promise(resolve => requestAnimationFrame(resolve))
-    }
     if (active !== current) return
     target.style.visibility = current.targetVisibility
     current.animation = current.overlay.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, fill: 'forwards' })

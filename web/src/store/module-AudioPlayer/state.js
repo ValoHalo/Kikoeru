@@ -62,6 +62,16 @@ export function normalizeSmartPathAudioTypes (value) {
   return normalized.concat(SMART_PATH_AUDIO_TYPES.filter(type => !normalized.includes(type))).join(',')
 }
 
+export function normalizeTranscodeFromTypes (value, fallback = '') {
+  if (typeof value !== 'string') return fallback
+  return value
+    .split(',')
+    .map(type => type.trim().toLowerCase())
+    .filter(type => TRANSCODE_FILE_TYPES.includes(type))
+    .filter((type, index, types) => types.indexOf(type) === index)
+    .join(',')
+}
+
 function loadTranscodeOption () {
   const value = LocalStorage.has(TRANSCODE_OPTION_KEY)
     ? LocalStorage.getItem(TRANSCODE_OPTION_KEY)
@@ -72,16 +82,8 @@ function loadTranscodeOption () {
 }
 
 function loadTranscodeFromTypes () {
-  const value = LocalStorage.has(TRANSCODE_FROM_TYPES_KEY)
-    ? LocalStorage.getItem(TRANSCODE_FROM_TYPES_KEY)
-    : 'flac,wav'
-  if (typeof value !== 'string') return 'flac,wav'
-  return value
-    .split(',')
-    .map(type => type.trim().toLowerCase())
-    .filter(type => TRANSCODE_FILE_TYPES.includes(type))
-    .filter((type, index, types) => types.indexOf(type) === index)
-    .join(',')
+  if (!LocalStorage.has(TRANSCODE_FROM_TYPES_KEY)) return 'flac,wav'
+  return normalizeTranscodeFromTypes(LocalStorage.getItem(TRANSCODE_FROM_TYPES_KEY), 'flac,wav')
 }
 
 function loadWorkListMode () {

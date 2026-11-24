@@ -407,13 +407,6 @@ function normalizeFingerprintPath(filePath) {
     const normalizedPath = path_1.default.resolve(filePath);
     return process.platform === 'win32' ? normalizedPath.toLowerCase() : normalizedPath;
 }
-function isSourceFingerprint(value) {
-    return !!value
-        && typeof value.path === 'string'
-        && Number.isFinite(value.size)
-        && Number.isFinite(value.mtimeMs)
-        && Number.isFinite(value.ctimeMs);
-}
 async function getSourceFingerprint(filePath) {
     const normalizedPath = normalizeFingerprintPath(filePath);
     let stat;
@@ -439,8 +432,7 @@ async function getSourceFingerprint(filePath) {
     };
 }
 function sourceFingerprintsEqual(left, right) {
-    return isSourceFingerprint(left)
-        && isSourceFingerprint(right)
+    return Boolean(left && right)
         && left.path === right.path
         && left.size === right.size
         && left.mtimeMs === right.mtimeMs
@@ -533,9 +525,7 @@ function scheduleTranscodeCacheCleanup() {
             console.error('清理转码缓存失败: ', error);
         }
     }, 1000 * 10);
-    if (typeof timer.unref === 'function') {
-        timer.unref();
-    }
+    timer.unref();
 }
 async function resolveTranscodeSource(workId, trackReference) {
     const { fileName, track } = await resolveMediaSource(workId, trackReference);

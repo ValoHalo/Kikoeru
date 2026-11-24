@@ -47,7 +47,7 @@ export default {
       'currentPlayingFile'
     ]),
     isDesktopPlayerOpen () {
-      return Boolean(!this.hide && this.currentPlayingFile && this.currentPlayingFile.hash)
+      return Boolean(!this.hide && this.currentPlayingFile.hash)
     },
   },
 

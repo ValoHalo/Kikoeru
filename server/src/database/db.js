@@ -217,10 +217,10 @@ const updateWorkMetadata = (work, options = {}) => knex.transaction(async (trx) 
 });
 exports.updateWorkMetadata = updateWorkMetadata;
 const customWorkMetadata = (workId, someMetadata) => knex.transaction(async (trx) => {
-    const hasTitle = Object.prototype.hasOwnProperty.call(someMetadata, 'title') && Boolean(someMetadata.title);
-    const hasTags = Object.prototype.hasOwnProperty.call(someMetadata, 'tags') && Boolean(someMetadata.tags);
-    const hasVas = Object.prototype.hasOwnProperty.call(someMetadata, 'vas') && Boolean(someMetadata.vas);
-    const hasCircle = Object.prototype.hasOwnProperty.call(someMetadata, 'circle') && Boolean(someMetadata.circle);
+    const hasTitle = Boolean(someMetadata.title);
+    const hasTags = Boolean(someMetadata.tags);
+    const hasVas = Boolean(someMetadata.vas);
+    const hasCircle = Boolean(someMetadata.circle);
     if (hasTitle) {
         await trx('t_work').where('id', '=', workId).update({ title: someMetadata.title });
     }

@@ -116,20 +116,12 @@ export default {
     }
     image.onerror = () => this.showErrNotif(t('imageEditor.loadFailed'))
 
-    if (typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(() => this.drawCropPreview())
-      this.resizeObserver.observe(canvas)
-    } else {
-      window.addEventListener('resize', this.drawCropPreview)
-    }
+    this.resizeObserver = new ResizeObserver(() => this.drawCropPreview())
+    this.resizeObserver.observe(canvas)
   },
 
   beforeUnmount () {
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect()
-    } else {
-      window.removeEventListener('resize', this.drawCropPreview)
-    }
+    this.resizeObserver?.disconnect()
   },
 
   methods: {

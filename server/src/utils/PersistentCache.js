@@ -106,9 +106,7 @@ class PersistentCache {
             this.persistScheduled = false;
             this.persist();
         }, delay);
-        if (typeof this.persistTimer.unref === 'function') {
-            this.persistTimer.unref();
-        }
+        this.persistTimer.unref();
     }
     cancelScheduledPersist() {
         if (this.persistTimer !== null) {

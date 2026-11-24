@@ -42,17 +42,13 @@ export default {
 
   computed: {
     relatedWorks () {
-      return Array.isArray(this.metadata.relatedWorks) ? this.metadata.relatedWorks : []
+      return this.metadata.relatedWorks || []
     }
   },
 
   methods: {
     displayCode (id) {
-      try {
-        return idNumberToCode(id)
-      } catch (_) {
-        return String(id)
-      }
+      return idNumberToCode(id)
     }
   }
 }
