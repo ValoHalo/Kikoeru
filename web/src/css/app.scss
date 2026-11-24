@@ -30,6 +30,10 @@
 //   &:active { text-decoration:underline; } // 鼠标点击时
 // }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 a {
   text-decoration:none;
 }

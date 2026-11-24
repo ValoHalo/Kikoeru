@@ -1,137 +1,176 @@
 <template>
   <q-card class="app-form-dialog edit-meta-card">
-    <q-card-section class="q-pb-sm">
-      <div class="text-h6">{{ $t('editMeta.title') }}</div>
+    <q-card-section class="kikoeru-dialog-header">
+      <div class="kikoeru-dialog-title-group">
+        <span class="kikoeru-dialog-icon">
+          <q-icon name="edit" size="18px" />
+        </span>
+        <div class="kikoeru-dialog-title-text">
+          <div class="kikoeru-dialog-title">{{ $t('editMeta.title') }}</div>
+        </div>
+      </div>
+      <q-btn flat round dense icon="close" class="kikoeru-dialog-close" :disable="saving" :aria-label="$t('common.close')" v-close-popup />
     </q-card-section>
 
-    <q-card-section class="q-pt-none">
-      <q-input
-        v-model="editTitle"
-        outlined
-        dense
-        :label="$t('editMeta.editTitle')"
-        :disable="saving"
-      />
-    </q-card-section>
-
-    <q-card-section class="q-pt-none">
-      <div class="text-caption edit-meta-label q-mb-xs">{{ $t('common.circles') }}</div>
-      <div class="row items-center q-gutter-xs">
-        <q-chip size="md" class="edit-meta-chip edit-meta-chip--accent">
-          {{ editCircle.name }}
-        </q-chip>
-        <q-btn
-          outline
-          round
-          color="primary"
-          icon="swap_horiz"
-          size="sm"
-          :aria-label="$t('editMeta.replaceCircle')"
+    <q-card-section class="kikoeru-dialog-body edit-meta-body scroll">
+      <div class="edit-meta-section">
+        <div class="kikoeru-dialog-field-label">{{ $t('editMeta.editTitle') }}</div>
+        <q-input
+          v-model="editTitle"
+          outlined
+          autogrow
+          type="textarea"
+          :rows="2"
           :disable="saving"
-          @click="openCandidateDialog('circles')"
         />
+      </div>
+
+      <div class="edit-meta-section">
+        <div class="kikoeru-dialog-field-label">
+          <span>{{ $t('common.circles') }}</span>
+          <q-btn
+            flat
+            dense
+            no-caps
+            size="sm"
+            color="primary"
+            icon="swap_horiz"
+            :label="$t('editMeta.replaceCircle')"
+            class="edit-meta-inline-btn"
+            :disable="saving"
+            @click="openCandidateDialog('circles')"
+          />
+        </div>
+        <div class="edit-meta-chip-box">
+          <q-chip size="md" icon="album" class="edit-meta-chip edit-meta-chip--accent">
+            {{ editCircle.name }}
+          </q-chip>
+        </div>
+      </div>
+
+      <div class="edit-meta-section">
+        <div class="kikoeru-dialog-field-label">
+          <span>{{ $t('common.voiceActors') }} ({{ editVas.length }})</span>
+          <q-btn
+            flat
+            dense
+            no-caps
+            size="sm"
+            color="primary"
+            icon="add"
+            :label="$t('editMeta.addVoiceActor')"
+            class="edit-meta-inline-btn"
+            :disable="saving"
+            @click="openCandidateDialog('vas')"
+          />
+        </div>
+        <div class="edit-meta-chip-box">
+          <q-chip
+            v-for="(va, index) in editVas"
+            :key="`${va.id}-${va.name}`"
+            removable
+            size="md"
+            icon="mic"
+            class="edit-meta-chip edit-meta-chip--accent"
+            :disable="saving"
+            @remove="removeVaAt(index)"
+          >
+            {{ va.name }}
+          </q-chip>
+        </div>
+      </div>
+
+      <div class="edit-meta-section">
+        <div class="kikoeru-dialog-field-label">
+          <span>{{ $t('common.tags') }} ({{ editTags.length }})</span>
+          <q-btn
+            flat
+            dense
+            no-caps
+            size="sm"
+            color="primary"
+            icon="add"
+            :label="$t('editMeta.addTag')"
+            class="edit-meta-inline-btn"
+            :disable="saving"
+            @click="openCandidateDialog('tags')"
+          />
+        </div>
+        <div class="edit-meta-chip-box">
+          <q-chip
+            v-for="(tag, index) in editTags"
+            :key="`${tag.id}-${tag.name}`"
+            removable
+            size="md"
+            class="edit-meta-chip"
+            :disable="saving"
+            @remove="removeTagAt(index)"
+          >
+            {{ tag.name }}
+          </q-chip>
+        </div>
       </div>
     </q-card-section>
 
-    <q-card-section class="q-pt-none">
-      <div class="text-caption edit-meta-label q-mb-xs">{{ $t('common.tags') }}</div>
-      <div class="row items-center q-gutter-xs">
-        <q-chip
-          v-for="(tag, index) in editTags"
-          :key="`${tag.id}-${tag.name}`"
-          removable
-          size="md"
-          class="edit-meta-chip"
-          :disable="saving"
-          @remove="removeTagAt(index)"
-        >
-          {{ tag.name }}
-        </q-chip>
-        <q-btn
-          outline
-          round
-          color="primary"
-          icon="add"
-          size="sm"
-          :aria-label="$t('editMeta.addTag')"
-          :disable="saving"
-          @click="openCandidateDialog('tags')"
-        />
-      </div>
-    </q-card-section>
-
-    <q-card-section class="q-pt-none">
-      <div class="text-caption edit-meta-label q-mb-xs">{{ $t('common.voiceActors') }}</div>
-      <div class="row items-center q-gutter-xs">
-        <q-chip
-          v-for="(va, index) in editVas"
-          :key="`${va.id}-${va.name}`"
-          removable
-          square
-          size="md"
-          icon="mic"
-          class="edit-meta-chip edit-meta-chip--accent"
-          :disable="saving"
-          @remove="removeVaAt(index)"
-        >
-          {{ va.name }}
-        </q-chip>
-        <q-btn
-          outline
-          round
-          color="primary"
-          icon="add"
-          size="sm"
-          :aria-label="$t('editMeta.addVoiceActor')"
-          :disable="saving"
-          @click="openCandidateDialog('vas')"
-        />
-      </div>
-    </q-card-section>
-
-    <q-card-actions align="right">
-      <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" :disable="saving" v-close-popup />
-      <q-btn unelevated :label="$t('common.ok')" color="primary" :loading="saving" @click="confirmChange" />
+    <q-card-actions class="kikoeru-dialog-footer">
+      <q-btn class="app-dialog-cancel" flat no-caps :label="$t('common.cancel')" :disable="saving" v-close-popup />
+      <q-btn unelevated no-caps :label="$t('common.save')" color="primary" :loading="saving" @click="confirmChange" />
     </q-card-actions>
 
     <q-dialog v-model="showCandidateDialog">
       <q-card class="app-form-dialog edit-meta-candidate-card">
-        <q-card-section>
-          <div class="text-h6 q-mb-sm">{{ searchTitle }}</div>
-          <q-input v-model="searchCandidate" outlined dense :label="$t('common.search')" autofocus clearable>
-            <template v-slot:append>
+        <q-card-section class="kikoeru-dialog-header">
+          <div class="kikoeru-dialog-title-group">
+            <span class="kikoeru-dialog-icon">
+              <q-icon name="search" size="18px" />
+            </span>
+            <div class="kikoeru-dialog-title-text">
+              <div class="kikoeru-dialog-title">{{ searchTitle }}</div>
+            </div>
+          </div>
+          <q-btn flat round dense icon="close" class="kikoeru-dialog-close" :aria-label="$t('common.close')" v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="kikoeru-dialog-body edit-meta-candidate-body">
+          <q-input v-model="searchCandidate" outlined dense :placeholder="$t('common.search')" autofocus clearable>
+            <template #prepend>
+              <q-icon name="search" size="18px" />
+            </template>
+            <template #append>
               <q-btn
                 v-if="canAddCustomCandidate"
-                flat
+                unelevated
                 dense
                 no-caps
+                size="sm"
                 color="primary"
                 :label="$t('editMeta.addCustom')"
                 @click="chooseCandidate({ id: 0, name: normalizedSearchCandidate })"
               />
             </template>
           </q-input>
-        </q-card-section>
 
-        <q-card-section class="q-pt-none">
-          <q-scroll-area style="height: 40vh">
-            <q-list dense bordered separator class="edit-meta-candidate-list">
+          <q-scroll-area class="edit-meta-candidate-scroll">
+            <q-list dense separator class="edit-meta-candidate-list">
               <q-item
                 v-for="candidate in filteredCandidates"
                 :key="`${candidate.id}-${candidate.name}`"
                 clickable
                 v-ripple
+                class="edit-meta-candidate-item"
                 @click="chooseCandidate(candidate)"
               >
                 <q-item-section>{{ candidate.name }}</q-item-section>
-                <q-item-section side>{{ candidate.count }}</q-item-section>
+                <q-item-section side>
+                  <span class="edit-meta-candidate-count">{{ candidate.count }}</span>
+                </q-item-section>
               </q-item>
             </q-list>
           </q-scroll-area>
         </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn class="app-dialog-cancel" flat :label="$t('common.cancel')" v-close-popup />
+        <q-card-actions class="kikoeru-dialog-footer">
+          <q-btn class="app-dialog-cancel" flat no-caps :label="$t('common.cancel')" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -145,7 +184,7 @@ import { ServerApi } from 'src/utils'
 
 const DEFAULT_VA = { id: 0, name: 'N/A' }
 
-function cloneList(list) {
+function cloneList (list) {
   return Array.isArray(list)
     ? list.filter(item => item && item.name !== null).map(item => ({ id: item.id, name: item.name }))
     : []
@@ -314,33 +353,92 @@ export default {
 
 <style scoped>
 .edit-meta-card {
-  width: min(760px, calc(100vw - 32px));
+  width: min(640px, calc(100vw - 28px));
+  max-height: 86dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.edit-meta-candidate-card {
-  width: min(680px, calc(100vw - 32px));
+.edit-meta-body {
+  min-height: 0;
+  gap: 16px !important;
 }
 
-.edit-meta-label {
-  color: var(--kikoeru-muted);
+.edit-meta-section {
+  min-width: 0;
+}
+
+.edit-meta-inline-btn {
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: rgba(var(--kikoeru-accent-rgb), 0.1);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.edit-meta-inline-btn:hover {
+  background: rgba(var(--kikoeru-accent-rgb), 0.18);
+}
+
+.edit-meta-chip-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: var(--kikoeru-radius-sm);
+  background: var(--kikoeru-inset);
+  border: 1px solid var(--kikoeru-border);
 }
 
 .edit-meta-chip {
   margin: 0;
-  background: var(--kikoeru-inset);
+  background: var(--kikoeru-surface);
   color: var(--kikoeru-text);
   border: 1px solid var(--kikoeru-border);
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 13px;
 }
 
 .edit-meta-chip--accent {
-  background: var(--kikoeru-active-bg);
+  background: rgba(var(--kikoeru-accent-rgb), 0.12);
   color: var(--kikoeru-accent-text);
-  border-color: transparent;
+  border-color: rgba(var(--kikoeru-accent-rgb), 0.24);
 }
 
-.edit-meta-candidate-list {
-  border-color: var(--kikoeru-border);
+.edit-meta-candidate-card {
+  width: min(520px, calc(100vw - 28px));
+  max-height: 82dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.edit-meta-candidate-body {
+  min-height: 0;
+  gap: 12px !important;
+}
+
+.edit-meta-candidate-scroll {
+  height: 38vh;
+  border: 1px solid var(--kikoeru-border);
   border-radius: var(--kikoeru-radius-sm);
+  background: var(--kikoeru-inset);
+}
+
+.edit-meta-candidate-item {
+  min-height: 42px;
+}
+
+.edit-meta-candidate-count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--kikoeru-surface);
+  border: 1px solid var(--kikoeru-border);
+  color: var(--kikoeru-muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
 }
 </style>

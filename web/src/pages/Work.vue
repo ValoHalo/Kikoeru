@@ -12,44 +12,35 @@
       </div>
     </template>
     <div v-show="!isLyricsPage" class="work-page">
-      <div class="work-page-back">
-        <q-btn flat dense no-caps icon="arrow_back" :label="$t('common.back')" color="primary" @click="backToWorks" />
+      <div class="work-page-nav">
+        <q-btn flat dense no-caps icon="arrow_back" :label="$t('common.back')" class="work-back-btn" @click="backToWorks" />
       </div>
+
       <div v-if="workUnavailable" class="work-page-unavailable">{{ $t('work.unavailable') }}</div>
-      <div v-else-if="loadingData && !metadataLoaded" class="work-skeleton">
-        <div class="work-skeleton-header">
-          <q-skeleton height="255px" class="work-skeleton-cover" />
-          <div class="work-skeleton-info">
-            <q-skeleton type="text" width="32%" />
-            <q-skeleton type="text" width="88%" height="34px" />
-            <q-skeleton type="text" width="54%" />
-            <q-skeleton type="text" width="72%" />
-          </div>
+      <template v-else>
+        <WorkDetails
+          :metadata="metadata"
+          :loading="!metadataLoaded"
+          :tracks-loading="loadingTracks"
+          :can-play="canPlayWork"
+          @reset="requestMetaData({ silent: true })"
+          @resumeHistroy="resumeMetadataPlayHistroy({ autoPlay: true })"
+          @play="playPrimaryWork"
+          @open-bookmarks="showBookmarks = true"
+          @history-cleared="clearPlaybackHistory"
+        />
+
+        <RelatedWorks v-if="metadataLoaded" :metadata="metadata" />
+
+        <BookmarksDialog v-if="metadataLoaded && showBookmarks" :work-id="Number(workid)" @close="showBookmarks = false" />
+
+        <div v-if="loadingTracks && !metadata.files_missing" class="work-tree-skeleton">
+          <q-skeleton height="48px" class="work-skeleton-bar" />
+          <q-skeleton v-for="n in 5" :key="n" height="58px" class="work-skeleton-bar" />
         </div>
-        <q-skeleton height="56px" class="q-mt-md" />
-        <q-skeleton v-for="n in 4" :key="n" height="58px" class="q-mt-sm" />
-      </div>
-      <template v-if="metadataLoaded">
-        <WorkDetails :metadata="metadata" @reset="requestMetaData({ silent: true })" @resumeHistroy="resumeMetadataPlayHistroy" @history-cleared="clearPlaybackHistory">
-          <template #folder-action>
-            <q-btn
-              v-if="!metadata.files_missing"
-              flat round icon="folder_special"
-              :color="isDefaultFolder ? 'primary' : undefined"
-              :aria-label="$t(isDefaultFolder ? 'workTree.clearDefaultFolder' : 'workTree.setDefaultFolder')"
-              :aria-pressed="isDefaultFolder"
-              :disable="loadingData"
-              @click="toggleDefaultFolder"
-            >
-              <AppTooltip>{{ $t(isDefaultFolder ? 'workTree.clearDefaultFolder' : 'workTree.setDefaultFolder') }}</AppTooltip>
-            </q-btn>
-          </template>
-        </WorkDetails>
-        <RelatedWorks :metadata="metadata" />
-        <BookmarksDialog v-if="showBookmarks" :work-id="Number(workid)" @close="showBookmarks = false" />
-        <!-- <WorkQueue :queue="tracks" :editable="false" /> -->
+
         <WorkTree
-          v-if="!metadata.files_missing"
+          v-else-if="metadataLoaded && !metadata.files_missing"
           ref="workTree"
           :tree="tree"
           :metadata="metadata"
@@ -58,8 +49,23 @@
           @path-change="currentFolder = $event"
           :editable="false"
         >
-          <template #toolbar-actions>
-            <q-btn outline no-caps size="sm" color="primary" icon="bookmarks" :label="$t('bookmark.currentWork')" class="work-bookmarks-btn" @click="showBookmarks = true" />
+          <template #folder-actions>
+            <q-btn
+              flat
+              dense
+              no-caps
+              size="sm"
+              icon="folder_special"
+              class="work-default-folder-btn"
+              :class="{ 'work-default-folder-btn--active': isDefaultFolder }"
+              :label="isDefaultFolder ? $t('workTree.defaultFolderActive') : undefined"
+              :aria-label="$t(isDefaultFolder ? 'workTree.clearDefaultFolder' : 'workTree.setDefaultFolder')"
+              :aria-pressed="isDefaultFolder"
+              :disable="loadingData"
+              @click="toggleDefaultFolder"
+            >
+              <AppTooltip>{{ $t(isDefaultFolder ? 'workTree.clearDefaultFolder' : 'workTree.setDefaultFolder') }}</AppTooltip>
+            </q-btn>
           </template>
         </WorkTree>
       </template>
@@ -69,7 +75,6 @@
 
 <script>
 import WorkDetails from 'components/WorkDetails.vue'
-// import WorkQueue from 'components/WorkQueue'
 import WorkTree from 'components/WorkTree.vue'
 import SubtitleReader from 'components/SubtitleReader.vue'
 import RelatedWorks from 'components/RelatedWorks.vue'
@@ -79,6 +84,22 @@ import { mapState } from 'vuex'
 import { getImportantTreePath } from 'src/utils'
 import { folderExists, workFolderStorageKey } from '../utils/workFolder.mjs'
 
+function summarizeTreeAudio (items) {
+  let count = 0
+  let duration = 0
+  for (const item of items || []) {
+    if (item.type === 'audio') {
+      count += 1
+      if (Number.isFinite(item.duration) && item.duration > 0) duration += item.duration
+    } else if (item.type === 'folder' && Array.isArray(item.children)) {
+      const nested = summarizeTreeAudio(item.children)
+      count += nested.count
+      duration += nested.duration
+    }
+  }
+  return { count, duration }
+}
+
 export default {
   name: 'Work',
 
@@ -87,7 +108,6 @@ export default {
   components: {
     SubtitleReader,
     WorkDetails,
-    // WorkQueue,
     WorkTree,
     RelatedWorks,
     BookmarksDialog
@@ -104,6 +124,7 @@ export default {
       tree: [],
       metadataLoaded: false,
       loadingData: true,
+      loadingTracks: true,
       workUnavailable: false,
       importantTreePathArr: [],
       defaultFolder: null,
@@ -121,6 +142,12 @@ export default {
     },
     isDefaultFolder () {
       return Array.isArray(this.defaultFolder) && JSON.stringify(this.defaultFolder) === JSON.stringify(this.currentFolder)
+    },
+    totalAudioCount () {
+      return summarizeTreeAudio(this.tree).count
+    },
+    canPlayWork () {
+      return !this.metadata.files_missing && !this.loadingData && this.totalAudioCount > 0
     },
     isLyricsPage () { return this.$route.name === 'lyrics' },
     subtitleFiles () {
@@ -160,12 +187,9 @@ export default {
     '$store.state.AudioPlayer.historyRevision' () { this.clearPlaybackHistory() },
     $route (to) {
       if (!to.path.startsWith('/work/') || String(to.params.id) === String(this.workid)) return
-      this.workid = to.params.id;
-      this.metadata.state = null;
-      this.requestData();
-    },
-    
-    metadata() {
+      this.workid = to.params.id
+      this.metadata = { id: parseInt(to.params.id), circle: {} }
+      this.requestData()
     }
   },
 
@@ -180,6 +204,14 @@ export default {
   },
 
   methods: {
+    playPrimaryWork () {
+      if (this.metadata.files_missing) return
+      if (Number(this.playWorkId) === Number(this.metadata.id)) {
+        this.$store.commit('AudioPlayer/TOGGLE_PLAYING')
+        return
+      }
+      this.$refs.workTree?.playPrimary()
+    },
     clearPlaybackHistory (workId = this.workid) {
       if (Number(workId) !== Number(this.workid)) return
       this.historyRequest++
@@ -238,13 +270,13 @@ export default {
       if (typeof previous === 'string' && previous.startsWith('/') && !previous.startsWith('//')) this.$router.back()
       else this.$router.push('/works')
     },
-    async requestMetaData({ silent = false } = {}) {
+    async requestMetaData ({ silent = false, deferReveal = false } = {}) {
       const request = ++this.metadataRequest
       const historyRequest = this.historyRequest
       const workId = this.workid
       const user = this.$store.state.User.name
       try {
-        const response = await this.$axios.get(`/api/work/${workId}`);
+        const response = await this.$axios.get(`/api/work/${workId}`)
         if (request !== this.metadataRequest || workId !== this.workid || user !== this.$store.state.User.name) return false
         if (silent && !this.metadataLoaded) return false
         if (historyRequest !== this.historyRequest) {
@@ -253,21 +285,20 @@ export default {
           response.data.play_updated_at_full = null
         }
         this.metadata = response.data
-        this.metadataLoaded = true
+        if (!deferReveal) this.metadataLoaded = true
         // 如果有播放状态记录
         // 同时当前尚未播放，则设置历史播放进度
         if (!silent && !this.metadata.files_missing && !this.isLyricsPage && this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length > 0 && this.playWorkId == 0) {
           this.resumeMetadataPlayHistroy()
         }
         return true
-      } catch (error ) {
+      } catch (error) {
         if (silent || request !== this.metadataRequest || workId !== this.workid || user !== this.$store.state.User.name) return false
         if (error.response && error.response.status === 404 && this.$store.getters['AudioPlayer/sfwOnly']) {
           this.workUnavailable = true
           return false
         }
         if (error.response) {
-          // 请求已发出，但服务器响应的状态码不在 2xx 范围内
           this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
         } else {
           this.showErrNotif(error.message || error)
@@ -276,7 +307,7 @@ export default {
       }
     },
 
-    async requestTracks() {
+    async requestTracks ({ silentError = false } = {}) {
       const request = this.dataRequest
       try {
         const response = await this.$axios.get(`/api/tracks/${this.workid}`, {
@@ -285,18 +316,19 @@ export default {
             preferEffect: this.smartPathPreferEffect,
             audioTypes: this.smartPathAudioTypes,
           },
-        });
-        if (request !== this.dataRequest) return
-        this.tree = response.data;
-        this.importantTreePathArr = getImportantTreePath(this.tree)
+        })
+        if (request !== this.dataRequest) return { ok: false, data: [] }
+        return { ok: true, data: response.data }
       } catch (error) {
-        if (request !== this.dataRequest) return
-        if (error.response) {
-          // 请求已发出，但服务器响应的状态码不在 2xx 范围内
-          this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
-        } else {
-          this.showErrNotif(error.message || error)
+        if (request !== this.dataRequest) return { ok: false, data: [] }
+        if (!silentError) {
+          if (error.response) {
+            this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
+          } else {
+            this.showErrNotif(error.message || error)
+          }
         }
+        return { ok: false, error, data: [] }
       }
     },
 
@@ -304,19 +336,42 @@ export default {
       const request = ++this.dataRequest
       this.clearPlaybackHistory()
       this.loadingData = true
+      this.loadingTracks = true
       this.metadataLoaded = false
       this.workUnavailable = false
       this.tree = []
       this.importantTreePathArr = []
       this.currentFolder = []
       this.loadDefaultFolder()
-      if (await this.requestMetaData() && request === this.dataRequest && !this.metadata.files_missing) await this.requestTracks()
+      // 并行请求元数据与文件树；元数据返回即刻呈现信息，文件树就绪后平滑替换占位骨架
+      const metaPromise = this.requestMetaData()
+      const tracksPromise = this.requestTracks({ silentError: true })
+      const metaOk = await metaPromise
       if (request !== this.dataRequest) return
+      if (!metaOk || this.metadata.files_missing) {
+        this.loadingTracks = false
+        this.loadingData = false
+        return
+      }
+      const tracksResult = await tracksPromise
+      if (request !== this.dataRequest) return
+      if (tracksResult.ok) {
+        this.tree = tracksResult.data
+        this.importantTreePathArr = getImportantTreePath(this.tree)
+      } else if (tracksResult.error) {
+        const error = tracksResult.error
+        if (error.response) {
+          this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
+        } else {
+          this.showErrNotif(error.message || error)
+        }
+      }
+      this.loadingTracks = false
       this.loadingData = false
       if (this.historyRefreshPending) this.refreshPlaybackHistory()
     },
 
-    resumeMetadataPlayHistroy() {
+    resumeMetadataPlayHistroy ({ autoPlay = false } = {}) {
       if (!this.metadata.state || !Array.isArray(this.metadata.state.queue) || this.metadata.state.queue.length === 0) {
         return
       }
@@ -324,7 +379,7 @@ export default {
         workId: this.metadata.id,
         queue: this.metadata.state.queue,
         index: this.metadata.state.index,
-        resetPlaying: false,
+        resetPlaying: autoPlay,
         resumeHistroySeconds: this.metadata.state.seconds,
       })
       if (this.metadata.state.playMode) this.$store.commit('AudioPlayer/SET_PLAY_MODE', this.metadata.state.playMode)
@@ -339,53 +394,69 @@ export default {
 .work-page {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 12px 16px 32px;
+  padding: 12px 20px 36px;
 }
 
-.work-page-back {
-  margin-bottom: 4px;
+.work-page-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.work-back-btn {
+  color: var(--kikoeru-muted);
+  border-radius: var(--kikoeru-radius-sm);
+  padding: 4px 10px 4px 6px;
+  font-weight: 500;
+  transition: color .15s ease, background-color .15s ease;
+}
+
+.work-back-btn:hover {
+  color: var(--kikoeru-accent-text);
+  background: var(--kikoeru-surface);
 }
 
 .work-page-unavailable {
-  padding: 48px 16px;
+  padding: 56px 16px;
   text-align: center;
   color: var(--kikoeru-muted);
+  background: var(--kikoeru-surface);
+  border: 1px solid var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-md);
 }
 
-.work-skeleton {
-  padding-top: 8px;
-}
-
-.work-skeleton-header {
-  display: grid;
-  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
-  gap: 20px 28px;
-  align-items: start;
-}
-
-.work-skeleton-cover {
-  border-radius: 8px;
-}
-
-.work-skeleton-info {
+.work-tree-skeleton {
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 6px;
+  gap: 8px;
 }
 
-.work-bookmarks-btn {
+.work-skeleton-bar {
   border-radius: var(--kikoeru-radius-sm);
-  min-height: 36px;
+}
+
+.work-default-folder-btn {
+  min-height: 32px;
+  padding: 0 8px;
+  border-radius: var(--kikoeru-radius-sm);
+  color: var(--kikoeru-muted);
+  transition: color .15s ease, background-color .15s ease;
+}
+
+.work-default-folder-btn:hover {
+  color: var(--kikoeru-accent-text);
+}
+
+.work-default-folder-btn--active {
+  color: var(--kikoeru-accent-text);
+  background: rgba(var(--kikoeru-accent-rgb), 0.14);
+  font-weight: 500;
 }
 
 @media (max-width: 699px) {
   .work-page {
-    padding: 8px 12px 24px;
-  }
-
-  .work-skeleton-header {
-    grid-template-columns: minmax(0, 1fr);
+    padding: 8px 12px 28px;
   }
 }
 </style>

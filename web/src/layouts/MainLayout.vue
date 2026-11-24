@@ -104,7 +104,7 @@
     <SleepMode v-if="oldSleepTimerUIStyle" v-model="showTimer" />
     <CountDownSleepMode v-else v-model="showTimer" />
 
-    <q-page-container @click.capture="prepareCoverTransition" :class="{'page-container-style': isFullScreenPage, 'padding-bottom-play-bar': !isFullScreenPage, 'works-page-container': $route.name === 'works' || $route.name === 'advance search'}">
+    <q-page-container @click.capture="prepareCoverTransition" :class="{'page-container-style': isFullScreenPage, 'padding-bottom-play-bar': !isFullScreenPage, 'works-page-container': $route.name === 'works' || $route.name === 'advance search' || (isWorkPage && $route.name !== 'lyrics')}">
       <router-view v-slot="{ Component }">
         <keep-alive :key="$store.getters['AudioPlayer/sfwOnly']" include="Works">
           <component :is="Component" />

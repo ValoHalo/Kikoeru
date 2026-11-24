@@ -2,22 +2,59 @@
   <q-dialog :model-value="true" :persistent="saving" @update:model-value="$emit('close')">
     <q-card class="bookmark-editor app-form-dialog">
       <q-form v-if="!$store.state.AudioPlayer.privacyMode" @submit.prevent="saveBookmark">
-        <q-card-section>
-          <div class="text-h6">{{ $t(bookmark.id ? 'bookmark.edit' : 'bookmark.add') }}</div>
-          <div class="text-body2 text-grey q-mt-xs bookmark-file">{{ bookmark.relative_path }}</div>
+        <q-card-section class="kikoeru-dialog-header">
+          <div class="kikoeru-dialog-title-group">
+            <span class="kikoeru-dialog-icon">
+              <q-icon :name="bookmark.id ? 'edit' : 'bookmark_add'" size="18px" />
+            </span>
+            <div class="kikoeru-dialog-title-text">
+              <div class="kikoeru-dialog-title">{{ $t(bookmark.id ? 'bookmark.edit' : 'bookmark.add') }}</div>
+              <div class="kikoeru-dialog-subtitle bookmark-file">{{ bookmark.relative_path }}</div>
+            </div>
+          </div>
+          <q-btn flat round dense icon="close" class="kikoeru-dialog-close" :disable="saving" :aria-label="$t('common.close')" v-close-popup />
         </q-card-section>
-        <q-card-section class="q-pt-none q-gutter-md">
-          <q-input v-model="name" autofocus outlined :label="$t('bookmark.name')" :placeholder="defaultName" maxlength="120" />
-          <q-input v-if="!bookmark.id" v-model.number="seconds" outlined type="number" :label="$t('bookmark.seconds')" min="0" max="2147483647" step="1" :rules="[validSeconds]" hide-bottom-space />
-          <div v-else class="text-body2">{{ $t('bookmark.position', { time: defaultName }) }}</div>
-          <q-input v-model="note" outlined type="textarea" :label="$t('bookmark.note')" maxlength="500" :rows="3" />
+
+        <q-card-section class="kikoeru-dialog-body">
+          <div>
+            <div class="kikoeru-dialog-field-label">{{ $t('bookmark.name') }}</div>
+            <q-input v-model="name" autofocus outlined dense :placeholder="defaultName" maxlength="120" />
+          </div>
+
+          <div v-if="!bookmark.id">
+            <div class="kikoeru-dialog-field-label">{{ $t('bookmark.seconds') }}</div>
+            <q-input
+              v-model.number="seconds"
+              outlined
+              dense
+              type="number"
+              min="0"
+              max="2147483647"
+              step="1"
+              :rules="[validSeconds]"
+              hide-bottom-space
+            />
+          </div>
+          <div v-else class="bookmark-position-row">
+            <q-icon name="schedule" size="16px" />
+            <span>{{ $t('bookmark.position', { time: defaultName }) }}</span>
+          </div>
+
+          <div>
+            <div class="kikoeru-dialog-field-label">{{ $t('bookmark.note') }}</div>
+            <q-input v-model="note" outlined type="textarea" maxlength="500" :rows="3" />
+          </div>
         </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat :label="$t('bookmark.cancel')" class="app-dialog-cancel" :disable="saving" v-close-popup />
-          <q-btn flat color="primary" :label="$t('bookmark.save')" type="submit" :loading="saving" />
+
+        <q-card-actions class="kikoeru-dialog-footer">
+          <q-btn flat no-caps :label="$t('bookmark.cancel')" class="app-dialog-cancel" :disable="saving" v-close-popup />
+          <q-btn unelevated no-caps color="primary" :label="$t('bookmark.save')" type="submit" :loading="saving" />
         </q-card-actions>
       </q-form>
-      <q-card-section v-else>{{ $t('privacy.hidden') }}<q-btn v-close-popup flat round icon="close" :aria-label="$t('common.close')" /></q-card-section>
+      <q-card-section v-else class="kikoeru-dialog-header">
+        <span>{{ $t('privacy.hidden') }}</span>
+        <q-btn v-close-popup flat round dense icon="close" :aria-label="$t('common.close')" />
+      </q-card-section>
     </q-card>
   </q-dialog>
 </template>
@@ -78,6 +115,26 @@ export default {
 </script>
 
 <style scoped>
-.bookmark-editor { width: 440px; max-width: 92vw; max-height: 85dvh; border-radius: 8px; }
-.bookmark-file { overflow-wrap: anywhere; }
+.bookmark-editor {
+  width: min(450px, calc(100vw - 28px));
+  max-height: 85dvh;
+  overflow: hidden;
+}
+
+.bookmark-file {
+  overflow-wrap: anywhere;
+}
+
+.bookmark-position-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--kikoeru-radius-sm);
+  background: var(--kikoeru-inset);
+  border: 1px solid var(--kikoeru-border);
+  color: var(--kikoeru-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
 </style>

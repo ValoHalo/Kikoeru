@@ -16,11 +16,11 @@
 .q-dialog .q-dialog__backdrop { background: rgba(0, 0, 0, .55); }
 .q-dialog .q-card__actions {
   gap: 8px;
-  padding: 16px 24px 20px;
+  padding: 14px 22px 18px;
 }
 .q-dialog .q-card__actions .q-btn:not(.q-btn--round) {
-  min-height: 40px;
-  padding: 8px 16px;
+  min-height: 38px;
+  padding: 6px 16px;
   border-radius: var(--kikoeru-radius-sm);
   font-weight: 500;
   letter-spacing: 0;
@@ -33,31 +33,164 @@
 .q-dialog .q-btn--flat.text-negative { color: var(--kikoeru-danger) !important; }
 
 .q-dialog .q-dialog__inner > .app-confirm-dialog { width: 440px; }
-.app-confirm-dialog .q-dialog__title { padding: 24px 24px 12px; font-size: 20px; font-weight: 500; line-height: 1.5; letter-spacing: 0; }
-.app-confirm-dialog .q-dialog__message { padding: 0 24px 20px; color: var(--dialog-muted); font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+.app-confirm-dialog .q-dialog__title { padding: 24px 24px 12px; font-size: 19px; font-weight: 600; line-height: 1.45; letter-spacing: 0; }
+.app-confirm-dialog .q-dialog__message { padding: 0 24px 20px; color: var(--dialog-muted); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
 .app-confirm-dialog .q-dialog__progress, .app-confirm-dialog .q-dialog-plugin__form { padding: 0 24px 20px; }
 
 .q-dialog .app-form-dialog {
-  .q-card__section { padding: 20px 24px; }
+  .q-card__section { padding: 18px 22px; }
   .q-card__section.q-pt-none { padding-top: 0; }
-  .q-card__section .text-h6 { font-size: 20px; font-weight: 500; line-height: 1.5; letter-spacing: 0; }
+  .q-card__section .text-h6 { font-size: 18px; font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+}
+
+// 统一弹窗头部 / 内容区 / 底栏规范
+.kikoeru-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 14px 22px !important;
+  border-bottom: 1px solid var(--dialog-border);
+}
+
+.kikoeru-dialog-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.kikoeru-dialog-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(var(--kikoeru-accent-rgb), 0.12);
+  color: var(--kikoeru-accent-text);
+  flex-shrink: 0;
+}
+
+.kikoeru-dialog-title-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kikoeru-dialog-title {
+  font-size: 16.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--dialog-text);
+  overflow-wrap: anywhere;
+}
+
+.kikoeru-dialog-subtitle {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--dialog-muted);
+  overflow-wrap: anywhere;
+}
+
+.kikoeru-dialog-close {
+  color: var(--dialog-muted);
+  flex-shrink: 0;
+}
+
+.kikoeru-dialog-close:hover {
+  color: var(--dialog-text);
+}
+
+.kikoeru-dialog-body {
+  padding: 18px 22px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kikoeru-dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 22px 16px !important;
+  border-top: 1px solid var(--dialog-border);
+  background: color-mix(in srgb, var(--dialog-inset) 55%, transparent);
+}
+
+.kikoeru-dialog-field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--dialog-muted);
+  margin-bottom: 6px;
+}
+
+.kikoeru-dialog-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--dialog-muted);
+  font-size: 13.5px;
+}
+
+.kikoeru-dialog-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--dialog-inset);
+  color: var(--dialog-muted);
 }
 
 .q-dialog .review-dialog {
-  width: 540px;
-  .review-dialog-settings { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
-  .q-btn-toggle { display: flex; flex-wrap: wrap; width: 100%; margin: 0 !important; gap: 4px; border-radius: 6px; }
-  .q-btn-toggle .q-btn { flex: 1; min-height: 40px; padding: 8px; border-radius: 6px !important; }
-  .q-btn-toggle .q-btn:not(.bg-primary) { background: var(--dialog-inset) !important; color: var(--dialog-muted) !important; }
-  .review-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; }
-  .review-dialog-actions > .q-card__actions:first-child { margin-right: auto; }
-  .q-card__actions { padding: 12px 20px 20px; }
+  width: min(520px, calc(100vw - 28px));
+  overflow: hidden;
+  .q-btn-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 0 !important;
+    padding: 3px;
+    gap: 3px;
+    border-radius: var(--kikoeru-radius-sm);
+    background: var(--dialog-inset);
+    border: 1px solid var(--dialog-border);
+  }
+  .q-btn-toggle .q-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 36px;
+    padding: 4px 8px;
+    border-radius: 4px !important;
+    font-size: 13px;
+  }
+  .q-btn-toggle .q-btn:not(.bg-primary) {
+    background: transparent !important;
+    color: var(--dialog-muted) !important;
+  }
 }
 
 @media (max-width: 599px) {
-  .q-dialog__inner--minimized { padding: 16px; }
-  .q-dialog .q-card__actions { padding: 12px 20px 20px; flex-wrap: wrap; }
-  .app-confirm-dialog .q-dialog__title { padding: 20px 20px 12px; }
-  .app-confirm-dialog .q-dialog__message { padding: 0 20px 16px; }
-  .q-dialog .app-form-dialog .q-card__section { padding-right: 20px; padding-left: 20px; }
+  .q-dialog__inner--minimized { padding: 14px; }
+  .q-dialog .q-card__actions { padding: 12px 16px 16px; flex-wrap: wrap; }
+  .app-confirm-dialog .q-dialog__title { padding: 20px 18px 10px; }
+  .app-confirm-dialog .q-dialog__message { padding: 0 18px 16px; }
+  .q-dialog .app-form-dialog .q-card__section { padding-right: 16px; padding-left: 16px; }
+  .kikoeru-dialog-header { padding: 14px 14px 12px 16px !important; }
+  .kikoeru-dialog-body { padding: 16px !important; }
+  .kikoeru-dialog-footer { padding: 12px 16px 14px !important; }
 }

@@ -28,6 +28,9 @@
           <q-icon name="broken_image" size="32px" />
           <span>{{ $privateText(item.title) }}</span>
         </span>
+        <span v-if="!failed[item.hash]" class="work-image-overlay" aria-hidden="true">
+          <span class="work-image-caption">{{ $privateText(item.title) }}</span>
+        </span>
         <q-menu touch-position context-menu auto-close>
           <q-list dense style="min-width: 150px">
             <q-item v-if="canEdit" clickable @click="$emit('edit', item)">
@@ -93,13 +96,13 @@ export default {
 .work-image-gallery {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
 
 .work-image-row {
   display: flex;
   align-items: flex-start;
-  gap: 2px;
+  gap: 6px;
 }
 
 .work-image-tile {
@@ -108,15 +111,17 @@ export default {
   flex-basis: 0;
   min-width: 0;
   padding: 0;
-  border: 0;
-  background: rgba(127, 127, 127, 0.12);
+  border: 1px solid var(--kikoeru-border);
+  border-radius: var(--kikoeru-radius-sm);
+  overflow: hidden;
+  background: var(--kikoeru-inset);
   color: inherit;
   cursor: pointer;
 }
 
 .work-image-tile:focus-visible {
-  outline: 3px solid var(--q-primary);
-  outline-offset: -3px;
+  outline: 2px solid var(--q-primary);
+  outline-offset: 1px;
   z-index: 1;
 }
 
@@ -127,6 +132,37 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transition: transform .22s ease;
+}
+
+.work-image-tile:hover img {
+  transform: scale(1.03);
+}
+
+.work-image-overlay {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 20px 8px 6px;
+  background: linear-gradient(to top, rgba(16, 18, 22, 0.78), transparent);
+  opacity: 0;
+  transition: opacity .18s ease;
+  pointer-events: none;
+}
+
+.work-image-tile:hover .work-image-overlay,
+.work-image-tile:focus-visible .work-image-overlay {
+  opacity: 1;
+}
+
+.work-image-caption {
+  display: block;
+  color: #f4f5f7;
+  font-size: 11.5px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
 }
 
 .work-image-fallback {
@@ -140,5 +176,18 @@ export default {
   padding: 8px;
   overflow: hidden;
   overflow-wrap: anywhere;
+  color: var(--kikoeru-muted);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-image-tile img,
+  .work-image-overlay {
+    transition: none;
+  }
+
+  .work-image-tile:hover img {
+    transform: none;
+  }
 }
 </style>

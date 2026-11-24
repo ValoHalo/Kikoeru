@@ -10,19 +10,19 @@
     @mouseover="toggleBlurFlag()"
     @mouseout="toggleBlurFlag()"
   >
-    <div v-if="!$store.state.AudioPlayer.privacyMode" class="absolute-top-left transparent" style="padding: 0;">
+    <div v-if="showBadges && !$store.state.AudioPlayer.privacyMode" class="absolute-top-left transparent" style="padding: 0;">
       <q-chip dense square text-color="white" class="q-ma-sm cover-badge cover-badge--code">
         {{ workCode }}
       </q-chip>
     </div>
 
-    <div v-if="release !== ''" class="absolute-bottom-right transparent" style="padding: 0px;">
+    <div v-if="showBadges && release !== ''" class="absolute-bottom-right transparent" style="padding: 0px;">
       <q-chip dense square text-color="white" class="q-ma-sm cover-badge cover-badge--date">
         {{release}}
       </q-chip>
     </div>
 
-    <div v-if="lyricList.length > 0" class="absolute-top-right transparent" style="padding: 0px;">
+    <div v-if="showBadges && lyricList.length > 0" class="absolute-top-right transparent" style="padding: 0px;">
       <q-chip v-for="lyric in lyricList" :key="lyric" dense square text-color="white" class="q-ma-sm cover-badge cover-badge--lyric">{{ $t('common.localLyrics') }}</q-chip>
     </div>
 
@@ -75,6 +75,11 @@ export default {
       type: Array,
       require: false,
       default() {return [];}
+    },
+
+    showBadges: {
+      type: Boolean,
+      default: true
     },
   },
 

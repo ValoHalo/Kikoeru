@@ -42,26 +42,46 @@ function beginCoverTransition (source, id, destination, returning = false) {
   if (!rect.width || !rect.height || rect.bottom <= 0 || rect.top >= window.innerHeight) return
 
   const imageStyle = getComputedStyle(sourceImage)
+  const sourceRadius = getComputedStyle(source).borderRadius || '8px'
   const overlay = document.createElement('div')
   overlay.className = 'work-cover-transition'
   overlay.setAttribute('aria-hidden', 'true')
   Object.assign(overlay.style, {
-    position: 'fixed', pointerEvents: 'none', zIndex: '2900', overflow: 'hidden',
-    left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`,
-    borderRadius: '8px'
+    position: 'fixed',
+    pointerEvents: 'none',
+    zIndex: '2900',
+    overflow: 'hidden',
+    left: `${rect.left}px`,
+    top: `${rect.top}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+    borderRadius: sourceRadius,
+    transformOrigin: 'top left',
+    willChange: 'transform, opacity'
   })
   const image = document.createElement('img')
   image.src = sourceImage.currentSrc || sourceImage.src
   image.alt = ''
   Object.assign(image.style, {
-    display: 'block', width: '100%', height: '100%', objectFit: imageStyle.objectFit,
-    objectPosition: imageStyle.objectPosition, filter: imageStyle.filter
+    display: 'block',
+    width: '100%',
+    height: '100%',
+    objectFit: imageStyle.objectFit,
+    objectPosition: imageStyle.objectPosition,
+    filter: imageStyle.filter
   })
   overlay.append(image)
   document.body.append(overlay)
   active = {
-    id, destination, returning, source, sourceVisibility: source.style.visibility, overlay,
-    scrollReady: false, timer: setTimeout(cancelCoverTransition, 800)
+    id,
+    destination,
+    returning,
+    source,
+    sourceVisibility: source.style.visibility,
+    startRect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+    overlay,
+    scrollReady: false,
+    timer: setTimeout(cancelCoverTransition, 800)
   }
   source.style.visibility = 'hidden'
   window.addEventListener('resize', cancelCoverTransition, { passive: true })
@@ -106,15 +126,21 @@ export async function finishCoverTransition (id, target) {
   current.targetVisibility = target.style.visibility
   target.style.visibility = 'hidden'
 
-  // Cached lists and virtual rows must finish reactivation before measuring.
+  // Forward navigation mounts the detail cover immediately at its destination;
+  // return navigation to cached/virtual lists waits for scroll restoration to settle.
+  const requiredStableFrames = current.returning ? 2 : 1
   let previousRect = null
   let stableFrames = 0
-  while (active === current && stableFrames < 3) {
+  while (active === current && stableFrames < requiredStableFrames) {
     await new Promise(resolve => requestAnimationFrame(resolve))
     const nextRect = target.getBoundingClientRect()
-    const unchanged = previousRect && ['left', 'top', 'width', 'height'].every(key => Math.abs(nextRect[key] - previousRect[key]) < 0.5)
-    stableFrames = current.scrollReady && unchanged ? stableFrames + 1 : 0
-    previousRect = nextRect
+    if (!current.returning) {
+      if (current.scrollReady && nextRect.width > 0 && nextRect.height > 0) stableFrames = 1
+    } else {
+      const unchanged = previousRect && ['left', 'top', 'width', 'height'].every(key => Math.abs(nextRect[key] - previousRect[key]) < 0.5)
+      stableFrames = current.scrollReady && unchanged ? stableFrames + 1 : 0
+      previousRect = nextRect
+    }
   }
   if (active !== current) return
   if (!target.isConnected || reducedMotion()) return cancelCoverTransition()
@@ -123,18 +149,51 @@ export async function finishCoverTransition (id, target) {
 
   clearTimeout(current.timer)
   current.timer = setTimeout(cancelCoverTransition, 600)
+
+  const targetRadius = getComputedStyle(target).borderRadius || '8px'
+  const dx = current.startRect.left - rect.left
+  const dy = current.startRect.top - rect.top
+  const sx = current.startRect.width / rect.width
+  const sy = current.startRect.height / rect.height
+
+  // Position overlay at destination and FLIP via GPU-composited transform only.
+  Object.assign(current.overlay.style, {
+    left: `${rect.left}px`,
+    top: `${rect.top}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+    borderRadius: targetRadius
+  })
+
+  // Track minor layout shifts (e.g. async track/metadata load) without aborting the flight.
+  const trackedRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
   const checkPosition = () => {
     if (active !== current) return
+    if (!target.isConnected) return cancelCoverTransition()
     const latest = target.getBoundingClientRect()
-    if (['left', 'top', 'width', 'height'].some(key => Math.abs(latest[key] - rect[key]) > 1)) return cancelCoverTransition()
+    if (!latest.width || !latest.height || latest.bottom <= 0 || latest.top >= window.innerHeight) {
+      return cancelCoverTransition()
+    }
+    if (Math.abs(latest.width - trackedRect.width) > 4 || Math.abs(latest.height - trackedRect.height) > 4) {
+      return cancelCoverTransition()
+    }
+    if (Math.abs(latest.left - trackedRect.left) > 80 || Math.abs(latest.top - trackedRect.top) > 80) {
+      return cancelCoverTransition()
+    }
+    if (Math.abs(latest.left - trackedRect.left) > 0.5 || Math.abs(latest.top - trackedRect.top) > 0.5) {
+      trackedRect.left = latest.left
+      trackedRect.top = latest.top
+      current.overlay.style.left = `${latest.left}px`
+      current.overlay.style.top = `${latest.top}px`
+    }
     current.positionFrame = requestAnimationFrame(checkPosition)
   }
   current.positionFrame = requestAnimationFrame(checkPosition)
-  const start = current.overlay.style
+
   current.animation = current.overlay.animate([
-    { left: start.left, top: start.top, width: start.width, height: start.height, borderRadius: start.borderRadius },
-    { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: getComputedStyle(target).borderRadius }
-  ], { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' })
+    { transform: `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})` },
+    { transform: 'translate3d(0, 0, 0) scale(1, 1)' }
+  ], { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' })
 
   try {
     await current.animation.finished
@@ -145,7 +204,7 @@ export async function finishCoverTransition (id, target) {
     }
     if (active !== current) return
     target.style.visibility = current.targetVisibility
-    current.animation = current.overlay.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 100, fill: 'forwards' })
+    current.animation = current.overlay.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, fill: 'forwards' })
     await current.animation.finished
   } catch {
     // Cancellation also restores both covers.
