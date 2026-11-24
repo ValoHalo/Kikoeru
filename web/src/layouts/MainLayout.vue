@@ -16,7 +16,11 @@
       @focusin="drawerMini = false"
       @focusout="drawerMini = true"
     >
-      <q-scroll-area class="main-drawer-scroll fit" :content-style="{ minHeight: '100%', width: '100%' }" :content-active-style="{ minHeight: '100%', width: '100%' }">
+      <q-scroll-area
+        class="main-drawer-scroll fit"
+        :content-style="{ minHeight: '100%', width: '100%', display: 'flex', flexDirection: 'column' }"
+        :content-active-style="{ minHeight: '100%', width: '100%', display: 'flex', flexDirection: 'column' }"
+      >
         <div class="drawer-content">
           <q-list padding class="drawer-primary">
             <q-item v-for="link in getLinks()" :key="link.path" clickable v-ripple exact :to="link.path" :aria-label="link.title" active-class="text-primary text-weight-medium">
@@ -474,7 +478,7 @@ export default {
   .q-drawer:has(> .main-drawer) { transition: width .18s ease; }
 }
 .main-drawer .q-item__label { white-space: nowrap; }
-.drawer-content { display: flex; flex-direction: column; min-height: 100%; }
+.drawer-content { display: flex; flex-direction: column; flex: 1 0 auto; min-height: 100%; }
 .drawer-primary { padding-top: 8px; }
 .drawer-secondary { margin-top: auto; padding-bottom: 8px; }
 .main-drawer .q-item {
