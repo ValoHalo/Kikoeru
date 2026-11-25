@@ -33,34 +33,13 @@
 
         <div v-else-if="isCurrentPlayingWork || hasResumeHistory || canPlay" class="work-playback-panel">
           <q-btn
-            v-if="isCurrentPlayingWork"
             unelevated
             no-caps
             color="primary"
             class="work-play-btn"
-            :icon="playing ? 'pause' : 'play_arrow'"
-            :label="$t(playing ? 'workDetails.pause' : 'workDetails.resume')"
-            @click="$emit('play')"
-          />
-          <q-btn
-            v-else-if="hasResumeHistory"
-            unelevated
-            no-caps
-            color="primary"
-            class="work-play-btn"
-            icon="play_arrow"
-            :label="$t('workDetails.resume')"
-            @click="resumeThisHistroy"
-          />
-          <q-btn
-            v-else
-            unelevated
-            no-caps
-            color="primary"
-            class="work-play-btn"
-            icon="play_arrow"
-            :label="$t('workDetails.play')"
-            @click="$emit('play')"
+            :icon="playButtonIcon"
+            :label="playButtonLabel"
+            @click="onPlayButtonClick"
           />
 
           <div
@@ -455,6 +434,9 @@ import { mapGetters, mapState } from 'vuex'
 import { formatSeconds, getLastPlayedTrack, idNumberToCode } from 'src/utils'
 import { coverTransition } from '../coverTransition'
 
+const PLAY_ICON = 'M8 5v14l11-7z'
+const PAUSE_ICON = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'
+
 export default {
   name: 'WorkDetails',
   directives: { coverTransition },
@@ -521,6 +503,15 @@ export default {
     },
     hasResumeHistory () {
       return Boolean(this.metadata.state?.queue?.length)
+    },
+    playButtonIcon () {
+      return this.isCurrentPlayingWork && this.playing ? PAUSE_ICON : PLAY_ICON
+    },
+    playButtonLabel () {
+      if (this.isCurrentPlayingWork) {
+        return t(this.playing ? 'workDetails.pause' : 'workDetails.resume')
+      }
+      return t(this.hasResumeHistory ? 'workDetails.resume' : 'workDetails.play')
     },
     progressOptions () {
       return [
@@ -656,6 +647,14 @@ export default {
     processEditMeta () {
       this.showEditMetaDialog = false
       this.$emit('reset')
+    },
+
+    onPlayButtonClick () {
+      if (!this.isCurrentPlayingWork && this.hasResumeHistory) {
+        this.resumeThisHistroy()
+        return
+      }
+      this.$emit('play')
     },
 
     resumeThisHistroy () {
@@ -807,6 +806,16 @@ export default {
   font-size: 14.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+.work-play-btn :deep(.q-btn__content) {
+  gap: 4px;
+  line-height: 1.2;
+}
+
+.work-play-btn :deep(.q-icon) {
+  font-size: 22px;
+  margin-right: 0;
 }
 
 .work-playback-caption {
