@@ -1,19 +1,25 @@
 <template>
-  <q-card class="card hover-show" :class="{ 'card--thumbnail': thumbnailMode }">
+  <q-card class="card hover-show" :class="{ 'card--thumbnail': thumbnailMode, 'card--full': fullDetails }">
     <router-link :to="`/work/${metadata.id}`" class="work-card-cover" :aria-label="$privateText(metadata.title)">
-      <CoverSFW :workid="metadata.id" :nsfw="false" :release="thumbnailMode ? metadata.release : ''" :lyric_status="metadata.lyric_status" :tags="thumbnailMode ? metadata.tags : []" />
+      <CoverSFW
+        :workid="metadata.id"
+        :nsfw="false"
+        :release="thumbnailMode ? metadata.release : ''"
+        :lyric_status="metadata.lyric_status"
+        :tags="fullDetails ? [] : visibleTags"
+      />
     </router-link>
 
-    <q-separator />
-
     <div v-if="!thumbnailMode" class="work-card-info">
+      <!-- 第 1 行：社团 & 发售日 -->
       <div class="work-card-byline">
         <router-link :to="`/works?circleId=${metadata.circle.id}`" class="work-card-circle ellipsis">
           {{ $privateText(metadata.circle.name) }}
         </router-link>
         <time v-if="metadata.release">{{ metadata.release }}</time>
       </div>
-      <!-- 标题 -->
+
+      <!-- 第 2 行：标题 -->
       <h2 class="work-card-title">
         <router-link :to="`/work/${metadata.id}`" :class="fullDetails ? 'work-card-title-full' : 'ellipsis-2-lines'">
           {{ $privateText(metadata.title) }}
@@ -21,13 +27,12 @@
         </router-link>
       </h2>
 
-      <!-- 评价&评论 -->
+      <!-- 第 3 行：评价 & 评论 -->
       <div v-show="metadata.title" class="work-card-rating-row">
-        <!-- 评价 -->
         <div class="work-card-rating">
           <q-rating
             v-model="rating"
-            size="20px"
+            size="18px"
             class="work-card-stars"
             :class="userMarked ? 'work-card-stars--user' : 'work-card-stars--community'"
             icon="star_border"
@@ -54,45 +59,46 @@
         </div>
 
         <div class="work-card-score">
-          <span class="text-weight-medium">{{ metadata.rate_average_2dp }}</span>
-          <span class="work-card-muted"> ({{ metadata.rate_count }})</span>
+          <span class="work-card-score-num">{{ metadata.rate_average_2dp }}</span>
+          <span class="work-card-muted">({{ metadata.rate_count }})</span>
         </div>
 
-        <!-- 评论数量 -->
         <div class="work-card-reviews work-card-muted">
-          <q-icon name="chat_bubble_outline" size="16px" />
+          <q-icon name="chat_bubble_outline" size="14px" />
           <span>{{ metadata.review_count }}</span>
           <AppTooltip>{{ $t('workCard.reviews') }}</AppTooltip>
         </div>
-
-        <!-- DLsite链接 -->
       </div>
 
-      <!-- 价格&售出数 -->
+      <!-- 第 4 行：价格 / 销量 / 分级 + DLsite 胶囊 -->
       <div v-show="metadata.title" class="work-card-commerce">
-        <span class="work-card-price">
-          {{ metadata.price }}<small>{{ $t('workCard.yen') }}</small>
-        </span>
+        <span class="work-card-price">¥{{ metadata.price }}</span>
         <span class="work-card-muted">{{ $t('workCard.sales', { count: metadata.dl_count }) }}</span>
         <span v-if="metadata.nsfw === false" class="work-card-age">{{ $t('workCard.allAges') }}</span>
-        <a v-if="!dlsiteCode.startsWith('CC')" class="work-card-store" :href="`https://www.dlsite.com/home/work/=/product_id/${dlsiteCode}.html`" rel="noreferrer noopener" target="_blank">DLsite <q-icon name="open_in_new" size="14px" /></a>
+        <a
+          v-if="!dlsiteCode.startsWith('CC')"
+          class="work-card-store"
+          :href="`https://www.dlsite.com/home/work/=/product_id/${dlsiteCode}.html`"
+          rel="noreferrer noopener"
+          target="_blank"
+        >
+          <span>DLsite</span>
+          <q-icon name="open_in_new" size="12px" />
+        </a>
       </div>
     </div>
 
-    <div v-if="!thumbnailMode && visibleTags.length" class="work-card-tags">
-      <router-link v-for="tag in displayedTags" :key="tag.id" :to="`/works?tagId=${tag.id}`" class="work-card-tag">
+    <!-- 完整作品卡片模式下，所有标签平铺在正文下方、底栏上方 -->
+    <div v-if="!thumbnailMode && fullDetails && visibleTags.length" class="work-card-tags">
+      <router-link v-for="tag in visibleTags" :key="tag.id" :to="`/works?tagId=${tag.id}`" class="work-card-tag">
         {{ $privateText(tag.name) }}
       </router-link>
-      <span v-if="hiddenTagCount > 0" class="work-card-tag work-card-tag--more">
-        +{{ hiddenTagCount }}
-        <AppTooltip>{{ hiddenTagNames }}</AppTooltip>
-      </span>
     </div>
 
     <WorkSearchMatch v-if="metadata.searchMatch" :match="metadata.searchMatch" class="q-mx-md q-mb-sm" />
 
     <div class="work-card-footer">
-      <!-- 声优 -->
+      <!-- 声优（对齐详情页淡蓝胶囊样式） -->
       <div
         v-if="!thumbnailMode"
         class="work-card-vas"
@@ -100,11 +106,11 @@
         <router-link
           v-for="(va, index) in metadata.vas"
           :to="`/works?vaId=${va.id}`"
-          :key=index
+          :key="index"
           class="work-card-va"
         >
-          <q-icon name="mic_none" size="16px" />
-          <span>{{ $privateText(va.name) }}</span>
+          <q-icon name="mic_none" size="13px" />
+          <span class="ellipsis">{{ $privateText(va.name) }}</span>
         </router-link>
       </div>
       <LibraryActions class="work-card-actions" :work-id="Number(metadata.id)" :archived="Boolean(metadata.archived_at)" @changed="$emit('library-changed')" />
@@ -305,21 +311,30 @@ export default {
 }
 
 .work-card-info {
-  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding: 12px 14px 10px;
+}
+
+.card--full .work-card-title {
+  margin-bottom: auto;
+  padding-bottom: 12px;
 }
 
 .work-card-byline {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   color: var(--card-muted);
   font-size: 12px;
+  line-height: 1.3;
 }
 
 .work-card-circle {
   min-width: 0;
   color: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
 }
 
 .work-card-byline time {
@@ -329,22 +344,21 @@ export default {
 }
 
 .work-card-title {
-  margin: 8px 0 12px;
-  font-size: 18px;
-  line-height: 1.55;
+  margin: 7px 0 10px;
+  font-size: 15.5px;
+  line-height: 1.48;
   font-weight: 600;
   letter-spacing: 0;
   overflow-wrap: anywhere;
 }
 
 .work-card-title a {
-  min-height: 3.1em;
+  min-height: 2.96em;
   color: inherit;
 }
 
 .work-card-title a:hover,
-.work-card-circle:hover,
-.work-card-va:hover {
+.work-card-circle:hover {
   color: var(--kikoeru-accent-text);
 }
 
@@ -357,14 +371,23 @@ export default {
 .work-card-commerce {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px 10px;
+  flex-wrap: nowrap;
+  gap: 6px 8px;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .work-card-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
   white-space: nowrap;
-  font-size: 14px;
+}
+
+.work-card-score-num {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kikoeru-text);
 }
 
 .work-card-score .work-card-muted {
@@ -373,46 +396,60 @@ export default {
 
 .work-card-muted {
   color: var(--card-muted);
+  white-space: nowrap;
 }
 
 .work-card-reviews {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   margin-left: auto;
 }
 
 .work-card-commerce {
-  align-items: baseline;
-  margin-top: 10px;
+  margin-top: 8px;
   line-height: 20px;
 }
 
 .work-card-price {
-  font-size: 18px;
+  font-size: 13.5px;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  color: var(--kikoeru-text);
   white-space: nowrap;
-}
-
-.work-card-price small {
-  color: var(--card-muted);
-  font-size: 12px;
-  font-weight: 400;
 }
 
 .work-card-age {
-  color: var(--card-muted);
+  color: var(--kikoeru-text);
+  font-size: 11px;
+  font-weight: 500;
   border: 1px solid var(--card-line);
+  background: var(--card-chip);
   border-radius: 4px;
-  padding: 1px 5px;
-  line-height: 20px;
+  padding: 0 5px;
+  line-height: 18px;
+  white-space: nowrap;
 }
 
 .work-card-store {
-  color: var(--kikoeru-accent-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: var(--kikoeru-active-bg);
+  border: 1px solid color-mix(in srgb, var(--q-primary) 26%, transparent);
+  color: var(--kikoeru-accent-text);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 18px;
   white-space: nowrap;
+  transition: background-color .14s ease, border-color .14s ease;
+}
+
+.work-card-store:hover {
+  background: color-mix(in srgb, var(--q-primary) 22%, transparent);
+  border-color: color-mix(in srgb, var(--q-primary) 45%, transparent);
 }
 
 .work-card-title-full {
@@ -423,7 +460,9 @@ export default {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  padding: 0 16px 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--card-line);
+  background: color-mix(in srgb, var(--kikoeru-inset) 45%, transparent);
 }
 
 .work-card-tag {
@@ -432,28 +471,24 @@ export default {
   border: 1px solid var(--card-line);
   border-radius: 4px;
   background: var(--card-chip);
-  color: var(--card-muted);
-  font-size: 11.5px;
-  line-height: 18px;
+  color: var(--kikoeru-muted);
+  font-size: 11px;
+  line-height: 17px;
   overflow-wrap: anywhere;
-}
-
-.work-card-tag--more {
-  cursor: default;
-  font-variant-numeric: tabular-nums;
+  transition: color .14s ease, border-color .14s ease;
 }
 
 .work-card-tag:hover {
   color: var(--kikoeru-accent-text);
-  border-color: currentColor;
+  border-color: color-mix(in srgb, var(--q-primary) 45%, transparent);
 }
 
 .work-card-footer {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 52px;
-  padding: 8px 12px 8px 16px;
+  min-height: 40px;
+  padding: 6px 10px 6px 14px;
   border-top: 1px solid var(--card-line);
   margin-top: auto;
 }
@@ -463,26 +498,33 @@ export default {
   min-width: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .work-card-va {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   max-width: 100%;
-  min-height: 28px;
-  padding: 3px 8px;
-  background: var(--card-chip);
+  height: 22px;
+  padding: 0 7px;
+  background: var(--kikoeru-active-bg);
+  border: 1px solid color-mix(in srgb, var(--q-primary) 24%, transparent);
   border-radius: 4px;
-  color: inherit;
-  font-size: 13px;
-  line-height: 20px;
+  color: var(--kikoeru-accent-text);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1;
+  transition: background-color .14s ease, border-color .14s ease;
+}
+
+.work-card-va:hover {
+  background: color-mix(in srgb, var(--q-primary) 24%, transparent);
+  border-color: color-mix(in srgb, var(--q-primary) 46%, transparent);
 }
 
 .work-card-va span {
   min-width: 0;
-  overflow-wrap: anywhere;
 }
 
 .work-card-actions {
