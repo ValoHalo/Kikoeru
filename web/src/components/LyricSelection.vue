@@ -292,7 +292,7 @@
               <q-item-label caption lines="2">{{ $privateText(option.subtitle || $t('lyricSelection.workRoot')) }}</q-item-label>
               <div class="lyric-option-badges">
                 <span class="lyric-option-badge lyric-option-badge--accent">{{ subtitleLanguageLabel(option.language) }}</span>
-                <span class="lyric-option-badge">{{ $t('lyricSelection.match', { value: formatMatchLevel(option.matchLevel) }) }}</span>
+                <span v-if="matchLabel(option.matchLevel)" class="lyric-option-badge">{{ matchLabel(option.matchLevel) }}</span>
               </div>
             </q-item-section>
             <q-item-section v-if="activeSelectedHash === option.hash" side>
@@ -669,9 +669,12 @@ export default {
       return line.timeEnd != null && line.timeEnd >= 0
     },
 
-    formatMatchLevel (value) {
+    matchLabel (value) {
       const level = Number(value)
-      return Number.isFinite(level) ? level.toFixed(2) : '-'
+      if (!Number.isFinite(level) || level < 0) return ''
+      if (level < 1) return t('lyricSelection.exactMatch')
+      if (level < 2) return t('lyricSelection.highMatch')
+      return t('lyricSelection.nearMatch')
     },
 
     showCurrentLyric () {

@@ -580,15 +580,22 @@ function bidirectionSimilarity(s1, s2) {
 function audioLyricMatchLevel(audioName, lyricName) {
     if (audioName === lyricName)
         return 0;
-    else if (audioName.includes(lyricName))
-        return 1;
-    const opposition = /(あり|なし)/g, oppositionPlaceholder = "<o><p><o>";
-    if (audioName.replace(opposition, oppositionPlaceholder) === lyricName.replace(opposition, oppositionPlaceholder)) {
-        return 1;
-    }
     const digitDetector = /\d/g;
     if (digitDetector.test(audioName) && digitDetector.test(lyricName) && audioName.replace(digitDetector, "") === lyricName.replace(digitDetector, "")) {
         return -1;
+    }
+    if (lyricName && audioName.includes(lyricName))
+        return 1;
+    if (audioName && audioName.length >= 2 && lyricName.includes(audioName)) {
+        const idx = lyricName.indexOf(audioName);
+        const nextChar = lyricName[idx + audioName.length] || "";
+        if (!(/\d$/.test(audioName) && /^\d/.test(nextChar))) {
+            return 1;
+        }
+    }
+    const opposition = /(あり|なし)/g, oppositionPlaceholder = "<o><p><o>";
+    if (audioName.replace(opposition, oppositionPlaceholder) === lyricName.replace(opposition, oppositionPlaceholder)) {
+        return 1;
     }
     const [sim, ed] = similarity(audioName, lyricName);
     if (audioName.length == lyricName.length && ed <= 2) {

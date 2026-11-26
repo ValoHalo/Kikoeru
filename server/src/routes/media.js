@@ -58,7 +58,7 @@ const pathSafety_1 = require("../filesystem/pathSafety");
 const accessControl_1 = require("../auth/accessControl");
 const { decodeTrackPath } = require('../filesystem/trackReference');
 const minimatch = require('minimatch');
-const supportedLyricExtensions = [".lrc", ".srt", ".vtt"];
+const supportedLyricExtensions = [".lrc", ".srt", ".vtt", ".ass"];
 function trackReferenceValidator(name) {
     return (0, express_validator_1.param)(name, () => t('media.linkExpired')).custom(value => {
         decodeTrackPath(value);
@@ -100,11 +100,15 @@ function compareLyricTracks(left, right, preferredLanguage) {
     const rightLevel = Number(right.matchLevel);
     const leftRank = leftLevel < 0 ? Number.POSITIVE_INFINITY : leftLevel;
     const rightRank = rightLevel < 0 ? Number.POSITIVE_INFINITY : rightLevel;
-    if (leftRank !== rightRank)
-        return leftRank - rightRank;
+    const leftTier = Number.isFinite(leftRank) ? Math.floor(leftRank) : Number.POSITIVE_INFINITY;
+    const rightTier = Number.isFinite(rightRank) ? Math.floor(rightRank) : Number.POSITIVE_INFINITY;
+    if (leftTier !== rightTier)
+        return leftTier - rightTier;
     const leftPreferred = (0, subtitleLanguage_1.isPreferredSubtitleLanguage)(left.language, preferredLanguage);
     const rightPreferred = (0, subtitleLanguage_1.isPreferredSubtitleLanguage)(right.language, preferredLanguage);
-    return Number(rightPreferred) - Number(leftPreferred);
+    if (leftPreferred !== rightPreferred)
+        return Number(rightPreferred) - Number(leftPreferred);
+    return leftRank - rightRank;
 }
 const supportedTranscodeBitRates = new Set([128, 320]);
 const defaultTranscodeBitRate = 128;
@@ -188,7 +192,7 @@ router.get('/query-lrc/:id/:reference', (0, express_validator_1.param)('id', (_v
             lyricName = (0, subtitleLanguage_1.stripSubtitleLanguageSuffix)(lyricName);
             let matchLevel = (0, utils_1.audioLyricMatchLevel)(fileBasename, lyricName);
             console.log("[find-lrc] ", fileBasename, lyricName, matchLevel);
-            if (lrcTrack.subtitle != track.subtitle) {
+            if (matchLevel >= 0 && lrcTrack.subtitle != track.subtitle) {
                 matchLevel += 0.5;
             }
             return Object.assign({ matchLevel }, lrcTrack);
@@ -404,7 +408,7 @@ router.get('/check-lrc/:id/:reference', (0, express_validator_1.param)('id', (_v
                 lyricName = (0, subtitleLanguage_1.stripSubtitleLanguageSuffix)(lyricName);
                 let matchLevel = (0, utils_1.audioLyricMatchLevel)(fileBasename, lyricName);
                 console.log("[find-lrc] ", fileBasename, lyricName, matchLevel);
-                if (lrcTrack.subtitle != track.subtitle) {
+                if (matchLevel >= 0 && lrcTrack.subtitle != track.subtitle) {
                     matchLevel += 0.5;
                 }
                 return Object.assign({ matchLevel }, lrcTrack);
