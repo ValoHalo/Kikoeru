@@ -6,7 +6,7 @@
     <section class="works-toolbar" :class="{ 'works-toolbar--selecting': selecting }" :aria-labelledby="selecting ? undefined : 'works-heading'" :aria-label="selecting ? $t('batchWorks.selectWork') : undefined">
     <LibraryBatchActions v-if="selecting" :selected="selectedWorks" @select-all="selectLoaded" @clear="selectedWorks = []" @exit="exitSelection" @completed="batchCompleted" />
     <div v-else class="works-toolbar-heading">
-      <div class="works-title"><q-icon name="library_music" size="23px" /><h2 id="works-heading">{{ pageTitle ? $t(pageTitle) : '' }}</h2><span class="works-count">{{ pagination.totalCount }}</span></div>
+      <div class="works-title"><q-icon name="library_music" size="21px" /><h2 id="works-heading">{{ pageTitle ? $t(pageTitle) : '' }}</h2><span class="works-count">{{ pagination.totalCount }}</span></div>
       <div class="works-display-controls">
         <SavedSearchMenu v-if="$store.state.User.name" :search="savedSearchValue" @apply="applySavedSearch" />
         <q-btn v-if="$store.state.User.name" flat no-caps icon="checklist" :label="$t('batchWorks.selectWork')" :aria-label="$t('batchWorks.selectWork')" @click="selecting = true" />
@@ -21,74 +21,88 @@
     </div>
     <div v-show="!selecting" class="works-filters">
       <div class="works-filter-fields">
-      <!-- 排序属性 -->
-      <q-select
-        dense
-        outlined
-        stack-label
-        transition-show="scale"
-        transition-hide="scale"
-        v-model="sortCategoryOption"
-        :options="sortCategoryOptions"
-        :option-label="humanReadableLabel"
-        :label="$t('works.sortBy')"
-        class="col-auto"
-      />
+        <!-- 排序属性 -->
+        <div class="works-filter-field">
+          <span class="works-filter-label">{{ $t('works.sortBy') }}</span>
+          <q-select
+            dense
+            borderless
+            options-dense
+            hide-bottom-space
+            v-model="sortCategoryOption"
+            :options="sortCategoryOptions"
+            :option-label="humanReadableLabel"
+            :aria-label="$t('works.sortBy')"
+            class="works-filter-select"
+          />
+        </div>
 
-      <!-- 年龄分级 -->
-      <q-select
-        dense
-        outlined
-        stack-label
-        transition-show="scale"
-        transition-hide="scale"
-        :model-value="$store.getters['AudioPlayer/sfwOnly'] ? 'nsfw_1' : nsfwOption"
-        :disable="$store.getters['AudioPlayer/sfwOnly']"
-        @update:model-value="nsfwOption = $event"
-        :options="nsfwOptions"
-        :option-label="humanReadableLabel"
-        :label="$t('works.ageRating')"
-        class="col-auto"
-      />
+        <!-- 年龄分级 -->
+        <div class="works-filter-field">
+          <span class="works-filter-label">{{ $t('works.ageRating') }}</span>
+          <q-select
+            dense
+            borderless
+            options-dense
+            hide-bottom-space
+            :model-value="$store.getters['AudioPlayer/sfwOnly'] ? 'nsfw_1' : nsfwOption"
+            :disable="$store.getters['AudioPlayer/sfwOnly']"
+            @update:model-value="nsfwOption = $event"
+            :options="nsfwOptions"
+            :option-label="humanReadableLabel"
+            :aria-label="$t('works.ageRating')"
+            class="works-filter-select"
+            :class="{ 'is-active': !$store.getters['AudioPlayer/sfwOnly'] && nsfwOption !== 'nsfw_0' }"
+          />
+        </div>
 
-      <!-- 字幕筛选 -->
-      <q-select
-        dense
-        outlined
-        stack-label
-        transition-show="scale"
-        transition-hide="scale"
-        v-model="lyricOption"
-        :options="lyricOptions"
-        :option-label="humanReadableLabel"
-        :display-value="lyricOption && lyricOption.length ? lyricOption.map(humanReadableLabel).join(', ') : $t('common.all')"
-        :label="$t('works.subtitleFilter')"
-        clearable
-        multiple
-        class="col-auto works-filter-lyrics"
-      />
+        <!-- 字幕筛选 -->
+        <div class="works-filter-field">
+          <span class="works-filter-label">{{ $t('works.subtitleFilter') }}</span>
+          <q-select
+            dense
+            borderless
+            options-dense
+            hide-bottom-space
+            v-model="lyricOption"
+            :options="lyricOptions"
+            :option-label="humanReadableLabel"
+            :display-value="lyricOption && lyricOption.length ? lyricOption.map(humanReadableLabel).join(', ') : $t('common.all')"
+            :aria-label="$t('works.subtitleFilter')"
+            clearable
+            multiple
+            class="works-filter-select works-filter-lyrics"
+            :class="{ 'is-active': lyricOption && lyricOption.length > 0 }"
+          />
+        </div>
 
-      <q-select
-        dense
-        outlined
-        stack-label
-        :model-value="collectionId"
-        @update:model-value="setCollectionFilter"
-        :options="collectionOptions"
-        :loading="loadingCollections"
-        emit-value
-        map-options
-        clearable
-        :label="$t('common.collections')"
-        :display-value="collectionId ? (collections.find(item => String(item.id) === collectionId)?.name || $t('works.unavailableCollection')) : $t('works.allCollections')"
-        @popup-show="loadCollections"
-      >
-        <template #no-option>
-          <q-item><q-item-section class="text-grey">{{ $t('works.noCollections') }}</q-item-section></q-item>
-        </template>
-      </q-select>
+        <!-- 作品分组 -->
+        <div class="works-filter-field">
+          <span class="works-filter-label">{{ $t('common.collections') }}</span>
+          <q-select
+            dense
+            borderless
+            options-dense
+            hide-bottom-space
+            :model-value="collectionId"
+            @update:model-value="setCollectionFilter"
+            :options="collectionOptions"
+            :loading="loadingCollections"
+            emit-value
+            map-options
+            clearable
+            :aria-label="$t('common.collections')"
+            :display-value="collectionId ? (collections.find(item => String(item.id) === collectionId)?.name || $t('works.unavailableCollection')) : $t('works.allCollections')"
+            class="works-filter-select"
+            :class="{ 'is-active': Boolean(collectionId) }"
+            @popup-show="loadCollections"
+          >
+            <template #no-option>
+              <q-item><q-item-section class="text-grey">{{ $t('works.noCollections') }}</q-item-section></q-item>
+            </template>
+          </q-select>
+        </div>
       </div>
-
     </div>
     <div v-if="!selecting && (advanceSearchKeywords.length || searchMetas.length)" class="works-search-chips">
       <div v-if="isAdvanceSearch" class="works-search-chip-list"><!--高级搜索模式的多关键字展示-->
@@ -846,8 +860,8 @@ export default {
   --toolbar-border: var(--kikoeru-border);
   --toolbar-muted: var(--kikoeru-muted);
   --toolbar-inset: var(--kikoeru-inset);
-  margin: 14px 16px 16px;
-  padding: 14px 16px;
+  margin: 12px 16px 14px;
+  padding: 12px 16px 14px;
   border: 1px solid var(--toolbar-border);
   border-radius: var(--kikoeru-radius-md);
   background: var(--toolbar-surface);
@@ -855,20 +869,40 @@ export default {
 .works-toolbar-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .works-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .works-title > .q-icon { color: var(--kikoeru-accent-text); flex-shrink: 0; }
-.works-title h2 { margin: 0; font-size: 20px; font-weight: 500; line-height: 28px; letter-spacing: 0; overflow-wrap: anywhere; }
-.works-count { padding: 2px 8px; border-radius: 5px; color: var(--toolbar-muted); background: var(--toolbar-inset); font-size: 13px; font-variant-numeric: tabular-nums; }
-.works-display-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
-.works-display-controls :deep(.q-btn) { height: 40px; min-height: 40px; padding: 0 10px; border-radius: 6px; color: var(--toolbar-muted); }
-.works-display-controls :deep(.q-btn__content) { flex-wrap: nowrap; gap: 6px; white-space: nowrap; }
-.works-display-controls :deep(.q-icon) { font-size: 18px; margin: 0; }
-.works-view-options { display: flex; gap: 4px; padding: 0; border-radius: 6px; background: var(--toolbar-inset); box-shadow: inset 0 0 0 1px var(--toolbar-border); }
-.works-view-options .q-btn { flex: 1; }
-.works-view-options .is-selected { color: var(--kikoeru-accent-text); background: color-mix(in srgb, var(--q-primary) 14%, transparent); }
-.works-filter-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.works-filter-fields > .q-field { min-width: 0; width: 100%; }
-.works-filter-fields :deep(.q-field__control) { border-radius: 6px; }
-.works-filter-fields :deep(.q-field__label) { color: var(--toolbar-muted); }
-.works-filter-fields :deep(.q-field__native) { letter-spacing: 0; }
+.works-title h2 { margin: 0; font-size: 18px; font-weight: 600; line-height: 26px; letter-spacing: 0; overflow-wrap: anywhere; }
+.works-count { padding: 1px 8px; border-radius: 5px; color: var(--toolbar-muted); background: var(--toolbar-inset); border: 1px solid var(--toolbar-border); font-size: 12px; font-variant-numeric: tabular-nums; }
+.works-display-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
+.works-display-controls :deep(.q-btn) { height: 32px; min-height: 32px; padding: 0 10px; border-radius: var(--kikoeru-radius-sm); font-size: 12.5px; color: var(--kikoeru-text); background: var(--toolbar-inset); border: 1px solid var(--toolbar-border); transition: border-color .14s ease, background-color .14s ease, color .14s ease; }
+.works-display-controls :deep(.q-btn:hover) { border-color: color-mix(in srgb, var(--kikoeru-text) 24%, transparent); }
+.works-display-controls :deep(.q-btn__content) { flex-wrap: nowrap; gap: 5px; white-space: nowrap; }
+.works-display-controls :deep(.q-icon) { font-size: 16px; margin: 0; color: var(--toolbar-muted); }
+.works-view-options { display: flex; gap: 2px; padding: 2px; height: 32px; border-radius: var(--kikoeru-radius-sm); background: var(--toolbar-inset); border: 1px solid var(--toolbar-border); }
+.works-view-options :deep(.q-btn) { flex: 1; height: 26px; min-height: 26px; padding: 0 9px; border: 0; border-radius: 4px; background: transparent; color: var(--toolbar-muted); }
+.works-view-options :deep(.q-btn:hover) { color: var(--kikoeru-text); border: 0; }
+.works-view-options :deep(.is-selected) { color: var(--kikoeru-accent-text); background: var(--kikoeru-active-bg); }
+.works-view-options :deep(.is-selected .q-icon) { color: var(--kikoeru-accent-text); }
+.works-filter-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.works-filter-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.works-filter-label { font-size: 11.5px; font-weight: 500; color: var(--toolbar-muted); line-height: 1.2; padding-left: 2px; }
+.works-filter-select {
+  min-width: 0;
+  width: 100%;
+  border-radius: var(--kikoeru-radius-sm);
+  background: var(--toolbar-inset);
+  border: 1px solid var(--toolbar-border);
+  padding: 0 8px 0 10px;
+  transition: border-color .14s ease, background-color .14s ease;
+}
+.works-filter-select:hover:not(.q-field--disabled) { border-color: color-mix(in srgb, var(--kikoeru-text) 24%, transparent); }
+.works-filter-select.q-field--focused { border-color: color-mix(in srgb, var(--q-primary) 55%, transparent); }
+.works-filter-select.is-active { background: var(--kikoeru-active-bg); border-color: color-mix(in srgb, var(--q-primary) 38%, transparent); }
+.works-filter-select :deep(.q-field__control) { min-height: 32px; height: 32px; padding: 0; }
+.works-filter-select :deep(.q-field__control-container) { min-height: 32px; padding: 0; }
+.works-filter-select :deep(.q-field__native) { min-height: 32px; padding: 0; font-size: 13px; font-weight: 500; color: var(--kikoeru-text); letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.works-filter-select :deep(.q-field__native > span) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.works-filter-select :deep(.q-field__append) { height: 32px; padding-left: 4px; color: var(--toolbar-muted); }
+.works-filter-select :deep(.q-select__dropdown-icon) { font-size: 18px; }
+.works-filter-select :deep(.q-field__marginal) { height: 32px; font-size: 16px; }
 .works-search-chips { margin: 12px 0 0; }
 .works-search-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .works-search-chip {

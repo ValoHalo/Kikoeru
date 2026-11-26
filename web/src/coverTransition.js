@@ -20,6 +20,7 @@ export function cancelCoverTransition () {
 
 export function prepareCoverTransition (event) {
   if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
+  if (event.target.closest('[data-no-cover-transition], [role="button"], button')) return
   const link = event.target.closest('a[href]')
   if (!link || link.target === '_blank' || link.hasAttribute('download')) return
   const url = new URL(link.href, window.location.href)

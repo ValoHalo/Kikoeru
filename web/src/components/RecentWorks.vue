@@ -335,14 +335,15 @@ export default {
 .recent-works-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
 .recent-works-heading { display: flex; align-items: center; gap: 8px; }
 .recent-works-heading > .q-icon { color: var(--kikoeru-accent-text); }
-.recent-works-heading h2 { margin: 0; font-size: 18px; line-height: 28px; letter-spacing: 0; font-weight: 500; }
+.recent-works-heading h2 { margin: 0; font-size: 17px; line-height: 26px; letter-spacing: 0; font-weight: 600; }
 .recent-works-heading .q-btn { color: var(--recent-muted); }
-.recent-works-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.recent-works-actions .q-btn { color: var(--recent-muted); min-height: 36px; padding: 4px 10px; border-radius: 6px; }
-.recent-works-actions .recent-works-favourites { color: var(--kikoeru-accent-text); background: color-mix(in srgb, var(--q-primary) 10%, transparent); }
-.recent-works-actions :deep(.q-icon) { font-size: 18px; }
+.recent-works-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.recent-works-actions .q-btn { color: var(--kikoeru-text); background: var(--recent-inset); border: 1px solid var(--recent-border); height: 32px; min-height: 32px; padding: 0 10px; border-radius: var(--kikoeru-radius-sm); font-size: 12.5px; transition: border-color .14s ease, background-color .14s ease; }
+.recent-works-actions .q-btn:hover:not(:disabled) { border-color: color-mix(in srgb, var(--kikoeru-text) 24%, transparent); }
+.recent-works-actions .recent-works-favourites { color: var(--kikoeru-accent-text); background: var(--kikoeru-active-bg); border-color: color-mix(in srgb, var(--q-primary) 30%, transparent); }
+.recent-works-actions :deep(.q-icon) { font-size: 16px; }
 .recent-works-placeholder { display: flex; align-items: center; gap: 16px; min-height: 88px; padding: 20px; border: 1px solid var(--recent-border); border-radius: 6px; background: var(--recent-inset); color: var(--recent-muted); }
-.recent-work-item { width: 256px; max-width: 78vw; padding: 0 12px 6px 0; }
+.recent-work-item { width: 288px; max-width: 80vw; padding: 0 12px 6px 0; }
 .recent-work-cover { display: block; width: 100%; border: 1px solid var(--recent-border); padding: 0; border-radius: 8px; overflow: hidden; background: var(--recent-inset); color: white; text-align: left; font: inherit; cursor: pointer; }
 .recent-work-cover :deep(.q-img) { display: block; }
 .recent-work-overlay { padding: 34px 10px 10px; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.52) 42%, rgba(0,0,0,.88) 100%); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
@@ -355,7 +356,7 @@ export default {
   .recent-works-heading h2 { font-size: 18px; }
   .recent-works-actions { width: 100%; justify-content: flex-start; gap: 8px; }
   .recent-works-actions .q-btn { padding: 6px 10px; min-height: 38px; }
-  .recent-work-item { width: 224px; }
+  .recent-work-item { width: 248px; }
   .recent-works-placeholder { min-height: 84px; padding: 16px; }
 }
 </style>

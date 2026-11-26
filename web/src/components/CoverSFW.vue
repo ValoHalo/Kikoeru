@@ -11,16 +11,18 @@
     @mouseout="toggleBlurFlag()"
   >
     <div v-if="showBadges && !$store.state.AudioPlayer.privacyMode" class="absolute-top-left transparent cover-corner-top-left">
-      <button
-        type="button"
+      <span
+        role="button"
+        tabindex="0"
         class="cover-badge cover-badge--code cover-badge--copyable"
         :aria-label="$t('workDetails.copyCode')"
         @click.prevent.stop="copyWorkCode"
+        @keydown.enter.prevent.stop="copyWorkCode"
+        @keydown.space.prevent.stop="copyWorkCode"
       >
-        <span>{{ workCode }}</span>
-        <q-icon name="content_copy" size="11px" class="cover-badge-copy-icon" />
+        {{ workCode }}
         <AppTooltip>{{ $t('workDetails.copyCode') }}</AppTooltip>
-      </button>
+      </span>
     </div>
 
     <div v-if="showBadges && release !== ''" class="absolute-bottom-right transparent cover-corner-bottom-right">
@@ -45,7 +47,7 @@
         >
           {{ $privateText(tag.name) }}
         </router-link>
-        <span v-if="hiddenTagCount > 0" class="cover-tag-item cover-tag-item--more" @click.prevent.stop>
+        <span v-if="hiddenTagCount > 0" data-no-cover-transition class="cover-tag-item cover-tag-item--more" @click.prevent.stop>
           +{{ hiddenTagCount }}
           <AppTooltip>{{ hiddenTagNames }}</AppTooltip>
         </span>
@@ -212,20 +214,13 @@ export default {
 
 .cover-badge--copyable {
   cursor: pointer;
+  user-select: none;
   transition: background-color .15s ease, border-color .15s ease;
 }
 
 .cover-badge--copyable:hover {
   background: rgba(34, 38, 46, 0.94);
   border-color: rgba(255, 255, 255, 0.34);
-}
-
-.cover-badge-copy-icon {
-  opacity: 0.72;
-}
-
-.cover-badge--copyable:hover .cover-badge-copy-icon {
-  opacity: 1;
 }
 
 .cover-badge--lyric {
