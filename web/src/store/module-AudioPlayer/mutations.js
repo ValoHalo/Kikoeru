@@ -5,6 +5,7 @@ import {
   SWAP_SEEK_BUTTON_KEY,
   ENABLE_VISUALIZER_KEY,
   ENABLE_PIP_LYRICS,
+  SHOW_FLOATING_LYRICS_KEY,
   ENABLE_VIDEO_SOURCE_KEY,
   OLD_WORK_CARD_UI_STYLE_KEY,
   OLD_SLEEP_TIMER_UI_STYLE_KEY,
@@ -403,6 +404,16 @@ const mutations = {
   SET_ENABLE_PIP_LYRICS: (state, value) => {
     state.enablePIPLyrics = value
     LocalStorage.set(ENABLE_PIP_LYRICS, state.enablePIPLyrics)
+  },
+
+  SET_SHOW_FLOATING_LYRICS: (state, value) => {
+    state.showFloatingLyrics = Boolean(value)
+    LocalStorage.set(SHOW_FLOATING_LYRICS_KEY, state.showFloatingLyrics)
+  },
+
+  TOGGLE_SHOW_FLOATING_LYRICS: (state) => {
+    state.showFloatingLyrics = !state.showFloatingLyrics
+    LocalStorage.set(SHOW_FLOATING_LYRICS_KEY, state.showFloatingLyrics)
   },
 
   SET_RESUME_HISTROY_SECONDS: (state, value) => {

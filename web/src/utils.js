@@ -108,6 +108,20 @@ export const ServerApi = {
     return response.data.lyricList
   },
 
+  async queryLyricDetails(trackHash, language = 'auto') {
+    const response = await axios.get(`/api/media/query-lrc/${trackHash}`, { params: { language } })
+    return {
+      lyricList: response.data.lyricList || [],
+      globalSelectedHash: response.data.globalSelectedHash || null,
+      globalDisabled: Boolean(response.data.globalDisabled),
+    }
+  },
+
+  async selectGlobalLyric(trackHash, lyricHash) {
+    const response = await axios.put(`/api/media/select-lrc/${trackHash}`, { lyricHash })
+    return response.data
+  },
+
   async fetchLyric(lyricHash) {
     const response = await axios.get(`/api/media/fetch-lrc/${lyricHash}`)
     return response.data.lrc

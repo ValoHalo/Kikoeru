@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="currentLyric !== '' && !$store.state.AudioPlayer.privacyMode"
+    v-if="currentLyric !== '' && showFloatingLyrics && !$store.state.AudioPlayer.privacyMode"
     class="lyric-container"
     :class="{
       'lyric-container--player-open': isDesktopPlayerOpen && !customPosition,
@@ -106,7 +106,8 @@ export default {
   computed: {
     ...mapState('AudioPlayer', [
       'currentLyric',
-      'hide'
+      'hide',
+      'showFloatingLyrics'
     ]),
     ...mapGetters('AudioPlayer', [
       'currentPlayingFile'

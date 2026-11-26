@@ -97,137 +97,153 @@
 
         <!-- 设置菜单 -->
         <div class="player-tools">
-          <!-- 顶在前面 -->
-            <!-- 曲目列表 -->
-            <q-btn 
-              flat 
-              dense 
-              size="md" 
-              padding="none sm" 
-              icon="queue_music" 
-              :aria-label="$t('audioPlayer.switchTrack')"
-              @click="showCurrentPlayList = !showCurrentPlayList" 
-            >
-              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.switchTrack') }}</AppTooltip>
-            </q-btn>
+          <!-- 曲目列表 -->
+          <q-btn
+            flat
+            dense
+            size="md"
+            padding="none sm"
+            icon="queue_music"
+            class="player-tool-btn player-tool-btn--optical-md"
+            :aria-label="$t('audioPlayer.switchTrack')"
+            @click="showCurrentPlayList = !showCurrentPlayList"
+          >
+            <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.switchTrack') }}</AppTooltip>
+          </q-btn>
 
-            <!--播放顺序切换-->
-            <q-btn 
-              class="player-play-mode"
-              flat
-              dense 
-              size="md" 
-              padding="none sm" 
-              :icon="playModeIcon"
-              :aria-label="playModeString"
-              @click="changePlayMode()"
-            >
-              <AppTooltip anchor="top middle" self="bottom middle">{{ playModeString }}</AppTooltip>
-            </q-btn>
+          <!-- 播放顺序切换 -->
+          <q-btn
+            flat
+            dense
+            size="md"
+            padding="none sm"
+            :icon="playModeIcon"
+            class="player-tool-btn"
+            :class="{ 'player-tool-btn--optical-lg': playModeIcon === 'playlist_play' }"
+            :aria-label="playModeString"
+            @click="changePlayMode()"
+          >
+            <AppTooltip anchor="top middle" self="bottom middle">{{ playModeString }}</AppTooltip>
+          </q-btn>
 
-            <q-btn flat dense size="md" padding="none sm" icon="bookmark_border" :aria-label="$t('bookmark.title')" @click="showBookmarks = true">
-              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('bookmark.title') }}</AppTooltip>
-            </q-btn>
+          <!-- 书签与片段 -->
+          <q-btn
+            flat
+            dense
+            size="md"
+            padding="none sm"
+            icon="bookmark_border"
+            class="player-tool-btn"
+            :aria-label="$t('bookmark.title')"
+            @click="showBookmarks = true"
+          >
+            <AppTooltip anchor="top middle" self="bottom middle">{{ $t('bookmark.title') }}</AppTooltip>
+          </q-btn>
 
-            <q-btn
-              v-if="hasLyric || enablePIPLyrics"
-              :flat="!enablePIPLyrics"
-              :outline="enablePIPLyrics"
-              dense
-              size="md"
-              padding="none sm"
-              icon="picture_in_picture"
-              :aria-label="$t('audioPlayer.pipLyrics')"
-              :aria-pressed="enablePIPLyrics"
-              @click="setPIPLyrics"
-            >
-              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.pipLyrics') }}</AppTooltip>
-            </q-btn>
+          <!-- 悬浮歌词显隐开关 -->
+          <q-btn
+            flat
+            dense
+            size="md"
+            padding="none sm"
+            :icon="showFloatingLyrics ? 'subtitles' : 'subtitles_off'"
+            class="player-tool-btn"
+            :class="{ 'player-tool-btn--active': showFloatingLyrics && hasLyric && !enablePIPLyrics }"
+            :aria-label="$t(showFloatingLyrics ? 'audioPlayer.hideFloatingLyrics' : 'audioPlayer.showFloatingLyrics')"
+            :aria-pressed="showFloatingLyrics"
+            @click="toggleShowFloatingLyrics()"
+          >
+            <AppTooltip anchor="top middle" self="bottom middle">{{ $t(showFloatingLyrics ? 'audioPlayer.hideFloatingLyrics' : 'audioPlayer.showFloatingLyrics') }}</AppTooltip>
+          </q-btn>
 
-            <q-btn
-              flat
-              dense
-              size="md"
-              padding="none sm"
-              icon="subtitles"
-              :aria-label="$t('audioPlayer.selectLyrics')"
-              @click="showLyricSelection = true"
-            >
-              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.selectLyrics') }}</AppTooltip>
-            </q-btn>
+          <!-- 统一画中画（自动根据当前文件在视频画中画与桌面歌词画中画之间切换） -->
+          <q-btn
+            flat
+            dense
+            size="md"
+            padding="none sm"
+            icon="picture_in_picture_alt"
+            class="player-tool-btn"
+            :class="{ 'player-tool-btn--active': isPipActive }"
+            :disable="!canUsePip"
+            :aria-label="pipTooltip"
+            :aria-pressed="isPipActive"
+            @click="toggleUnifiedPip"
+          >
+            <AppTooltip anchor="top middle" self="bottom middle">{{ pipTooltip }}</AppTooltip>
+          </q-btn>
 
-          <!-- 放在尾部 -->
-            <q-btn
-              flat 
-              dense
-              size="md"
-              padding="none sm"
-              icon="more_horiz"
-              :aria-label="$t('audioPlayer.moreSettings')"
-            >
-              <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.moreSettings') }}</AppTooltip>
-              <q-menu class="player-settings-menu" anchor="top right" self="bottom right">
-                <q-list dense class="player-settings-list">
-                  <q-item tag="label" clickable>
-                    <q-item-section avatar><q-icon name="sync_alt" /></q-item-section>
-                    <q-item-section>{{ $t('audioEqualizer.swapChannels') }}</q-item-section>
-                    <q-item-section side><q-toggle dense :model-value="$store.state.AudioPlayer.swapChannels" :aria-label="$t('audioEqualizer.swapChannels')" @update:model-value="$store.commit('AudioPlayer/SET_SWAP_CHANNELS', $event)" /></q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section avatar><q-icon name="speed" /></q-item-section>
-                    <q-item-section>{{ $t('audioPlayer.playbackRate') }}</q-item-section>
-                    <q-item-section side>
-                      <q-select
-                        dense
-                        outlined
-                        options-dense
-                        class="player-rate-select"
-                        :aria-label="$t('audioPlayer.playbackRate')"
-                        :model-value="playbackRate"
-                        :options="playbackRates"
-                        :option-label="rate => `${rate}×`"
-                        @update:model-value="setPlaybackRate"
-                      />
-                    </q-item-section>
-                  </q-item>
-                  <q-item v-if="enableVideoSource && isCurrentPlayingFileVideo && !$store.state.AudioPlayer.privacyMode" clickable v-close-popup :active="enableVideoSourcePIP" @click="onSetEnableVideoSourcePIP(!enableVideoSourcePIP)">
-                    <q-item-section avatar><q-icon name="picture_in_picture_alt" /></q-item-section>
-                    <q-item-section>{{ $t('audioPlayer.videoPip') }}</q-item-section>
-                    <q-item-section side v-if="enableVideoSourcePIP"><q-icon name="done" /></q-item-section>
-                  </q-item>
-                  <q-item v-if="enableVisualizer" clickable v-close-popup :active="isFlipCover" @click="flipCover">
-                    <q-item-section avatar><q-icon name="equalizer" /></q-item-section>
-                    <q-item-section>{{ $t('audioPlayer.equalizer') }}</q-item-section>
-                    <q-item-section side v-if="isFlipCover"><q-icon name="done" /></q-item-section>
-                  </q-item>
-                  <q-separator v-if="hasLyric" />
-                  <q-item v-if="hasLyric" class="player-lyric-offset-item">
-                    <q-item-section>
-                      <div class="player-lyric-offset-row">
-                        <q-btn flat round dense icon="sync_alt" :aria-label="$t('audioPlayer.syncTool')" @click="lyricSyncDialog = true">
-                          <AppTooltip>{{ $t('audioPlayer.syncTool') }}</AppTooltip>
-                        </q-btn>
-                        <q-input
-                          :model-value="lyricOffsetSeconds"
-                          @update:model-value="lyricOffsetChange"
-                          type="number"
-                          dense
-                          outlined
-                          hide-bottom-space
-                          class="col player-lyric-offset-input"
-                          :prefix="$t('audioPlayer.lyricOffset')"
-                          suffix="s"
-                          clearable
-                          input-style="text-align: right;"
-                        />
-                        <q-btn flat round dense icon="remove" :aria-label="`${$t('audioPlayer.lyricOffset')} -0.1s`" @click="lyricOffsetChange(lyricOffsetSeconds - 0.1)" />
-                        <q-btn flat round dense icon="add" :aria-label="`${$t('audioPlayer.lyricOffset')} +0.1s`" @click="lyricOffsetChange(lyricOffsetSeconds + 0.1)" />
-                      </div>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
+          <!-- 更多设置 -->
+          <q-btn
+            flat
+            dense
+            size="md"
+            padding="none sm"
+            icon="more_horiz"
+            class="player-tool-btn player-more-btn"
+            :aria-label="$t('audioPlayer.moreSettings')"
+          >
+            <span v-if="hasActiveMoreSettings" class="player-more-dot" aria-hidden="true" />
+            <AppTooltip anchor="top middle" self="bottom middle">{{ $t('audioPlayer.moreSettings') }}</AppTooltip>
+            <q-menu class="player-settings-menu" anchor="top right" self="bottom right" :offset="[0, 8]">
+              <q-list dense class="player-settings-list">
+                <div class="player-rate-block">
+                  <div class="player-rate-header">
+                    <q-icon name="speed" size="18px" />
+                    <span>{{ $t('audioPlayer.playbackRate') }}</span>
+                  </div>
+                  <div class="player-rate-segmented" role="radiogroup" :aria-label="$t('audioPlayer.playbackRate')">
+                    <button
+                      v-for="rate in playbackRates"
+                      :key="rate"
+                      type="button"
+                      class="player-rate-option"
+                      :class="{ 'is-selected': playbackRate === rate }"
+                      role="radio"
+                      :aria-checked="playbackRate === rate"
+                      @click="setPlaybackRate(rate)"
+                    >
+                      {{ rate }}×
+                    </button>
+                  </div>
+                </div>
+
+                <q-item tag="label" clickable>
+                  <q-item-section avatar><q-icon name="swap_horiz" /></q-item-section>
+                  <q-item-section>{{ $t('audioEqualizer.swapChannels') }}</q-item-section>
+                  <q-item-section side>
+                    <q-toggle
+                      dense
+                      :model-value="$store.state.AudioPlayer.swapChannels"
+                      :aria-label="$t('audioEqualizer.swapChannels')"
+                      @update:model-value="$store.commit('AudioPlayer/SET_SWAP_CHANNELS', $event)"
+                    />
+                  </q-item-section>
+                </q-item>
+
+                <q-item v-if="enableVisualizer" clickable v-close-popup :active="isFlipCover" @click="flipCover">
+                  <q-item-section avatar><q-icon name="equalizer" /></q-item-section>
+                  <q-item-section>{{ $t('audioPlayer.equalizer') }}</q-item-section>
+                  <q-item-section side v-if="isFlipCover"><q-icon name="done" /></q-item-section>
+                </q-item>
+
+                <q-separator />
+
+                <q-item clickable v-close-popup @click="showLyricSelection = true">
+                  <q-item-section avatar><q-icon name="closed_caption" /></q-item-section>
+                  <q-item-section>{{ $t('audioPlayer.subtitleManager') }}</q-item-section>
+                  <q-item-section side>
+                    <div class="row items-center no-wrap q-gutter-xs">
+                      <span v-if="lyricOffsetSeconds !== 0" class="player-offset-pill">
+                        {{ lyricOffsetSeconds > 0 ? '+' : '' }}{{ lyricOffsetSeconds }}s
+                      </span>
+                      <q-icon name="chevron_right" size="18px" />
+                    </div>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
         </div>
 
       </q-card>
@@ -330,31 +346,6 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="lyricSyncDialog" seamless position="top">
-      <q-card class="app-form-dialog lyric-sync-dialog">
-        <q-card-section>
-          <div class="text-h6">{{ $t('audioPlayer.syncTool') }}</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none lyric-sync-instructions">{{ $t('audioPlayer.syncInstructions') }}</q-card-section>
-
-        <q-card-section v-if="fixState === 'ready'" class="q-pt-none row q-gutter-sm">
-          <q-btn outline no-caps color="primary" class="col" @click="startFixLyricSync('lyric')">{{ $t('audioPlayer.lyricsFirst') }}</q-btn>
-          <q-btn outline no-caps color="primary" class="col" @click="startFixLyricSync('audio')">{{ $t('audioPlayer.audioFirst') }}</q-btn>
-        </q-card-section>
-
-        <q-card-section v-if="fixState === 'measure'" class="q-pt-none">
-          <q-btn unelevated no-caps color="primary" class="full-width" @click="stopFixLyricSync">{{ fixWhoStartFirst == "audio" ? $t('audioPlayer.lyricsNow') : $t('audioPlayer.audioNow') }}</q-btn>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn class="app-dialog-cancel" flat no-caps @click="lyricSyncDialog = false">{{ $t('common.close') }}</q-btn>
-          <q-btn v-if="fixState !== 'ready'" outline no-caps color="primary" @click="fixState = 'ready'">{{ $t('audioPlayer.measureAgain') }}</q-btn>
-          <q-btn v-if="fixState === 'done'" unelevated no-caps color="primary" @click="fixApply">{{ $t('audioPlayer.applyOffset', { showDeltaSeconds: showDeltaSeconds }) }}</q-btn>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
     <q-dialog v-model="showLyricSelection">
       <LyricSelection />
     </q-dialog>
@@ -407,12 +398,6 @@ export default {
 
       isFlipCover: false, // 是否反转封面显示其他内容
 
-      // 歌词偏移量修复工具
-      lyricSyncDialog: false,
-      fixState: "ready",  // ready: 准备开始, measure: 计时进行中, done: 计时完成
-      fixWhoStartFirst: "", // "audio", "lyric" // 先看到的歌词，还是先听到的声音
-      fixStartMills: 0,
-      fixStopMills: 0,
       showLyricSelection: false,
     }
   },
@@ -536,9 +521,6 @@ export default {
     enableVideoSource() {
       this.suggestRefreshPage();
     },
-    lyricSyncDialog() {
-      this.fixState = 'ready';
-    }
   },
 
   computed: {
@@ -631,15 +613,26 @@ export default {
       }
     },
 
-    fixDeltaMills() {
-      // 音频先出现的话，需要将offset增加，使得歌词提前出现
-      let sign = this.fixWhoStartFirst == 'audio' ? +1 : -1;
-      return sign * (this.fixStopMills - this.fixStartMills);
+    isVideoPipMode () {
+      return Boolean(this.enableVideoSource && this.isCurrentPlayingFileVideo && !this.$store.state.AudioPlayer.privacyMode)
     },
-    showDeltaSeconds() {
-      const epsilon = 1;
-      if (Math.abs(this.fixDeltaMills) < epsilon) return ""
-      return `${this.fixDeltaMills > 0 ? '+': ''}${(this.fixDeltaMills/1000).toFixed(2)}s`;
+
+    canUsePip () {
+      return this.isVideoPipMode || this.hasLyric || this.enablePIPLyrics
+    },
+
+    isPipActive () {
+      return this.isVideoPipMode ? this.enableVideoSourcePIP : this.enablePIPLyrics
+    },
+
+    pipTooltip () {
+      if (this.isVideoPipMode) return t('audioPlayer.videoPip')
+      if (this.hasLyric || this.enablePIPLyrics) return t('audioPlayer.pipLyrics')
+      return t('audioPlayer.pipUnavailable')
+    },
+
+    hasActiveMoreSettings () {
+      return this.playbackRate !== 1 || this.$store.state.AudioPlayer.swapChannels || this.lyricOffsetSeconds !== 0
     },
 
     ...mapState('AudioPlayer', [
@@ -657,6 +650,7 @@ export default {
       'enableVideoSource',
       'enableVideoSourcePIP',
       'enablePIPLyrics',
+      'showFloatingLyrics',
       'playWorkId',
       'rewindSeekMode',
       'forwardSeekMode',
@@ -695,22 +689,12 @@ export default {
       } catch { /* Session undo remains available when saved positions cannot be loaded. */ }
     },
 
-    startFixLyricSync(whoStartFirst) {
-      this.fixState = "measure";
-      this.fixWhoStartFirst = whoStartFirst;
-      this.fixStartMills = this.fixStopMills = performance.now();
-    },
-
-    stopFixLyricSync() {
-      this.fixState = "done"; // 计时结束，重制状态
-      this.fixStopMills = performance.now();
-    },
-
-    fixApply() {
-      this.lyricOffsetChange(this.fixDeltaMills / 1000);
-      this.lyricSyncDialog = false;
-      this.fixState = "ready";
-      this.$q.notify({message: t('audioPlayer.offsetApplied', { value: this.fixDeltaMills/1000 }), timeout: 500})
+    toggleUnifiedPip () {
+      if (this.isVideoPipMode) {
+        this.onSetEnableVideoSourcePIP(!this.enableVideoSourcePIP)
+      } else if (this.hasLyric || this.enablePIPLyrics) {
+        this.setPIPLyrics()
+      }
     },
 
     ...mapMutations('AudioPlayer', {
@@ -725,7 +709,7 @@ export default {
       forward: 'SET_FORWARD_SEEK_MODE',
       setEnableVideoSourcePIP: 'SET_ENABLE_VIDEO_SOURCE_PIP',
       setEnablePIPLyrics: 'SET_ENABLE_PIP_LYRICS',
-      setLyricOffsetSeconds: 'SET_LYRIC_OFFSET_SECONDS',
+      toggleShowFloatingLyrics: 'TOGGLE_SHOW_FLOATING_LYRICS',
     }),
     ...mapMutations('AudioPlayer', [
       'SET_TRACK',
@@ -936,13 +920,6 @@ export default {
           }
         ],
       });
-    },
-
-    lyricOffsetChange(seconds) {
-      if (seconds == null) seconds = 0;
-      seconds = Math.round(seconds * 10000) / 10000; // 解决javascript小数点精度问题，比如0.9+0.1变成0.999999这种问题，在这里修复成1.0
-      console.log("lyric offset change to ", seconds, typeof seconds)
-      this.setLyricOffsetSeconds(seconds)
     },
 
     flipCover() {
@@ -1189,24 +1166,81 @@ export default {
 
 .player-tools {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  justify-items: center;
+  align-items: center;
+  gap: 2px;
   margin-top: 2px;
 
-  > .q-btn {
-    min-width: 0;
+  > .player-tool-btn {
+    position: relative;
+    width: 40px;
     height: 40px;
-    border-radius: var(--kikoeru-radius-sm);
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--kikoeru-text);
+    opacity: 0.75;
+    transition: opacity 0.16s ease, color 0.16s ease, background-color 0.16s ease;
+
+    :deep(.q-icon) {
+      font-size: 22px;
+    }
+
+    &:hover:not(:disabled) {
+      opacity: 1;
+    }
+
+    &:disabled {
+      opacity: 0.32;
+    }
   }
 
-  .player-play-mode :deep(.q-icon) {
-    font-size: 30px;
+  > .player-tool-btn--optical-md :deep(.q-icon) {
+    font-size: 24px;
+  }
+
+  > .player-tool-btn--optical-lg :deep(.q-icon) {
+    font-size: 27px;
+  }
+
+  > .player-tool-btn--active {
+    color: var(--kikoeru-accent-text);
+    opacity: 1;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 4px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
   }
 }
 
+.player-more-btn {
+  position: relative;
+}
+
+.player-more-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--kikoeru-accent-text);
+  pointer-events: none;
+}
+
 :global(.player-settings-menu) {
-  width: 316px;
+  width: 288px;
   max-width: calc(100vw - 24px);
 }
 
@@ -1214,26 +1248,60 @@ export default {
   padding: 6px;
 }
 
-:global(.player-rate-select) {
-  min-width: 84px;
+:global(.player-rate-block) {
+  padding: 6px 10px 10px;
 }
 
-:global(.player-lyric-offset-item) {
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-
-:global(.player-lyric-offset-row) {
+:global(.player-rate-header) {
   display: flex;
   align-items: center;
-  gap: 4px;
-  width: 100%;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--kikoeru-muted);
 }
 
-:global(.player-lyric-offset-input .q-field__control) {
-  height: 34px;
-  min-height: 34px;
+:global(.player-rate-segmented) {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
   border-radius: var(--kikoeru-radius-sm);
+  background: var(--kikoeru-inset);
+  border: 1px solid var(--kikoeru-border);
+}
+
+:global(.player-rate-option) {
+  height: 30px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--kikoeru-muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+:global(.player-rate-option:hover) {
+  color: var(--kikoeru-text);
+}
+
+:global(.player-rate-option.is-selected) {
+  background: var(--kikoeru-active-bg);
+  color: var(--kikoeru-accent-text);
+  font-weight: 600;
+}
+
+:global(.player-offset-pill) {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--kikoeru-active-bg);
+  color: var(--kikoeru-accent-text);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 .hideStyle {

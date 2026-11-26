@@ -111,6 +111,9 @@ async function scrapeWorkMemo(dir, oldMemo) {
     const oldMemoMtime = oldMemo.mtime || {};
     const oldMemoDuration = oldMemo.duration || {};
     const memo = { duration: {}, isContainLyric: false, mtime: {} };
+    if (oldMemo && oldMemo.lyricBindings && typeof oldMemo.lyricBindings === 'object') {
+        memo.lyricBindings = { ...oldMemo.lyricBindings };
+    }
     await Promise.all(files
         .filter((file) => {
         const ext = path_1.default.extname(file).toLowerCase();

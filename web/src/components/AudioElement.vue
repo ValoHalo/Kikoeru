@@ -627,7 +627,12 @@ export default {
       const url = `/api/media/check-lrc/${fileHash}`;
 
       try {
-        const selected = this.$q.localStorage.getItem(key)
+        const isAdministrator = this.$store.state.User.canManage === true
+        const selected = isAdministrator ? null : this.$q.localStorage.getItem(key)
+        if (selected === '__disabled__') {
+          this.resetToNoLyricStatus()
+          return
+        }
         if (selected) {
           try {
             const lines = await ServerApi.fetchLyric(selected)

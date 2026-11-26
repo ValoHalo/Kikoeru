@@ -162,7 +162,8 @@ router.get('/query-lrc/:id/:reference', (0, express_validator_1.param)('id', (_v
     const work_id = req.params.id;
     try {
         const { work, rootFolder, track } = await resolveMediaSource(work_id, req.params.reference);
-        const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
+        const workMemo = (0, utils_1.ensureIsJsonObject)(work.memo) || {};
+        const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), workMemo);
         console.log("[find-lrc]", track.subtitle, track.title);
         const lyricTracks = tracks.filter((track) => {
             const ext = path_1.default.extname(track.title).toLowerCase();
@@ -170,6 +171,7 @@ router.get('/query-lrc/:id/:reference', (0, express_validator_1.param)('id', (_v
         }).map(track => ({
             title: track.title,
             subtitle: track.subtitle || '',
+            relativePath: track.relativePath,
             hash: track.hash,
             ext: track.ext,
         }));
@@ -193,9 +195,17 @@ router.get('/query-lrc/:id/:reference', (0, express_validator_1.param)('id', (_v
         }), rootFolder, work.dir);
         matchedTracks.sort((left, right) => compareLyricTracks(left, right, req.query.language));
         console.log("[find-lrc] matchedTracks: ", matchedTracks);
+        const bindings = workMemo.lyricBindings && typeof workMemo.lyricBindings === 'object' ? workMemo.lyricBindings : {};
+        const hasGlobalBinding = Object.prototype.hasOwnProperty.call(bindings, track.relativePath);
+        const boundRelativePath = hasGlobalBinding ? bindings[track.relativePath] : undefined;
+        const boundTrack = typeof boundRelativePath === 'string'
+            ? matchedTracks.find(item => item.relativePath === boundRelativePath)
+            : null;
         res.send({
             result: true,
             lyricList: matchedTracks,
+            globalSelectedHash: boundTrack ? boundTrack.hash : null,
+            globalDisabled: hasGlobalBinding && boundRelativePath === null,
         });
     }
     catch (err) {
@@ -297,13 +307,61 @@ router.post('/save-lrc/:id', accessControl_1.requireAdministrator, (0, express_v
         next(e);
     }
 });
+router.put('/select-lrc/:id/:reference', accessControl_1.requireAdministrator, (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
+    if (!(0, validate_1.isValidRequest)(req, res))
+        return;
+    const work_id = req.params.id;
+    const { lyricHash } = req.body || {};
+    try {
+        const { work, track } = await resolveMediaSource(work_id, req.params.reference);
+        const workMemo = (0, utils_1.ensureIsJsonObject)(work.memo) || {};
+        const bindings = workMemo.lyricBindings && typeof workMemo.lyricBindings === 'object'
+            ? { ...workMemo.lyricBindings }
+            : {};
+        let selectedHash = null;
+        if (lyricHash === null || lyricHash === '') {
+            bindings[track.relativePath] = null;
+        }
+        else if (typeof lyricHash === 'string') {
+            const slashIndex = lyricHash.indexOf('/');
+            const lyricWorkId = slashIndex > 0 ? lyricHash.slice(0, slashIndex) : String(work_id);
+            const lyricReference = slashIndex > 0 ? lyricHash.slice(slashIndex + 1) : lyricHash;
+            if (String(lyricWorkId) !== String(work_id)) {
+                res.status(400).send({ error: t('validation.invalidValue', { field: 'lyricHash' }) });
+                return;
+            }
+            const { track: lyricTrack } = await resolveMediaSource(work_id, lyricReference);
+            const ext = path_1.default.extname(lyricTrack.title).toLowerCase();
+            if (!supportedLyricExtensions.includes(ext)) {
+                res.status(400).send({ error: t('validation.invalidValue', { field: 'lyricHash' }) });
+                return;
+            }
+            bindings[track.relativePath] = lyricTrack.relativePath;
+            selectedHash = lyricTrack.hash;
+        }
+        else {
+            delete bindings[track.relativePath];
+        }
+        workMemo.lyricBindings = bindings;
+        await db.setWorkMemo(work_id, workMemo);
+        res.send({
+            result: true,
+            selectedHash,
+            globalDisabled: bindings[track.relativePath] === null,
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 router.get('/check-lrc/:id/:reference', (0, express_validator_1.param)('id', (_value, { path }) => t('validation.invalidValue', { field: path })).isInt(), trackReferenceValidator('reference'), async (req, res, next) => {
     if (!(0, validate_1.isValidRequest)(req, res))
         return;
     const work_id = req.params.id;
     try {
         const { work, rootFolder, track } = await resolveMediaSource(work_id, req.params.reference);
-        const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), (0, utils_1.ensureIsJsonObject)(work.memo));
+        const workMemo = (0, utils_1.ensureIsJsonObject)(work.memo) || {};
+        const tracks = await (0, utils_1.getTrackList)(work_id, path_1.default.join(rootFolder.path, work.dir), workMemo);
         console.log("[find-lrc]", track.subtitle, track.title);
         const lyricTracks = tracks.filter((track) => {
             const ext = path_1.default.extname(track.title).toLowerCase();
@@ -311,35 +369,55 @@ router.get('/check-lrc/:id/:reference', (0, express_validator_1.param)('id', (_v
         }).map(track => ({
             title: track.title,
             subtitle: track.subtitle || '',
+            relativePath: track.relativePath,
             hash: track.hash,
             ext: track.ext,
         }));
         console.log("[find-lrc] tracks: ", lyricTracks);
-        const fileBasename = path_1.default.parse(track.title).name;
-        console.log("[find-lrc] fileBasename: ", fileBasename, track.title);
-        const matchedTracks = (await addSubtitleLanguages(lyricTracks.map((lrcTrack) => {
-            let lyricName = lrcTrack.title;
-            lyricName = path_1.default.parse(lyricName).name;
-            const p = path_1.default.parse(lyricName);
-            if (utils_1.supportedMediaExtList.includes(p.ext.toLowerCase())) {
-                lyricName = p.name;
+        const bindings = workMemo.lyricBindings && typeof workMemo.lyricBindings === 'object' ? workMemo.lyricBindings : {};
+        const hasGlobalBinding = Object.prototype.hasOwnProperty.call(bindings, track.relativePath);
+        let bestLrcTrack = null;
+        if (hasGlobalBinding) {
+            const boundRelativePath = bindings[track.relativePath];
+            if (boundRelativePath === null) {
+                res.send({ result: false, message: t('media.noLyrics'), hash: '' });
+                return;
             }
-            lyricName = (0, subtitleLanguage_1.stripSubtitleLanguageSuffix)(lyricName);
-            let matchLevel = (0, utils_1.audioLyricMatchLevel)(fileBasename, lyricName);
-            console.log("[find-lrc] ", fileBasename, lyricName, matchLevel);
-            if (lrcTrack.subtitle != track.subtitle) {
-                matchLevel += 0.5;
+            if (typeof boundRelativePath === 'string') {
+                const found = lyricTracks.find(item => item.relativePath === boundRelativePath);
+                if (found) {
+                    const [withLang] = await addSubtitleLanguages([found], rootFolder, work.dir);
+                    bestLrcTrack = withLang || found;
+                }
             }
-            return Object.assign({ matchLevel }, lrcTrack);
-        }), rootFolder, work.dir))
-            .filter((lrcTrack) => lrcTrack.matchLevel >= 0);
-        matchedTracks.sort((left, right) => compareLyricTracks(left, right, req.query.language));
-        console.log("[find-lrc] matchedTracks: ", matchedTracks);
-        if (matchedTracks.length == 0) {
-            res.send({ result: false, message: t('media.noLyrics'), hash: '' });
-            return;
         }
-        const bestLrcTrack = matchedTracks[0];
+        if (!bestLrcTrack) {
+            const fileBasename = path_1.default.parse(track.title).name;
+            console.log("[find-lrc] fileBasename: ", fileBasename, track.title);
+            const matchedTracks = (await addSubtitleLanguages(lyricTracks.map((lrcTrack) => {
+                let lyricName = lrcTrack.title;
+                lyricName = path_1.default.parse(lyricName).name;
+                const p = path_1.default.parse(lyricName);
+                if (utils_1.supportedMediaExtList.includes(p.ext.toLowerCase())) {
+                    lyricName = p.name;
+                }
+                lyricName = (0, subtitleLanguage_1.stripSubtitleLanguageSuffix)(lyricName);
+                let matchLevel = (0, utils_1.audioLyricMatchLevel)(fileBasename, lyricName);
+                console.log("[find-lrc] ", fileBasename, lyricName, matchLevel);
+                if (lrcTrack.subtitle != track.subtitle) {
+                    matchLevel += 0.5;
+                }
+                return Object.assign({ matchLevel }, lrcTrack);
+            }), rootFolder, work.dir))
+                .filter((lrcTrack) => lrcTrack.matchLevel >= 0);
+            matchedTracks.sort((left, right) => compareLyricTracks(left, right, req.query.language));
+            console.log("[find-lrc] matchedTracks: ", matchedTracks);
+            if (matchedTracks.length == 0) {
+                res.send({ result: false, message: t('media.noLyrics'), hash: '' });
+                return;
+            }
+            bestLrcTrack = matchedTracks[0];
+        }
         const fileName = path_1.default.join(rootFolder.path, work.dir, bestLrcTrack.subtitle || '', bestLrcTrack.title);
         const fileBuffer = await fs_1.default.promises.readFile(fileName);
         const charsetMatch = jschardet_1.default.detect(fileBuffer).encoding;
@@ -352,6 +430,10 @@ router.get('/check-lrc/:id/:reference', (0, express_validator_1.param)('id', (_v
             case ".srt":
             case ".vtt":
                 lrc = (0, lyricParser_1.parseSrtOrVtt)(fileContent);
+                break;
+            case ".ass":
+            case ".ssa":
+                lrc = (0, lyricParser_1.parseAss)(fileContent);
                 break;
             default:
                 break;
