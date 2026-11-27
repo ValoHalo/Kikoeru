@@ -119,14 +119,6 @@
           <q-item-section side class="preference-control"><q-toggle v-model="enableShowRecent" color="primary" /></q-item-section>
         </q-item>
 
-        <q-item tag="label" class="preference-row">
-          <q-item-section>
-            <q-item-label>{{ $t('preferences.fullCards') }}</q-item-label>
-            <q-item-label caption>{{ $t('preferences.fullCardsHint') }}</q-item-label>
-          </q-item-section>
-          <q-item-section side class="preference-control"><q-toggle v-model="oldWorkCardUIStyle" color="primary" /></q-item-section>
-        </q-item>
-
         <SmartPathSettings
           v-model:enabled="smartPathEnabled"
           v-model:prefer-effect="smartPathPreferEffect"
@@ -317,10 +309,6 @@ export default {
       get () { return this.$store.state.AudioPlayer.hideSubtitleFiles },
       set (value) { this.SET_HIDE_SUBTITLE_FILES(value) },
     },
-    oldWorkCardUIStyle: {
-      get () { return this.$store.state.AudioPlayer.oldWorkCardUIStyle },
-      set (value) { this.SET_OLD_WORK_CARD_UI_STYLE(value) },
-    },
     smartPathEnabled: {
       get () { return this.$store.state.AudioPlayer.smartPathEnabled },
       set (value) { this.SET_SMART_PATH_ENABLED(value) },
@@ -396,7 +384,6 @@ export default {
       'SET_DEFAULT_SUBTITLE_LANGUAGE',
       'SET_RESTORE_LAST_QUEUE',
       'SET_OLD_SLEEP_TIMER_UI_STYLE',
-      'SET_OLD_WORK_CARD_UI_STYLE',
       'SET_REWIND_SEEK_TIME',
       'SET_TRANSCODE_FROM_TYPES',
       'SET_TRANSCODE_OPTION',

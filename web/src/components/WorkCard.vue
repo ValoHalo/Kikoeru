@@ -1,95 +1,100 @@
 <template>
-  <q-card class="card hover-show" :class="{ 'card--thumbnail': thumbnailMode, 'card--full': fullDetails }">
+  <q-card class="card hover-show" :class="{ 'card--thumbnail': thumbnailMode }">
     <router-link :to="`/work/${metadata.id}`" class="work-card-cover" :aria-label="$privateText(metadata.title)">
       <CoverSFW
         :workid="metadata.id"
         :nsfw="false"
-        :release="thumbnailMode ? metadata.release : ''"
+        :age-rating="metadata.nsfw"
+        :release="metadata.release || ''"
         :lyric_status="metadata.lyric_status"
-        :tags="fullDetails ? [] : visibleTags"
+        :show-lyric-badge="false"
       />
     </router-link>
 
     <div v-if="!thumbnailMode" class="work-card-info">
-      <!-- 第 1 行：社团 & 发售日 -->
-      <div class="work-card-byline">
-        <router-link :to="`/works?circleId=${metadata.circle.id}`" class="work-card-circle ellipsis">
-          {{ $privateText(metadata.circle.name) }}
-        </router-link>
-        <time v-if="metadata.release">{{ metadata.release }}</time>
-      </div>
-
-      <!-- 第 2 行：标题 -->
+      <!-- 第 1 行：两行标题 -->
       <h2 class="work-card-title">
-        <router-link :to="`/work/${metadata.id}`" :class="fullDetails ? 'work-card-title-full' : 'ellipsis-2-lines'">
+        <router-link :to="`/work/${metadata.id}`" class="work-card-title-full" :title="$privateText(metadata.title)">
           {{ $privateText(metadata.title) }}
-          <AppTooltip v-if="!fullDetails">{{ $privateText(metadata.title) }}</AppTooltip>
         </router-link>
       </h2>
 
-      <!-- 第 3 行：评价 & 评论 -->
-      <div v-show="metadata.title" class="work-card-rating-row">
-        <div class="work-card-rating">
-          <q-rating
-            v-model="rating"
-            size="18px"
-            class="work-card-stars"
-            :class="userMarked ? 'work-card-stars--user' : 'work-card-stars--community'"
-            icon="star_border"
-            icon-selected="star"
-            icon-half="star_half"
-          />
-
-          <!-- 评价分布明细 -->
-          <AppTooltip v-if="metadata.rate_count_detail">
-            <div class="kikoeru-rating-tooltip">
-              <div class="kikoeru-rating-tooltip__title">{{ $t('workCard.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
-              <div v-for="(rate, index) in sortedRatings" :key="index" class="kikoeru-rating-tooltip__row">
-                <span>{{ $t('workCard.stars', { count: rate.review_point }) }}</span>
-                <q-linear-progress
-                  :model-value="rate.ratio/100"
-                  color="amber"
-                  track-color="grey-8"
-                  class="kikoeru-rating-tooltip__bar"
-                />
-                <span class="kikoeru-rating-tooltip__count">({{ rate.count }})</span>
+      <!-- 第 2 行：5星评分 / 评论数（左） + 售价 / 销量（右） -->
+      <div v-show="metadata.title" class="work-card-stats-row">
+        <div class="work-card-stats-left">
+          <div class="work-card-rating">
+            <q-rating
+              v-model="rating"
+              size="16px"
+              class="work-card-stars"
+              :class="userMarked ? 'work-card-stars--user' : 'work-card-stars--community'"
+              icon="star_border"
+              icon-selected="star"
+              icon-half="star_half"
+            />
+            <AppTooltip v-if="metadata.rate_count_detail">
+              <div class="kikoeru-rating-tooltip">
+                <div class="kikoeru-rating-tooltip__title">{{ $t('workCard.average', { rate_average_2dp: metadata.rate_average_2dp }) }}</div>
+                <div v-for="(rate, index) in sortedRatings" :key="index" class="kikoeru-rating-tooltip__row">
+                  <span>{{ $t('workCard.stars', { count: rate.review_point }) }}</span>
+                  <q-linear-progress
+                    :model-value="rate.ratio/100"
+                    color="amber"
+                    track-color="grey-8"
+                    class="kikoeru-rating-tooltip__bar"
+                  />
+                  <span class="kikoeru-rating-tooltip__count">({{ rate.count }})</span>
+                </div>
               </div>
-            </div>
-          </AppTooltip>
+            </AppTooltip>
+          </div>
+
+          <span class="work-card-score">
+            <span class="work-card-score-num">{{ metadata.rate_average_2dp }}</span>
+            <span class="work-card-muted">({{ metadata.rate_count }})</span>
+          </span>
+
+          <span class="work-card-reviews work-card-muted">
+            <q-icon name="chat_bubble_outline" size="13px" />
+            <span>{{ metadata.review_count }}</span>
+            <AppTooltip>{{ $t('workCard.reviews') }}</AppTooltip>
+          </span>
         </div>
 
-        <div class="work-card-score">
-          <span class="work-card-score-num">{{ metadata.rate_average_2dp }}</span>
-          <span class="work-card-muted">({{ metadata.rate_count }})</span>
-        </div>
-
-        <div class="work-card-reviews work-card-muted">
-          <q-icon name="chat_bubble_outline" size="14px" />
-          <span>{{ metadata.review_count }}</span>
-          <AppTooltip>{{ $t('workCard.reviews') }}</AppTooltip>
+        <div class="work-card-stats-right">
+          <span class="work-card-price">¥{{ metadata.price }}</span>
+          <span class="work-card-muted">{{ $t('workCard.sales', { count: metadata.dl_count }) }}</span>
         </div>
       </div>
 
-      <!-- 第 4 行：价格 / 销量 / 分级 + DLsite 胶囊 -->
-      <div v-show="metadata.title" class="work-card-commerce">
-        <span class="work-card-price">¥{{ metadata.price }}</span>
-        <span class="work-card-muted">{{ $t('workCard.sales', { count: metadata.dl_count }) }}</span>
-        <span v-if="metadata.nsfw === false" class="work-card-age">{{ $t('workCard.allAges') }}</span>
-        <a
-          v-if="!dlsiteCode.startsWith('CC')"
-          class="work-card-store"
-          :href="`https://www.dlsite.com/home/work/=/product_id/${dlsiteCode}.html`"
-          rel="noreferrer noopener"
-          target="_blank"
+      <!-- 第 3 行：社团 + 本地歌词 + DLsite -->
+      <div class="work-card-byline">
+        <router-link
+          v-if="metadata.circle && metadata.circle.id != null"
+          :to="`/works?circleId=${metadata.circle.id}`"
+          class="work-card-circle"
         >
-          <span>DLsite</span>
-          <q-icon name="open_in_new" size="12px" />
-        </a>
+          <q-icon name="album" size="14px" class="work-card-circle-icon" />
+          <span class="ellipsis">{{ $privateText(metadata.circle.name) }}</span>
+        </router-link>
+        <div class="work-card-byline-badges">
+          <span v-if="hasLocalLyrics" class="work-card-lyric-badge">{{ $t('common.localLyrics') }}</span>
+          <a
+            v-if="!dlsiteCode.startsWith('CC')"
+            class="work-card-store"
+            :href="`https://www.dlsite.com/home/work/=/product_id/${dlsiteCode}.html`"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            <span>DLsite</span>
+            <q-icon name="open_in_new" size="12px" />
+          </a>
+        </div>
       </div>
     </div>
 
-    <!-- 完整作品卡片模式下，所有标签平铺在正文下方、底栏上方 -->
-    <div v-if="!thumbnailMode && fullDetails && visibleTags.length" class="work-card-tags">
+    <!-- 完整标签区（去灰蒙蒙：直接落在卡片底面上，高对比度实底圆角胶囊） -->
+    <div v-if="!thumbnailMode && visibleTags.length" class="work-card-tags">
       <router-link v-for="tag in visibleTags" :key="tag.id" :to="`/works?tagId=${tag.id}`" class="work-card-tag">
         {{ $privateText(tag.name) }}
       </router-link>
@@ -181,6 +186,9 @@ export default {
     },
     dlsiteCode() {
       return idNumberToCode(this.metadata.id)
+    },
+    hasLocalLyrics () {
+      return Boolean(this.metadata.lyric_status && this.metadata.lyric_status.includes('local'))
     }
   },
 
@@ -313,47 +321,20 @@ export default {
 .work-card-info {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  padding: 12px 14px 10px;
-}
-
-.card--full .work-card-title {
-  margin-bottom: auto;
-  padding-bottom: 12px;
-}
-
-.work-card-byline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--card-muted);
-  font-size: 12px;
-  line-height: 1.3;
-}
-
-.work-card-circle {
-  min-width: 0;
-  color: inherit;
-  font-size: 12.5px;
-}
-
-.work-card-byline time {
-  flex-shrink: 0;
-  margin-left: auto;
-  font-variant-numeric: tabular-nums;
+  padding: 12px 14px 8px;
 }
 
 .work-card-title {
-  margin: 7px 0 10px;
-  font-size: 15.5px;
-  line-height: 1.48;
+  margin: 0 0 6px;
+  min-height: 2.9em;
+  font-size: 15px;
+  line-height: 1.45;
   font-weight: 600;
   letter-spacing: 0;
   overflow-wrap: anywhere;
 }
 
 .work-card-title a {
-  min-height: 2.96em;
   color: inherit;
 }
 
@@ -362,85 +343,141 @@ export default {
   color: var(--kikoeru-accent-text);
 }
 
+.work-card-byline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+
+.work-card-byline-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.work-card-circle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--card-muted);
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+.work-card-circle-icon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
 .card a:focus-visible {
   outline: 2px solid var(--kikoeru-accent-text);
   outline-offset: -2px;
 }
 
-.work-card-rating-row,
-.work-card-commerce {
+.work-card-stats-row {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
-  gap: 6px 8px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-bottom: 8px;
+  min-height: 20px;
   font-size: 12px;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.work-card-stats-left,
+.work-card-stats-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.work-card-rating {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.work-card-stars :deep(.q-rating__icon-container) {
+  display: inline-flex;
+  align-items: center;
 }
 
 .work-card-score {
   display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
+  align-items: center;
+  gap: 2px;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .work-card-score-num {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--kikoeru-text);
-}
-
-.work-card-score .work-card-muted {
-  font-size: 12px;
+  line-height: 1;
 }
 
 .work-card-muted {
   color: var(--card-muted);
   white-space: nowrap;
+  line-height: 1;
 }
 
 .work-card-reviews {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-left: auto;
+  gap: 3px;
+  line-height: 1;
 }
 
-.work-card-commerce {
-  margin-top: 8px;
-  line-height: 20px;
+.work-card-reviews :deep(.q-icon) {
+  transform: translateY(0.5px);
 }
 
 .work-card-price {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--kikoeru-text);
   white-space: nowrap;
+  line-height: 1;
 }
 
-.work-card-age {
-  color: var(--kikoeru-text);
+.work-card-lyric-badge {
+  padding: 1px 7px;
+  border-radius: 5px;
   font-size: 11px;
   font-weight: 500;
-  border: 1px solid var(--card-line);
-  background: var(--card-chip);
-  border-radius: 4px;
-  padding: 0 5px;
   line-height: 18px;
   white-space: nowrap;
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.body--light .work-card-lyric-badge {
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.28);
 }
 
 .work-card-store {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  margin-left: auto;
   padding: 1px 7px;
   border-radius: 5px;
   background: var(--kikoeru-active-bg);
   border: 1px solid color-mix(in srgb, var(--q-primary) 26%, transparent);
   color: var(--kikoeru-accent-text);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 18px;
   white-space: nowrap;
@@ -453,34 +490,43 @@ export default {
 }
 
 .work-card-title-full {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .work-card-tags {
+  flex: 1 0 auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  padding: 10px 14px;
-  border-top: 1px solid var(--card-line);
-  background: color-mix(in srgb, var(--kikoeru-inset) 45%, transparent);
+  align-content: flex-start;
+  gap: 6px;
+  padding: 4px 14px 12px;
 }
 
 .work-card-tag {
   max-width: 100%;
-  padding: 2px 7px;
-  border: 1px solid var(--card-line);
-  border-radius: 4px;
-  background: var(--card-chip);
-  color: var(--kikoeru-muted);
-  font-size: 11px;
-  line-height: 17px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #2b2e35;
+  color: #eceef2;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 18px;
   overflow-wrap: anywhere;
-  transition: color .14s ease, border-color .14s ease;
+  transition: background-color .14s ease, color .14s ease;
+}
+
+.body--light .work-card-tag {
+  background: #ebedf0;
+  color: #25272b;
 }
 
 .work-card-tag:hover {
+  background: var(--kikoeru-active-bg);
   color: var(--kikoeru-accent-text);
-  border-color: color-mix(in srgb, var(--q-primary) 45%, transparent);
 }
 
 .work-card-footer {

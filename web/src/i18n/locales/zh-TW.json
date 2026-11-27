@@ -543,7 +543,7 @@
     "stars": "{count}星",
     "reviews": "評論數",
     "yen": "日元",
-    "sales": "售出 {count}",
+    "sales": "銷量 {count}",
     "allAges": "全年齡"
   },
   "workDetails": {
@@ -554,7 +554,7 @@
     "reviewCounts": "{rate_count} 個評價 · {review_count} 條評論",
     "price": "售價",
     "yen": "日元",
-    "sales": "售出 {count}",
+    "sales": "銷量 {count}",
     "listeningStatus": "收聽狀態",
     "myRating": "我的評分",
     "actions": "作品操作",

@@ -99,10 +99,6 @@
             <q-item-section><q-item-label>{{ $t('defaultPreferences.showRecent') }}</q-item-label><q-item-label caption>{{ $t('defaultPreferences.showRecentHint') }}</q-item-label></q-item-section>
             <q-item-section side class="settings-control"><q-toggle v-model="config.enableShowRecent" color="primary" /></q-item-section>
           </q-item>
-          <q-item tag="label" class="settings-row">
-            <q-item-section><q-item-label>{{ $t('defaultPreferences.fullCards') }}</q-item-label><q-item-label caption>{{ $t('defaultPreferences.fullCardsHint') }}</q-item-label></q-item-section>
-            <q-item-section side class="settings-control"><q-toggle v-model="config.oldWorkCardUIStyle" color="primary" /></q-item-section>
-          </q-item>
           <SmartPathSettings
             v-model:enabled="config.smartPathEnabled"
             v-model:prefer-effect="config.smartPathPreferEffect"

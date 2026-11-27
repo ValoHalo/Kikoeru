@@ -171,13 +171,6 @@
           <WorkSelection v-for="work in works" :key="work.id" :label="work.title" list :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><WorkListItem :metadata="work" :showLabel="showLabel && $q.screen.width > 700" /></WorkSelection>
         </q-list>
 
-        <!--完整作品卡片-->
-        <div v-else-if="!listMode && works.length && oldWorkCardUIStyle" class="works-grid" :class="{ 'works-grid--compact': !detailMode }">
-          <div class="works-grid-item" v-for="work in works" :key="work.id">
-            <WorkSelection :label="work.title" :enabled="selecting" :selected="selectedWorks.includes(work.id)" @select="toggleSelection(work.id, $event)"><OldWorkCard :metadata="work" :thumbnailMode="!detailMode" class="fit" @library-changed="reset()"/></WorkSelection>
-          </div>
-        </div>
-
         <!--解决android平台hover事件不像safari那样及时响应的问题，需要手动添加触摸响应时间-->
         <div v-else-if="!listMode && works.length && $q.platform.is.android && $q.platform.has.touch" class="works-grid" :class="{ 'works-grid--compact': !detailMode }">
           <div class="works-grid-item" v-for="work in works" :key="work.id"
@@ -230,7 +223,6 @@ import WorkListItem from 'components/WorkListItem.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import RecentWorks from 'src/components/RecentWorks.vue'
 import { mapState } from 'vuex'
-import OldWorkCard from 'src/components/OldWorkCard.vue'
 import { AdvanceSearchCondType } from '../utils.js'
 import { WORK_LIST_MODES } from '../store/module-AudioPlayer/state'
 import { rememberWorksScroll } from '../utils/worksScroll'
@@ -248,7 +240,6 @@ export default {
     LibraryBatchActions,
     SavedSearchMenu,
     WorkCard,
-    OldWorkCard,
     WorkListItem,
     RecentWorks,
   },
@@ -411,7 +402,6 @@ export default {
     },
 
     ...mapState('AudioPlayer', [
-      'oldWorkCardUIStyle',
       'enableShowRecent',
       'workListMode',
     ]),
@@ -842,7 +832,7 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
   gap: 14px;
 }
-.works-grid-item { min-width: 0; }
+.works-grid-item { min-width: 0; height: 100%; }
 .works-skeleton-card {
   background: var(--kikoeru-surface);
   border-color: var(--kikoeru-border);

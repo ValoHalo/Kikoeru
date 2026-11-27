@@ -10,6 +10,7 @@
     @mouseover="toggleBlurFlag()"
     @mouseout="toggleBlurFlag()"
   >
+    <!-- 左上角：RJ 编号（点击复制，无图标） -->
     <div v-if="showBadges && !$store.state.AudioPlayer.privacyMode" class="absolute-top-left transparent cover-corner-top-left">
       <span
         role="button"
@@ -25,33 +26,21 @@
       </span>
     </div>
 
-    <div v-if="showBadges && release !== ''" class="absolute-bottom-right transparent cover-corner-bottom-right">
-      <span class="cover-badge cover-badge--date">
-        {{ release }}
+    <!-- 右上角：年龄分级（彩色区分）或复用场景的本地歌词 -->
+    <div v-if="showBadges && !$store.state.AudioPlayer.privacyMode && (ageBadgeText || (showLyricBadge && lyricList.length > 0))" class="absolute-top-right transparent cover-corner-top-right">
+      <span v-if="ageBadgeText" class="cover-badge" :class="ageBadgeClass">
+        {{ ageBadgeText }}
+      </span>
+      <span v-else-if="showLyricBadge && lyricList.length > 0" v-for="lyric in lyricList" :key="lyric" class="cover-badge cover-badge--lyric">
+        {{ $t('common.localLyrics') }}
       </span>
     </div>
 
-    <div v-if="showBadges && lyricList.length > 0" class="absolute-top-right transparent cover-corner-top-right">
-      <span v-for="lyric in lyricList" :key="lyric" class="cover-badge cover-badge--lyric">{{ $t('common.localLyrics') }}</span>
-    </div>
-
-    <!-- 常驻封面悬浮标签（带独立毛玻璃卡片衬底） -->
-    <div v-if="displayedTags.length && !$store.state.AudioPlayer.privacyMode" class="absolute-bottom-left tags-panel">
-      <div class="tags-card">
-        <router-link
-          v-for="tag in displayedTags"
-          :key="tag.id"
-          :to="`/works?tagId=${tag.id}`"
-          class="cover-tag-item"
-          @click.stop
-        >
-          {{ $privateText(tag.name) }}
-        </router-link>
-        <span v-if="hiddenTagCount > 0" data-no-cover-transition class="cover-tag-item cover-tag-item--more" @click.prevent.stop>
-          +{{ hiddenTagCount }}
-          <AppTooltip>{{ hiddenTagNames }}</AppTooltip>
-        </span>
-      </div>
+    <!-- 右下角：发售日 -->
+    <div v-if="showBadges && release !== '' && !$store.state.AudioPlayer.privacyMode" class="absolute-bottom-right transparent cover-corner-bottom-right">
+      <span class="cover-badge cover-badge--date">
+        {{ release }}
+      </span>
     </div>
 
     <!--其他自定义组件-->
@@ -88,15 +77,14 @@ export default {
       require: true,
     },
 
-    tags: {
-      type: Array,
-      require: false,
-      default() {return [];}
+    ageRating: {
+      type: Boolean,
+      default: null
     },
 
-    maxTags: {
-      type: Number,
-      default: 3
+    showLyricBadge: {
+      type: Boolean,
+      default: true
     },
 
     showBadges: {
@@ -139,21 +127,17 @@ export default {
       return this.lyric_status?.includes('local') ? ['local'] : [];
     },
 
-    validTags () {
-      return (this.tags || []).filter(tag => tag && tag.id != null && tag.name)
+    ageBadgeText () {
+      if (this.ageRating === false) return t('workCard.allAges')
+      if (this.ageRating === true) return 'R-18'
+      return ''
     },
 
-    displayedTags () {
-      return this.maxTags > 0 ? this.validTags.slice(0, this.maxTags) : this.validTags
+    ageBadgeClass () {
+      if (this.ageRating === false) return 'cover-badge--all-ages'
+      if (this.ageRating === true) return 'cover-badge--r18'
+      return ''
     },
-
-    hiddenTagCount () {
-      return Math.max(0, this.validTags.length - this.displayedTags.length)
-    },
-
-    hiddenTagNames () {
-      return this.validTags.slice(this.displayedTags.length).map(tag => this.$privateText(tag.name)).join(' · ')
-    }
   },
 
   methods: {
@@ -207,7 +191,8 @@ export default {
   white-space: nowrap;
 }
 
-.cover-badge--code {
+.cover-badge--code,
+.cover-badge--date {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
@@ -228,55 +213,16 @@ export default {
   border-color: rgba(134, 239, 172, 0.28);
 }
 
-.tags-panel {
-  padding: 8px;
-  max-width: 100%;
-  background: transparent;
-  pointer-events: none;
+.cover-badge--all-ages {
+  background: rgba(22, 101, 52, 0.84);
+  border-color: rgba(134, 239, 172, 0.38);
+  color: #dcfce7;
 }
 
-.tags-card {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 3px;
-  max-width: 100%;
-  padding: 3px 4px;
-  border-radius: 5px;
-  background: rgba(18, 20, 24, 0.78);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  pointer-events: auto;
-}
-
-.cover-tag-item {
-  display: inline-flex;
-  align-items: center;
-  height: 18px;
-  max-width: 120px;
-  padding: 0 5px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 10.5px;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: background-color .14s ease, color .14s ease;
-}
-
-a.cover-tag-item:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-}
-
-.cover-tag-item--more {
-  cursor: default;
-  color: rgba(255, 255, 255, 0.75);
-  font-variant-numeric: tabular-nums;
+.cover-badge--r18 {
+  background: rgba(153, 27, 27, 0.86);
+  border-color: rgba(252, 165, 165, 0.4);
+  color: #fee2e2;
 }
 
 </style>
